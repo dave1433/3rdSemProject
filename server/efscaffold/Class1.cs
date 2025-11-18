@@ -1,4 +1,4 @@
-﻿namespace server;
+﻿namespace efscaffold;
 
 public class Class1
 {
