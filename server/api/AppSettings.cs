@@ -1,11 +1,15 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿// csharp
+using System.ComponentModel.DataAnnotations;
 
 namespace api;
 
 public class AppSettings
 {
+    [Required]
     [MinLength(1)]
-    public string DefaultConnection { get; set; }
+    public required string DefaultConnection { get; init; }
+
+    [Required]
     [MinLength(1)]
-    public string Secret { get; set; }
+    public required string JwtSecret { get; init; }
 }
