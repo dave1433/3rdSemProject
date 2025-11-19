@@ -1,13 +1,12 @@
-﻿// server/api/Controllers/PlayersController.cs
-namespace api.Controllers;
-
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
+using api.Services;
 using api.Dtos.Requests;
 using api.Dtos.Responses;
-using api.Services;
+
+namespace api.Controllers.Admin;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/admin/players")]
 public class PlayersController : ControllerBase
 {
     private readonly IPlayerService _service;
