@@ -1,0 +1,7 @@
+@import "tailwindcss";
+@theme {
+    --color-jerneRed: #C80000;
+    --color-jerneNavy: #2E4658;
+    --color-lightBG: #F2F2F2;
+    --color-greyBorder: #D9D9D9;
+}
