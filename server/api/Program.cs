@@ -10,7 +10,12 @@ var builder = WebApplication.CreateBuilder(args);
 var appSettings = builder.Services.AddAppSettings(builder.Configuration);
 
 // Add AutoMapper
-builder.Services.AddAutoMapper(typeof(PlayerProfile));
+builder.Services.AddAutoMapper(typeof(Program)); 
+builder.Services.AddScoped<IBoardService, BoardService>();
+builder.Services.AddScoped<IRepeatService, RepeatService>();
+builder.Services.AddScoped<ITransactionService, TransactionService>();
+
+
 
 // Register EF Core + PostgreSQL
 builder.Services.AddDbContext<MyDbContext>(options =>

@@ -6,7 +6,8 @@ using api.Dtos.Responses;
 namespace api.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/admin/games")]
+
 public class GamesController : ControllerBase
 {
     private readonly IGameService _service;
