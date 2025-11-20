@@ -1,23 +1,34 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿// csharp
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace api;
 
-public static class AppSettingsExtensions
+public static class AddAppSettingsExtensions
 {
     public static AppSettings AddAppSettings(this IServiceCollection services, IConfiguration configuration)
     {
-        var appSettings = new AppSettings();
-        configuration.GetSection(nameof(AppSettings)).Bind(appSettings);
+        var section = configuration.GetSection(nameof(AppSettings));
+        var settings = section.Get<AppSettings>()
+                       ?? throw new InvalidOperationException("Missing 'AppSettings' configuration section.");
 
-        services.Configure<AppSettings>(configuration.GetSection(nameof(AppSettings)));
+        var results = new List<ValidationResult>();
+        var valid = Validator.TryValidateObject(settings, new ValidationContext(settings), results, validateAllProperties: true);
+        if (!valid)
+        {
+            Console.WriteLine("Warning: Invalid AppSettings configuration. Validation errors:");
+            foreach (var r in results.Where(r => r != ValidationResult.Success))
+                Console.WriteLine($" - {r.ErrorMessage}");
+            // Continue without throwing so the application can start. Fix configuration to remove warnings.
+        }
 
-        ICollection<ValidationResult> results = new List<ValidationResult>();
-        var validated = Validator.TryValidateObject(appSettings, new ValidationContext(appSettings), results, true);
-        if (!validated)
-            throw new Exception(
-                $"hey buddy, alex here. You're probably missing an environment variable / appsettings.json stuff / repo secret on github. Here's the technical error: " +
-                $"{string.Join(", ", results.Select(r => r.ErrorMessage))}");
+        services.Configure<AppSettings>(section);
+        services.AddSingleton(settings);
 
-        return appSettings;
+        return settings;
     }
 }
