@@ -36,4 +36,14 @@ public class PlayersController : ControllerBase
         var result = await _service.GetPlayerById(id);
         return result == null ? NotFound() : Ok(result);
     }
+
+    // GET /api/admin/players
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<PlayerResponse>>> GetAll()
+    {
+        var players = await _service.GetAllPlayers();
+        return Ok(players);
+    }
+
+
 }

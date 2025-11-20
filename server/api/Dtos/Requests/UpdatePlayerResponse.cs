@@ -8,5 +8,5 @@ public class UpdatePlayerResponse
     public string? Email { get; set; }
     public bool Active { get; set; }
     public int Balance { get; set; }
-    public DateTime? UpdatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime? CreatedAt { get; set; }
 }

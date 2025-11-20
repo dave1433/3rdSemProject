@@ -10,12 +10,8 @@ var builder = WebApplication.CreateBuilder(args);
 var appSettings = builder.Services.AddAppSettings(builder.Configuration);
 
 // Add AutoMapper
-builder.Services.AddAutoMapper(typeof(Program)); 
-builder.Services.AddScoped<IBoardService, BoardService>();
-builder.Services.AddScoped<IRepeatService, RepeatService>();
-builder.Services.AddScoped<ITransactionService, TransactionService>();
-
-
+builder.Services.AddAutoMapper(typeof(Program));
+builder.Services.AddAutoMapper(typeof(PlayerProfile));
 
 // Register EF Core + PostgreSQL
 builder.Services.AddDbContext<MyDbContext>(options =>
@@ -23,15 +19,17 @@ builder.Services.AddDbContext<MyDbContext>(options =>
     options.UseNpgsql(appSettings.DefaultConnection);
 });
 
-// Register Services
+// Register services
 builder.Services.AddScoped<IPlayerService, PlayerService>();
-
-// Add controllers
-builder.Services.AddControllers();
+builder.Services.AddScoped<IBoardService, BoardService>();
+builder.Services.AddScoped<IRepeatService, RepeatService>();
+builder.Services.AddScoped<ITransactionService, TransactionService>();
 builder.Services.AddScoped<IGameService, GameService>();
 
+// Add Controllers
+builder.Services.AddControllers();
 
-// NSwag (instead of Swashbuckle)
+// Add NSwag
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddOpenApiDocument(config =>
 {
@@ -39,13 +37,31 @@ builder.Services.AddOpenApiDocument(config =>
     config.Description = "3rd Semester Project API documentation";
 });
 
+
+// ✅ ENABLE CORS for React frontend (http://localhost:5173)
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend",
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:5173")
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        });
+});
+
 var app = builder.Build();
 
-// Enable NSwag UI
+
+// Enable CORS BEFORE routing
+app.UseCors("AllowFrontend");
+
+
+// Swagger
 if (app.Environment.IsDevelopment())
 {
-    app.UseOpenApi();      // serve /swagger/v1/swagger.json
-    app.UseSwaggerUi();    // serve Swagger UI
+    app.UseOpenApi();
+    app.UseSwaggerUi();
 }
 
 app.MapControllers();
