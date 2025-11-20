@@ -1,15 +1,16 @@
 import { useState } from 'react'
 
 import '../App.css'
+import {Login} from "./pages/Login.tsx";
 
 function App() {
   const [count, setCount] = useState(0)
 
   return (
     <>
-     <div>
+     <div className="min-h-screen bg-lightBG flex flex-col justify-center items-center">
          <span>
-             <h1>Exam Project</h1>
+             <Login/>
          </span>
 
      </div>

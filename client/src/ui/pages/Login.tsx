@@ -2,12 +2,13 @@
 import { Input } from "../components/Input";
 import { Button } from "../components/Button";
 import { Card } from "../components/Card";
+import {DefaultLayout} from "../layout/DefaultLayout.tsx";
 
 
 export const Login = () => {
 
     return (
-        <div className="min-h-screen bg-lightBG flex flex-col justify-center items-center">
+        <DefaultLayout>
 
             {/* Logo */}
             <img
@@ -46,6 +47,6 @@ export const Login = () => {
                 </p>
 
             </Card>
-        </div>
+        </DefaultLayout>
     );
 };
