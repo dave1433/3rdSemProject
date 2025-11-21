@@ -1,5 +1,6 @@
 import {Input} from "./Input.tsx";
 import {Button} from "./Button.tsx";
+import {PhoneInput} from "./PhoneInput.tsx";
 
 export const PlayerForm = () => {
     return(
@@ -8,8 +9,9 @@ export const PlayerForm = () => {
 
             <form className="flex flex-col gap-4">
                 <Input label="Name" placeholder="Enter player name"/>
-                <Input label="Email" placeholder="Enter player email"/>
-                <Input label="Password" placeholder="Enter player password"/>
+                <PhoneInput label="Phone Number" placeholder="Nordic number"/>
+                <Input label="Email" type="email" placeholder="Enter player email"/>
+                <Input label="Password" type="password" placeholder="Enter player password"/>
 
                 <Button type="submit">Add New Player</Button>
             </form>
