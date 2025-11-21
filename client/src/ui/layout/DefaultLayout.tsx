@@ -7,7 +7,6 @@ export const DefaultLayout= ({ children }:{ children: React.ReactNode})=> {
     bg-lightBG
     flex
     flex-col
-    items-center
     ">
             {children}
     </div>
