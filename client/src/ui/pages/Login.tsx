@@ -2,19 +2,16 @@
 import { Input } from "../components/Input";
 import { Button } from "../components/Button";
 import { Card } from "../components/Card";
+import {DefaultLayout} from "../layout/DefaultLayout.tsx";
+import {Logo} from "../components/Logo.tsx";
 
 
 export const Login = () => {
 
     return (
-        <div className="min-h-screen bg-lightBG flex flex-col justify-center items-center">
+        <DefaultLayout>
 
-            {/* Logo */}
-            <img
-                src={"src/assets/logo1.png"}
-                alt="Jerne IF Logo"
-                className="w-28 mb-10"
-            />
+            <Logo/>
 
             <Card>
                 <form className="flex flex-col gap-4">
@@ -46,6 +43,6 @@ export const Login = () => {
                 </p>
 
             </Card>
-        </div>
+        </DefaultLayout>
     );
 };
