@@ -1,20 +1,15 @@
 import { useState } from 'react'
 
 import '../App.css'
+import {Login} from "./pages/Login.tsx";
+import {AdminDashboard} from "./pages/AdminDashboard.tsx";
 
 function App() {
-  const [count, setCount] = useState(0)
-
-  return (
-    <>
-     <div>
-         <span>
-             <h1>Exam Project</h1>
-         </span>
-
-     </div>
-    </>
-  )
+    return (
+        <div className="min-h-screen w-full bg-lightBG flex flex-col">
+            <AdminDashboard />
+        </div>
+    );
 }
 
 export default App
