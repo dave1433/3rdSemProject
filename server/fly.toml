@@ -1,9 +1,9 @@
-# fly.toml app configuration file generated for server3semproj on 2025-11-24T13:31:04Z
+# fly.toml app configuration file generated for server3sem-deadpigeons on 2025-11-24T17:46:03+01:00
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-app = 'server3semproj'
+app = 'server3sem-deadpigeons'
 primary_region = 'fra'
 
 [build]
