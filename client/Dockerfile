@@ -6,17 +6,16 @@ COPY . .
 RUN npm run build
 
 FROM nginx:alpine
+
+# Copy frontend build output
 COPY --from=build /app/dist /usr/share/nginx/html
 
-RUN echo $'\
-server { \n\
-    listen 8080; \n\
-    location / { \n\
-        root /usr/share/nginx/html; \n\
-        index index.html index.htm; \n\
-        try_files $uri $uri/ /index.html; \n\
-    } \n\
-}' > /etc/nginx/conf.d/default.conf
+# Copy nginx template (with variables like $BACKEND_URL)
+COPY nginx.conf.template /etc/nginx/templates/default.conf.template
+
+# Enable environment variable substitution
+RUN apk add --no-cache gettext
 
 EXPOSE 8080
-CMD ["nginx", "-g", "daemon off;"]
+
+CMD ["/bin/sh", "-c", "envsubst < /etc/nginx/templates/default.conf.template > /etc/nginx/conf.d/default.conf && exec nginx -g 'daemon off;'"]
