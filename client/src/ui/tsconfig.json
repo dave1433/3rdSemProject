@@ -4,5 +4,11 @@
   "references": [
     { "path": "../core"},
     { "path": "../utils"}
-  ]
+  ],
+
+  "compilerOptions": {
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true
+  }
 }

@@ -2,5 +2,11 @@
 {
   "extends": "../../tsconfig.settings.json",
   "include": ["**/*.ts", "**/*.tsx", "../vite-env.d.ts"],
-  "references": []
+  "references": [],
+
+  "compilerOptions": {
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true
+  }
 }
