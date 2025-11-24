@@ -1,0 +1,236 @@
+.myrepeats-card {
+    background: #f9f6f2;
+    border-radius: 12px;
+    border: 1px solid #d4cec7;
+    padding: 20px 24px 18px;
+    max-width: 640px;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+}
+
+.myrepeats-title {
+    font-size: 1.2rem;
+    margin: 0 0 4px 0;
+}
+
+.myrepeats-subtitle {
+    margin: 0 0 16px 0;
+    font-size: 0.9rem;
+    color: #555;
+}
+
+.myrepeats-row {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 14px;
+    margin-top:24px;
+    gap: 16px;
+}
+
+.myrepeats-row-weeks {
+    align-items: flex-start;
+}
+
+.myrepeats-label {
+    width: 80px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #333;
+}
+
+.myrepeats-value {
+    font-size: 0.95rem;
+}
+
+/* numbers */
+.myrepeats-numbers {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.myrepeats-number-pill {
+    min-width: 34px;
+    padding: 4px 8px;
+    border-radius: 999px;
+    background: #bbaea8;
+    text-align: center;
+    font-size: 0.9rem;
+}
+
+.myrepeats-empty-text {
+    font-size: 0.85rem;
+    color: #777;
+}
+
+/* inputs */
+.myrepeats-input-wrapper {
+    align-items: flex-start;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.myrepeats-input {
+    max-width: 220px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 0.9rem;
+}
+
+.myrepeats-input-hint {
+    font-size: 0.8rem;
+    color: #777;
+}
+
+/* Times control – same style as board page */
+.myrepeats-times-control {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    background: #e9e5de;
+    padding: 2px;
+}
+
+.myrepeats-times-control button {
+    border: none;
+    background: transparent;
+    width: 28px;
+    height: 28px;
+    cursor: pointer;
+    font-size: 1.1rem;
+}
+
+.myrepeats-times-control input {
+    width: 50px;
+    border: none;
+    background: #ffffff;
+    border-radius: 999px;
+    text-align: center;
+    font-size: 0.9rem;
+    padding: 2px 8px;
+    margin: 0 4px;
+}
+
+/* weeks list (calendar-style) */
+.myrepeats-weeks-list {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.myrepeats-week-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 6px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.myrepeats-week-item:hover {
+    background: #f0ece6;
+}
+
+.myrepeats-week-item input[type="checkbox"] {
+    cursor: pointer;
+}
+
+.myrepeats-week-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.myrepeats-week-label {
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.myrepeats-week-range {
+    font-size: 0.8rem;
+    color: #666;
+}
+
+/* preview */
+
+.myrepeats-preview {
+    display: flex;
+    gap: 40px;
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid #ddd;
+}
+
+.myrepeats-preview-label {
+    font-size: 0.8rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #666;
+}
+
+.myrepeats-preview-value {
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+/* actions */
+.myrepeats-actions {
+    margin-top: 18px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.myrepeats-btn {
+    border: none;
+    border-radius: 999px;
+    padding: 8px 20px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background 0.12s, transform 0.08s, box-shadow 0.08s;
+}
+
+/* Cancel btn */
+.myrepeats-btn-cancel {
+    background: #c80000;
+    color: #fff;
+}
+
+.myrepeats-btn-cancel:hover {
+    background: #b00000;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.18);
+}
+
+/* Confirm btn */
+.myrepeats-btn-confirm {
+    background: #00a86b;
+    color: #fff;
+}
+
+.myrepeats-btn-confirm:hover:enabled {
+    background: #008a58;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.18);
+}
+
+.myrepeats-btn-confirm:disabled {
+    opacity: 0.6;
+    cursor: default;
+    box-shadow: none;
+    transform: none;
+}
+
+/* Chrome, Safari, Edge: hide arrows on number input */
+.myrepeats-times-control input::-webkit-outer-spin-button,
+.myrepeats-times-control input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* Firefox: hide arrows on number input */
+.myrepeats-times-control input[type="number"] {
+    -moz-appearance: textfield;
+}
