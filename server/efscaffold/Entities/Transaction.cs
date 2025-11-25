@@ -13,6 +13,10 @@ public partial class Transaction
 
     public int Amount { get; set; }
 
+    public string? Mobilepayref { get; set; }
+
+    public string Status { get; set; } = null!;
+
     public string? Boardid { get; set; }
 
     public DateTime? Createdat { get; set; }
@@ -24,4 +28,6 @@ public partial class Transaction
     public virtual Board? Board { get; set; }
 
     public virtual Player? Player { get; set; }
+
+    public virtual Admin? ProcessedbyNavigation { get; set; }
 }
