@@ -12,6 +12,8 @@ public partial class MyDbContext : DbContext
     {
     }
 
+    public virtual DbSet<Admin> Admins { get; set; }
+
     public virtual DbSet<Board> Boards { get; set; }
 
     public virtual DbSet<Boardprice> Boardprices { get; set; }
@@ -26,6 +28,22 @@ public partial class MyDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<Admin>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("admin_pkey");
+
+            entity.ToTable("admin", "deadpigeons");
+
+            entity.HasIndex(e => e.Email, "admin_email_key").IsUnique();
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Createdat)
+                .HasDefaultValueSql("now()")
+                .HasColumnName("createdat");
+            entity.Property(e => e.Email).HasColumnName("email");
+            entity.Property(e => e.Password).HasColumnName("password");
+        });
+
         modelBuilder.Entity<Board>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("board_pkey");
@@ -37,7 +55,9 @@ public partial class MyDbContext : DbContext
             entity.HasIndex(e => e.Playerid, "board_player_idx");
 
             entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.Createdat).HasColumnName("createdat");
+            entity.Property(e => e.Createdat)
+                .HasDefaultValueSql("now()")
+                .HasColumnName("createdat");
             entity.Property(e => e.Gameid).HasColumnName("gameid");
             entity.Property(e => e.Numbers).HasColumnName("numbers");
             entity.Property(e => e.Playerid).HasColumnName("playerid");
@@ -76,7 +96,9 @@ public partial class MyDbContext : DbContext
             entity.HasIndex(e => new { e.Year, e.Weeknumber }, "game_week_idx");
 
             entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.Createdat).HasColumnName("createdat");
+            entity.Property(e => e.Createdat)
+                .HasDefaultValueSql("now()")
+                .HasColumnName("createdat");
             entity.Property(e => e.Joindeadline).HasColumnName("joindeadline");
             entity.Property(e => e.Startat).HasColumnName("startat");
             entity.Property(e => e.Weeknumber).HasColumnName("weeknumber");
@@ -90,6 +112,8 @@ public partial class MyDbContext : DbContext
 
             entity.ToTable("player", "deadpigeons");
 
+            entity.HasIndex(e => e.Email, "player_email_key").IsUnique();
+
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.Active)
                 .HasDefaultValue(false)
@@ -97,9 +121,12 @@ public partial class MyDbContext : DbContext
             entity.Property(e => e.Balance)
                 .HasDefaultValue(0)
                 .HasColumnName("balance");
-            entity.Property(e => e.Createdat).HasColumnName("createdat");
+            entity.Property(e => e.Createdat)
+                .HasDefaultValueSql("now()")
+                .HasColumnName("createdat");
             entity.Property(e => e.Email).HasColumnName("email");
             entity.Property(e => e.Fullname).HasColumnName("fullname");
+            entity.Property(e => e.Password).HasColumnName("password");
             entity.Property(e => e.Phone).HasColumnName("phone");
         });
 
@@ -110,7 +137,9 @@ public partial class MyDbContext : DbContext
             entity.ToTable("repeat", "deadpigeons");
 
             entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.Createdat).HasColumnName("createdat");
+            entity.Property(e => e.Createdat)
+                .HasDefaultValueSql("now()")
+                .HasColumnName("createdat");
             entity.Property(e => e.Numbers).HasColumnName("numbers");
             entity.Property(e => e.Optout)
                 .HasDefaultValue(false)
@@ -131,13 +160,25 @@ public partial class MyDbContext : DbContext
 
             entity.ToTable("transaction", "deadpigeons");
 
+            entity.HasIndex(e => e.Mobilepayref, "transaction_mobilepay_idx");
+
+            entity.HasIndex(e => e.Playerid, "transaction_player_idx");
+
+            entity.HasIndex(e => e.Status, "transaction_status_idx");
+
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.Amount).HasColumnName("amount");
             entity.Property(e => e.Boardid).HasColumnName("boardid");
-            entity.Property(e => e.Createdat).HasColumnName("createdat");
+            entity.Property(e => e.Createdat)
+                .HasDefaultValueSql("now()")
+                .HasColumnName("createdat");
+            entity.Property(e => e.Mobilepayref).HasColumnName("mobilepayref");
             entity.Property(e => e.Playerid).HasColumnName("playerid");
             entity.Property(e => e.Processedat).HasColumnName("processedat");
             entity.Property(e => e.Processedby).HasColumnName("processedby");
+            entity.Property(e => e.Status)
+                .HasDefaultValueSql("'pending'::text")
+                .HasColumnName("status");
             entity.Property(e => e.Type).HasColumnName("type");
 
             entity.HasOne(d => d.Board).WithMany(p => p.Transactions)
@@ -149,6 +190,10 @@ public partial class MyDbContext : DbContext
                 .HasForeignKey(d => d.Playerid)
                 .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("transaction_playerid_fkey");
+
+            entity.HasOne(d => d.ProcessedbyNavigation).WithMany(p => p.Transactions)
+                .HasForeignKey(d => d.Processedby)
+                .HasConstraintName("transaction_processedby_fkey");
         });
 
         OnModelCreatingPartial(modelBuilder);
