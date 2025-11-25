@@ -1,11 +1,7 @@
-import {
-    createBrowserRouter,
-    Navigate,
-    RouterProvider,
-    Outlet
-} from "react-router";
+import { useEffect } from "react";
+import {createBrowserRouter, Navigate, RouterProvider, Outlet,} from "react-router";
 import { PlayerBoardPage } from "./pages/player/PlayerBoardPage";
-import { PlayerHistoryPage } from "./pages/player/PlayerHistoryPage";
+import { PlayerHistoryPage } from "./pages/player/PlayerHistoryPage.tsx";
 import { PlayerResultsPage } from "./pages/player/PlayerResultsPage";
 import { PlayerMyBalancePage } from "./pages/player/PlayerMyBalancePage";
 import { Login } from "./pages/Login";
@@ -26,6 +22,10 @@ const router = createBrowserRouter([
     { path: "/admin", element: <AdminDashboard /> },
 
     // PLAYER
+    {
+        path: "/login",
+        element: <Login />, // 👈 top-level login
+    },
     {
         path: "/player",
         element: <PlayerRootLayout />,

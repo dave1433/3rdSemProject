@@ -1,5 +1,5 @@
 import React from "react";
-import { NavLink } from "react-router";
+import { NavLink, useNavigate } from "react-router";
 import "../css/PlayerPageHeader.css";
 
 interface PlayerPageHeaderProps {
@@ -13,14 +13,19 @@ const navItems = [
     { label: "My Balance", path: "/player/balance" },
 ];
 
-export const PlayerPageHeader: React.FC<PlayerPageHeaderProps> = ({
-                                                                      userName,
-                                                                  }) => {
+export const PlayerPageHeader: React.FC<PlayerPageHeaderProps> = ({ userName }) => {
+    const navigate = useNavigate();
+
+    const handleLogout = () => {
+        // TODO: clear auth state / token here if needed
+        navigate("/login");
+    };
+
     return (
         <header className="player-header">
             {/* Logo */}
             <div className="player-header_logo">
-                 <img src="../../../src/assets/logo1.png" alt="Jerne IF" />
+                <img src="../../../src/assets/logo1.png" alt="Jerne IF" />
             </div>
 
             {/* Navigation */}
@@ -42,10 +47,22 @@ export const PlayerPageHeader: React.FC<PlayerPageHeaderProps> = ({
                 </ul>
             </nav>
 
-            {/* User name */}
+            {/* User area */}
             <div className="player-header_user">
+                {/* top line: greeting */}
                 <span className="player-header_user-label">Welcome back!</span>
-                <span className="player-header_user-name">{userName}</span>
+
+                {/* second line: name + logout button */}
+                <div className="player-header_user-bottom">
+                    <span className="player-header_user-name">{userName}</span>
+                    <button
+                        type="button"
+                        className="player-header_logout-btn"
+                        onClick={handleLogout}
+                    >
+                        Log out
+                    </button>
+                </div>
             </div>
         </header>
     );
