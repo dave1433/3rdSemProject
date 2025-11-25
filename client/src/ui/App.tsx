@@ -4,12 +4,17 @@ import { PlayerBoardPage } from "./pages/player/PlayerBoardPage";
 import { PlayerHistoryPage } from "./pages/player/PlayerHistoryPage.tsx";
 import { PlayerResultsPage } from "./pages/player/PlayerResultsPage";
 import { PlayerMyBalancePage } from "./pages/player/PlayerMyBalancePage";
+import {Login} from "./pages/Login.tsx";
 
 function PlayerRootLayout() {
     return <Outlet />;
 }
 
 const router = createBrowserRouter([
+    {
+        path: "/login",
+        element: <Login />, // 👈 top-level login
+    },
     {
         path: "/player",
         element: <PlayerRootLayout />,

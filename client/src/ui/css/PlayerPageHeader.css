@@ -60,21 +60,50 @@
     transform: scale(1.05);
 }
 
-/* user */
+/* user block on the right */
 .player-header_user {
-    text-align: right;
-    min-width: 140px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    font-size: 0.9rem;
+    margin-left: auto;
 }
 
+/* "Welcome back!" line */
 .player-header_user-label {
-    display: block;
-    font-size: 0.75rem;
-    letter-spacing: 0.1em;
-    color: white;
+    color: #ffffff;
+    font-size: 0.85rem;
+}
+
+/* second line: name + button inline */
+.player-header_user-bottom {
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .player-header_user-name {
-    font-size: 1rem;
-    font-weight: 500;
-    color: white;
+    font-weight: 600;
+    color: #ffffff;
+}
+
+/* logout button stays the same */
+.player-header_logout-btn {
+    border: none;
+    border-radius: 999px;
+    padding: 4px 12px;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    background: #b80000;
+    color: #fff;
+    transition: background 0.12s, transform 0.08s, box-shadow 0.08s;
+}
+
+.player-header_logout-btn:hover {
+    background: #a00000;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
