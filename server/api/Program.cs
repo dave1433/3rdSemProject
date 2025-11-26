@@ -5,8 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ✅ TEMPORARY — REMOVE AFTER COPYING HASH
-Console.WriteLine(PasswordHasher.Hash("1111"));
+
 
 // Load AppSettings
 var appSettings = builder.Services.AddAppSettings(builder.Configuration);
