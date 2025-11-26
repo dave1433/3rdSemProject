@@ -8,26 +8,59 @@ import { useNavigate } from "react-router";
 export const Login = () => {
     const navigate = useNavigate();
 
-    function handleLogin(e: React.FormEvent) {
+    async function handleLogin(e: React.FormEvent) {
         e.preventDefault();
 
-        // TODO: Replace with real auth validation
-        navigate("/admin");
+        const form = e.currentTarget as HTMLFormElement;
+        const formData = new FormData(form);
+
+        const email = formData.get("email");
+        const password = formData.get("password");
+
+        const res = await fetch("/api/auth/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password })
+        });
+
+        if (!res.ok) {
+            alert("Invalid credentials");
+            return;
+        }
+
+        const data = await res.json();
+
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("role", data.role);
+
+        if (data.role === 1) {
+            navigate("/admin");
+        } else {
+            navigate("/player");
+        }
     }
+
 
     return (
         <DefaultLayout>
             <Logo />
             <Card>
                 <form className="flex flex-col gap-4" onSubmit={handleLogin}>
-                    <Input label="Email" type="email" placeholder="you@example.com" required />
-                    <Input label="Password" type="password" placeholder="••••••••" required />
-                    <Button type="submit"> Login </Button>
-                </form>
+                    <Input
+                        label="Email"
+                        name="email"
+                        type="email"
+                        required
+                    />
+                    <Input
+                        label="Password"
+                        name="password"
+                        type="password"
+                        required
+                    />
 
-                <p className="text-center text-sm text-jerneNavy hover:underline cursor-pointer">
-                    Forgot password?
-                </p>
+                    <Button type="submit">Login</Button>
+                </form>
             </Card>
         </DefaultLayout>
     );
