@@ -34,7 +34,7 @@ namespace api.dtos
                 Id = Guid.NewGuid().ToString(),
                 Email = request.Email,
                 Password = PasswordHasher.Hash(request.Password),
-                Role = 1,                    // ✅ player (INT, not string)
+                Role = 2,                    // ✅ player (INT, not string)
                 Fullname = request.FullName,
                 Phone = request.Phone,
                 Active = true,
