@@ -61,8 +61,7 @@ namespace api.dtos
         [HttpGet]
         public async Task<ActionResult<IEnumerable<PlayerResponse>>> GetPlayers()
         {
-            var players = await _db.Users
-                .Where(u => u.Role == 1)   // ✅ player
+            var users = await _db.Users
                 .Select(u => new PlayerResponse
                 {
                     Id = u.Id,
@@ -73,7 +72,8 @@ namespace api.dtos
                 })
                 .ToListAsync();
 
-            return Ok(players);
+            return Ok(users);
         }
+
     }
 }
