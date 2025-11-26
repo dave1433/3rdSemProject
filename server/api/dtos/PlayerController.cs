@@ -6,6 +6,8 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using api.security;  
+
 
 namespace api.dtos
 {
@@ -31,15 +33,6 @@ namespace api.dtos
             public string Password { get; set; } = default!;
         }
 
-        public class PlayerResponse
-        {
-            public string Id { get; set; } = default!;
-            public string FullName { get; set; } = default!;
-            public string Phone { get; set; } = default!;
-            public bool Active { get; set; }
-            public int Balance { get; set; }
-        }
-
         [HttpPost]
         public async Task<ActionResult<PlayerResponse>> CreatePlayer(CreatePlayerRequest request)
         {
@@ -47,7 +40,7 @@ namespace api.dtos
             {
                 Id = Guid.NewGuid().ToString(),
                 Email = request.Email,
-                Password = request.Password, // TODO: hash
+                Password = PasswordHasher.Hash(request.Password),
                 Role = 1,                    // ✅ player (INT, not string)
                 Fullname = request.FullName,
                 Phone = request.Phone,
