@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using efscaffold.Entities;
 
-namespace Infrastructure.Postgres.Scaffolding;
+namespace efscaffold;
 
 public partial class MyDbContext : DbContext
 {
@@ -12,38 +12,20 @@ public partial class MyDbContext : DbContext
     {
     }
 
-    public virtual DbSet<Admin> Admins { get; set; }
-
     public virtual DbSet<Board> Boards { get; set; }
 
     public virtual DbSet<Boardprice> Boardprices { get; set; }
 
     public virtual DbSet<Game> Games { get; set; }
 
-    public virtual DbSet<Player> Players { get; set; }
-
     public virtual DbSet<Repeat> Repeats { get; set; }
 
     public virtual DbSet<Transaction> Transactions { get; set; }
 
+    public virtual DbSet<User> Users { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<Admin>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("admin_pkey");
-
-            entity.ToTable("admin", "deadpigeons");
-
-            entity.HasIndex(e => e.Email, "admin_email_key").IsUnique();
-
-            entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.Createdat)
-                .HasDefaultValueSql("now()")
-                .HasColumnName("createdat");
-            entity.Property(e => e.Email).HasColumnName("email");
-            entity.Property(e => e.Password).HasColumnName("password");
-        });
-
         modelBuilder.Entity<Board>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("board_pkey");
@@ -106,35 +88,13 @@ public partial class MyDbContext : DbContext
             entity.Property(e => e.Year).HasColumnName("year");
         });
 
-        modelBuilder.Entity<Player>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("player_pkey");
-
-            entity.ToTable("player", "deadpigeons");
-
-            entity.HasIndex(e => e.Email, "player_email_key").IsUnique();
-
-            entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.Active)
-                .HasDefaultValue(false)
-                .HasColumnName("active");
-            entity.Property(e => e.Balance)
-                .HasDefaultValue(0)
-                .HasColumnName("balance");
-            entity.Property(e => e.Createdat)
-                .HasDefaultValueSql("now()")
-                .HasColumnName("createdat");
-            entity.Property(e => e.Email).HasColumnName("email");
-            entity.Property(e => e.Fullname).HasColumnName("fullname");
-            entity.Property(e => e.Password).HasColumnName("password");
-            entity.Property(e => e.Phone).HasColumnName("phone");
-        });
-
         modelBuilder.Entity<Repeat>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("repeat_pkey");
 
             entity.ToTable("repeat", "deadpigeons");
+
+            entity.HasIndex(e => e.Playerid, "repeat_player_idx");
 
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.Createdat)
@@ -186,14 +146,41 @@ public partial class MyDbContext : DbContext
                 .OnDelete(DeleteBehavior.SetNull)
                 .HasConstraintName("transaction_boardid_fkey");
 
-            entity.HasOne(d => d.Player).WithMany(p => p.Transactions)
+            entity.HasOne(d => d.Player).WithMany(p => p.TransactionPlayers)
                 .HasForeignKey(d => d.Playerid)
                 .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("transaction_playerid_fkey");
 
-            entity.HasOne(d => d.ProcessedbyNavigation).WithMany(p => p.Transactions)
+            entity.HasOne(d => d.ProcessedbyNavigation).WithMany(p => p.TransactionProcessedbyNavigations)
                 .HasForeignKey(d => d.Processedby)
                 .HasConstraintName("transaction_processedby_fkey");
+        });
+
+        modelBuilder.Entity<User>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("user_pkey");
+
+            entity.ToTable("user", "deadpigeons");
+
+            entity.HasIndex(e => e.Email, "user_email_key").IsUnique();
+
+            entity.HasIndex(e => e.Role, "user_role_idx");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Active)
+                .HasDefaultValue(false)
+                .HasColumnName("active");
+            entity.Property(e => e.Balance)
+                .HasDefaultValue(0)
+                .HasColumnName("balance");
+            entity.Property(e => e.Createdat)
+                .HasDefaultValueSql("now()")
+                .HasColumnName("createdat");
+            entity.Property(e => e.Email).HasColumnName("email");
+            entity.Property(e => e.Fullname).HasColumnName("fullname");
+            entity.Property(e => e.Password).HasColumnName("password");
+            entity.Property(e => e.Phone).HasColumnName("phone");
+            entity.Property(e => e.Role).HasColumnName("role");
         });
 
         OnModelCreatingPartial(modelBuilder);

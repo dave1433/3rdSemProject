@@ -1,13 +1,13 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Infrastructure.Postgres.Scaffolding;   // <-- Your actual DbContext namespace
-using efscaffold.Entities;                   // <-- Your scaffolded Player entity
+using efscaffold;
+using efscaffold.Entities;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 
-namespace api.dtos   // <-- Keep your folder structure, or adjust your namespace
+namespace api.dtos
 {
     [ApiController]
     [Route("api/[controller]")]
@@ -43,11 +43,12 @@ namespace api.dtos   // <-- Keep your folder structure, or adjust your namespace
         [HttpPost]
         public async Task<ActionResult<PlayerResponse>> CreatePlayer(CreatePlayerRequest request)
         {
-            var player = new Player
+            var user = new User
             {
                 Id = Guid.NewGuid().ToString(),
                 Email = request.Email,
-                Password = request.Password, // TODO: hash later
+                Password = request.Password, // TODO: hash
+                Role = 1,                    // ✅ player (INT, not string)
                 Fullname = request.FullName,
                 Phone = request.Phone,
                 Active = true,
@@ -55,16 +56,16 @@ namespace api.dtos   // <-- Keep your folder structure, or adjust your namespace
                 Createdat = DateTime.UtcNow
             };
 
-            _db.Players.Add(player);
+            _db.Users.Add(user);
             await _db.SaveChangesAsync();
 
             return Ok(new PlayerResponse
             {
-                Id = player.Id,
-                FullName = player.Fullname,
-                Phone = player.Phone ?? "",
-                Active = player.Active,
-                Balance = player.Balance
+                Id = user.Id,
+                FullName = user.Fullname ?? "",
+                Phone = user.Phone ?? "",
+                Active = user.Active,
+                Balance = user.Balance
             });
         }
 
@@ -74,14 +75,15 @@ namespace api.dtos   // <-- Keep your folder structure, or adjust your namespace
         [HttpGet]
         public async Task<ActionResult<IEnumerable<PlayerResponse>>> GetPlayers()
         {
-            var players = await _db.Players
-                .Select(p => new PlayerResponse
+            var players = await _db.Users
+                .Where(u => u.Role == 1)   // ✅ player
+                .Select(u => new PlayerResponse
                 {
-                    Id = p.Id,
-                    FullName = p.Fullname,
-                    Phone = p.Phone ?? "",
-                    Active = p.Active,
-                    Balance = p.Balance
+                    Id = u.Id,
+                    FullName = u.Fullname ?? "",
+                    Phone = u.Phone ?? "",
+                    Active = u.Active,
+                    Balance = u.Balance
                 })
                 .ToListAsync();
 

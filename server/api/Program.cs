@@ -1,8 +1,12 @@
 using api;
-using Infrastructure.Postgres.Scaffolding;
+using api.security;        // ✅ ADD THIS
+using efscaffold;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// ✅ TEMPORARY — REMOVE AFTER COPYING HASH
+Console.WriteLine(PasswordHasher.Hash("1111"));
 
 // Load AppSettings
 var appSettings = builder.Services.AddAppSettings(builder.Configuration);
@@ -13,10 +17,10 @@ builder.Services.AddDbContext<MyDbContext>(options =>
     options.UseNpgsql(appSettings.DefaultConnection);
 });
 
-// Add controllers
+// Controllers
 builder.Services.AddControllers();
 
-// CORS (allow frontend)
+// CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
@@ -24,7 +28,6 @@ builder.Services.AddCors(options =>
         policy.WithOrigins("http://localhost:5173")
             .AllowAnyHeader()
             .AllowAnyMethod();
-
     });
 });
 
@@ -45,7 +48,5 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("AllowFrontend");
-
 app.MapControllers();
-
 app.Run();

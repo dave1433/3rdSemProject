@@ -21,7 +21,7 @@ public partial class Board
 
     public virtual Game? Game { get; set; }
 
-    public virtual Player? Player { get; set; }
+    public virtual User? Player { get; set; }
 
     public virtual ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
 }
