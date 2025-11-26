@@ -34,14 +34,27 @@ namespace api.controllers
         [HttpPost("login")]
         public async Task<ActionResult<LoginResponse>> Login(LoginRequest request)
         {
+            // 🔎 DEBUG LOGS
+            Console.WriteLine("=== LOGIN ATTEMPT ===");
+            Console.WriteLine($"Email received: '{request.Email}'");
+            Console.WriteLine($"Password received: '{request.Password}'");
+
             var user = await _db.Users
                 .FirstOrDefaultAsync(u => u.Email == request.Email && u.Active);
+
+            Console.WriteLine($"User found: {user != null}");
 
             if (user == null)
                 return Unauthorized("Invalid credentials");
 
-            var passwordValid =
-                PasswordHasher.Verify(user.Password, request.Password);
+            Console.WriteLine($"Password hash in DB: {user.Password}");
+
+            bool passwordValid = PasswordHasher.Verify(
+                user.Password,
+                request.Password
+            );
+
+            Console.WriteLine($"Password valid: {passwordValid}");
 
             if (!passwordValid)
                 return Unauthorized("Invalid credentials");
@@ -63,12 +76,15 @@ namespace api.controllers
                 signingCredentials: creds
             );
 
+            Console.WriteLine("✅ LOGIN SUCCESS");
+
             return Ok(new LoginResponse(
                 new JwtSecurityTokenHandler().WriteToken(token),
-                user.Role,         // 1 or 2
+                user.Role,
                 user.Id
             ));
         }
+
     }
 
 }
