@@ -27,7 +27,7 @@ public partial class Transaction
 
     public virtual Board? Board { get; set; }
 
-    public virtual Player? Player { get; set; }
+    public virtual User? Player { get; set; }
 
-    public virtual Admin? ProcessedbyNavigation { get; set; }
+    public virtual User? ProcessedbyNavigation { get; set; }
 }
