@@ -47,7 +47,7 @@ namespace api.controllers
             if (user == null)
                 return Unauthorized("Invalid credentials");
 
-            Console.WriteLine($"Password hash in DB: {user.Password}");
+            
 
             bool passwordValid = PasswordHasher.Verify(
                 user.Password,
