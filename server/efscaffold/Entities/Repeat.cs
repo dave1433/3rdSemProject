@@ -19,5 +19,5 @@ public partial class Repeat
 
     public DateTime? Createdat { get; set; }
 
-    public virtual Player? Player { get; set; }
+    public virtual User? Player { get; set; }
 }
