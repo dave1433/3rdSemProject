@@ -1,51 +1,86 @@
+using System.ComponentModel.DataAnnotations;
 using api;
 using api.security;        // ✅ ADD THIS
 using efscaffold;
 using Microsoft.EntityFrameworkCore;
 
-var builder = WebApplication.CreateBuilder(args);
-
-
-
-// Load AppSettings
-var appSettings = builder.Services.AddAppSettings(builder.Configuration);
-
-// Register EF Core + PostgreSQL
-builder.Services.AddDbContext<MyDbContext>(options =>
-{
-    options.UseNpgsql(appSettings.DefaultConnection);
-});
-
-// Controllers
-builder.Services.AddControllers();
-
-// CORS
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowFrontend", policy =>
+public class Program
+{ 
+    public static void ConfigureServices(IServiceCollection services)
     {
-        policy.WithOrigins("http://localhost:5173")
-            .AllowAnyHeader()
-            .AllowAnyMethod();
-    });
-});
+        services.AddSingleton<AppSettings>(provider =>
+        {
+            var configuration = provider.GetRequiredService<IConfiguration>();
 
-// Swagger
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddOpenApiDocument(config =>
-{
-    config.Title = "DeadPigeons API";
-    config.Description = "3rd Semester Project API documentation";
-});
+            var appSettings = configuration
+                .GetSection(nameof(AppSettings))
+                .Get<AppSettings>();
 
-var app = builder.Build();
+            if (appSettings is null)
+                throw new InvalidOperationException("AppSettings section is missing in configuration.");
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseOpenApi();
-    app.UseSwaggerUi();
+            return appSettings;
+        });
+
+        // DbContext using AppSettings from DI
+        services.AddDbContext<MyDbContext>((sp, options) =>
+        {
+            var appSettings = sp.GetRequiredService<AppSettings>();
+            options.UseNpgsql(appSettings.DefaultConnection);
+        });
+
+        // Controllers
+        services.AddControllers();
+
+        // CORS
+        services.AddCors(options =>
+        {
+            options.AddPolicy("AllowFrontend", policy =>
+            {
+                policy.WithOrigins("http://localhost:5173")
+                      .AllowAnyHeader()
+                      .AllowAnyMethod();
+            });
+        });
+
+        // Swagger / OpenAPI
+        services.AddEndpointsApiExplorer();
+        services.AddOpenApiDocument(config =>
+        {
+            config.Title = "DeadPigeons API";
+            config.Description = "3rd Semester Project API documentation";
+        });
+
+        // TODO: register other services here, e.g.:
+        // services.AddScoped<IPlayerService, PlayerService>();
+        // services.AddScoped<IGameService, GameService>();
+        // services.AddScoped<IBoardService, BoardService>();
+        // services.AddScoped<IRepeatService, RepeatService>();
+        // services.AddScoped<ITransactionService, TransactionService>();
+    }
+
+    public static void Main()
+    {
+        var builder = WebApplication.CreateBuilder();
+        ConfigureServices(builder.Services);
+
+        var app = builder.Build();
+        
+        var appSettings = app.Services.GetRequiredService<AppSettings>();
+        //Trigger the DataAnnotations validations for AppSettings properties
+        Validator.ValidateObject(appSettings, new ValidationContext(appSettings), validateAllProperties: true);
+
+        if (app.Environment.IsDevelopment())
+        {
+            app.UseOpenApi();
+            app.UseSwaggerUi();
+        }
+
+        //when using proxy, below CORs settings are not needed
+        app.UseCors("AllowFrontend");
+
+        app.MapControllers();
+
+        app.Run();
+    }
 }
-
-app.UseCors("AllowFrontend");
-app.MapControllers();
-app.Run();
