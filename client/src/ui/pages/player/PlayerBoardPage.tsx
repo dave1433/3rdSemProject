@@ -17,8 +17,13 @@ interface BetPlacement {
     amountDkk: number;
 }
 
-// TODO: replace with real logged-in player id later
-const CURRENT_PLAYER_ID = "f2042bb0-c738-44ea-ac59-d8f18d9058f1";
+// price per board for each fields count (same as boardprice table)
+const PRICE_PER_FIELDS: Record<FieldsCount, number> = {
+    5: 20,
+    6: 40,
+    7: 80,
+    8: 160,
+};
 
 const playerClient = new PlayerClient();
 const boardClient = new BoardClient();
@@ -33,30 +38,44 @@ export const PlayerBoardPage: React.FC = () => {
     const [balance, setBalance] = useState<number | null>(null);
     const [loadingPlayer, setLoadingPlayer] = useState(false);
     const [submitting, setSubmitting] = useState(false);
+    const [authError, setAuthError] = useState<string | null>(null);
+
+    // get logged-in user id from localStorage (set in Login page)
+    const CURRENT_PLAYER_ID = localStorage.getItem("userId") ?? "";
 
     const fields = selectedNumbers.length;
-    const valueDkk = fields * times * 20;
-    const canMakeBet = fields === fieldsCount && fields > 0 && times > 0;
+    const numbers = useMemo(
+        () => Array.from({ length: 16 }, (_, i) => i + 1),
+        []
+    );
+
+    // price for current selection
+    const basePrice =
+        (PRICE_PER_FIELDS[fields as FieldsCount] as number | undefined) ?? 0;
+    const valueDkk = basePrice * times;
+
+    const canMakeBet =
+        fields === fieldsCount && fields > 0 && times > 0 && basePrice > 0;
 
     const totalAmount = useMemo(
         () => bets.reduce((sum, b) => sum + b.amountDkk, 0),
         [bets]
     );
 
-    const numbers = useMemo(
-        () => Array.from({ length: 16 }, (_, i) => i + 1),
-        []
-    );
-
     // -------------------------------------------------
     // 1) Load player info from backend
     // -------------------------------------------------
     useEffect(() => {
+        if (!CURRENT_PLAYER_ID) {
+            setAuthError("No player is logged in. Please log in again.");
+            return;
+        }
+
         async function loadPlayer() {
             try {
                 setLoadingPlayer(true);
+                setAuthError(null);
 
-                // there is no getById, so I fetch all and find the current one
                 const players: PlayerResponse[] = await playerClient.getPlayers();
                 const current = players.find((p) => p.id === CURRENT_PLAYER_ID);
 
@@ -64,17 +83,18 @@ export const PlayerBoardPage: React.FC = () => {
                     setPlayerName(current.fullName);
                     setBalance(current.balance);
                 } else {
-                    console.warn("Player not found for id", CURRENT_PLAYER_ID);
+                    setAuthError("Player not found. Please log in again.");
                 }
             } catch (err) {
                 console.error("Failed to load player", err);
+                setAuthError("Failed to load player data.");
             } finally {
                 setLoadingPlayer(false);
             }
         }
 
         void loadPlayer();
-    }, []);
+    }, [CURRENT_PLAYER_ID]);
 
     // ---- number selection ----
     function toggleNumber(n: number) {
@@ -88,6 +108,7 @@ export const PlayerBoardPage: React.FC = () => {
         if (selectedNumbers.length >= fieldsCount) {
             return;
         }
+
         setSelectedNumbers((prev) => [...prev, n].sort((a, b) => a - b));
     }
 
@@ -127,6 +148,7 @@ export const PlayerBoardPage: React.FC = () => {
 
         setBets((prev) => [...prev, bet]);
 
+        // reset for next bet
         setSelectedNumbers([]);
         setTimes(1);
     }
@@ -143,6 +165,11 @@ export const PlayerBoardPage: React.FC = () => {
     // 2) Submit bets to backend
     // -------------------------------------------------
     async function handleSubmitBets() {
+        if (!CURRENT_PLAYER_ID) {
+            alert("No player id found. Please log in again.");
+            return;
+        }
+
         if (bets.length === 0 || submitting) return;
 
         try {
@@ -157,16 +184,14 @@ export const PlayerBoardPage: React.FC = () => {
             // POST /api/Board/purchase
             await boardClient.purchase(payload);
 
-            // Clear "cart"
+            // Clear current "cart"
             setBets([]);
 
-            // Update balance locally, or refetch from backend if you want
-            if (balance != null) {
-                setBalance(balance - totalAmount);
-            } else {
-                const players = await playerClient.getPlayers();
-                const current = players.find((p) => p.id === CURRENT_PLAYER_ID);
-                if (current) setBalance(current.balance);
+            // refetch balance from backend
+            const players: PlayerResponse[] = await playerClient.getPlayers();
+            const current = players.find((p) => p.id === CURRENT_PLAYER_ID);
+            if (current) {
+                setBalance(current.balance);
             }
         } catch (err) {
             console.error("Failed to submit bets", err);
@@ -186,6 +211,12 @@ export const PlayerBoardPage: React.FC = () => {
                     <div className="player-board-week">
                         Week 47, 2025 {/* later: get this from API */}
                     </div>
+
+                    {authError && (
+                        <p className="history-status history-status-error">
+                            {authError}
+                        </p>
+                    )}
 
                     {/* Board grid */}
                     <div className="player-board-card">
@@ -227,6 +258,7 @@ export const PlayerBoardPage: React.FC = () => {
                                     }
                                     onClick={() => {
                                         setFieldsCount(f as FieldsCount);
+                                        // trim selection if too many when lowering
                                         setSelectedNumbers((prev) => prev.slice(0, f));
                                     }}
                                 >
@@ -240,7 +272,10 @@ export const PlayerBoardPage: React.FC = () => {
                             <div className="player-board-times">
                                 <span className="player-board-meta-label">Times</span>
                                 <div className="player-board-times-control">
-                                    <button type="button" onClick={() => changeTimes(-1)}>
+                                    <button
+                                        type="button"
+                                        onClick={() => changeTimes(-1)}
+                                    >
                                         −
                                     </button>
                                     <input
@@ -249,7 +284,10 @@ export const PlayerBoardPage: React.FC = () => {
                                         value={times}
                                         onChange={handleTimesInput}
                                     />
-                                    <button type="button" onClick={() => changeTimes(1)}>
+                                    <button
+                                        type="button"
+                                        onClick={() => changeTimes(1)}
+                                    >
                                         +
                                     </button>
                                 </div>
@@ -257,7 +295,9 @@ export const PlayerBoardPage: React.FC = () => {
 
                             <div className="player-board-value">
                                 <span className="player-board-meta-label">Value</span>
-                                <div className="player-board-value-box">{valueDkk} DKK</div>
+                                <div className="player-board-value-box">
+                                    {valueDkk} DKK
+                                </div>
                             </div>
                         </div>
 

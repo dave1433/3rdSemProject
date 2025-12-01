@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
-//import { api } from "../../core/api"; //
 import "../../css/PlayerHistoryPage.css";
 import { PlayerPageHeader } from "../../components/PlayerPageHeader";
 import { PlayerMyRepeatsPage } from "./PlayerMyRepeatsPage";
+import { BoardClient, PlayerClient } from "../../../generated-ts-client";
+import type { Board, PlayerResponse } from "../../../generated-ts-client";
 
 type RecordStatus = "Pending" | "Complete";
 type HistoryTab = "all" | "myRepeats";
@@ -13,50 +14,100 @@ interface PlayerRecord {
     numbers: number[];
     times: number;
     status: RecordStatus;
+    totalAmountDkk: number;
 }
+
+// same mapping as your price table
+const PRICE_PER_FIELDS: Record<number, number> = {
+    5: 20,
+    6: 40,
+    7: 80,
+    8: 160,
+};
+
+const boardClient = new BoardClient();
+const playerClient = new PlayerClient();
 
 export const PlayerHistoryPage: React.FC = () => {
     const [activeTab, setActiveTab] = useState<HistoryTab>("all");
     const [records, setRecords] = useState<PlayerRecord[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [playerName, setPlayerName] = useState<string>("Player");
 
     // when clicking "Reorder" we remember that row and pass its numbers to MyRepeats
     const [selectedForRepeat, setSelectedForRepeat] =
         useState<PlayerRecord | null>(null);
 
-    useEffect(() => {
-        void loadRecords();
-    }, []);
+    const CURRENT_PLAYER_ID = localStorage.getItem("userId") ?? "";
 
-    async function loadRecords() {
+    useEffect(() => {
+        if (!CURRENT_PLAYER_ID) {
+            setError("No player is logged in. Please log in first.");
+            return;
+        }
+
+        // load history + player name in parallel
+        void (async () => {
+            await Promise.all([
+                loadRecords(CURRENT_PLAYER_ID),
+                loadPlayer(CURRENT_PLAYER_ID),
+            ]);
+        })();
+    }, [CURRENT_PLAYER_ID]);
+
+    async function loadPlayer(playerId: string) {
+        try {
+            const players: PlayerResponse[] = await playerClient.getPlayers();
+            const current = players.find((p) => p.id === playerId);
+            if (current) {
+                setPlayerName(current.fullName);
+            }
+        } catch (err) {
+            console.error("Failed to load player", err);
+            // we don't show an error banner just for the name; history is more important
+        }
+    }
+
+    async function loadRecords(playerId: string) {
         try {
             setLoading(true);
             setError(null);
 
-            // TODO: change "/MyRecords" to your real endpoint
-            //const res = await api.get<PlayerRecord[]>("/MyRecords");
-            //setRecords(res.data);
+            // GET /api/Board/player/{playerId}
+            const boards: Board[] = await boardClient.getByPlayer(playerId);
 
-            // For testing without backend, below are fake data. Remove the fake data after connecting to backend
-            const fake: PlayerRecord[] = [
-              {
-                id: "1",
-                createdAt: new Date().toISOString(),
-                numbers: [1, 4, 7, 9, 12],
-                times: 5,
-                status: "Complete",
-              },
-              {
-                id: "2",
-                createdAt: new Date().toISOString(),
-                numbers: [2, 5, 8, 13, 16],
-                times: 2,
-                status: "Pending",
-              },
-            ];
-            setRecords(fake);
+            const mapped: PlayerRecord[] = boards.map((b) => {
+                const fields = b.numbers.length;
 
+                // price stored in DB is total amount for that board
+                const totalAmount = b.price;
+
+                // derive "times" from total price and base price for this fieldsCount
+                const basePrice = PRICE_PER_FIELDS[fields] ?? 0;
+                const times =
+                    basePrice > 0 ? Math.max(1, Math.round(totalAmount / basePrice)) : 1;
+
+                // map transaction status -> Pending / Complete
+                const purchaseTx = b.transactions?.find(
+                    (t) => t.type === "purchase"
+                );
+                let status: RecordStatus = "Pending";
+                if (purchaseTx && purchaseTx.status.toLowerCase() === "approved") {
+                    status = "Complete";
+                }
+
+                return {
+                    id: b.id,
+                    createdAt: b.createdat ?? new Date().toISOString(),
+                    numbers: b.numbers,
+                    times,
+                    status,
+                    totalAmountDkk: totalAmount,
+                };
+            });
+
+            setRecords(mapped);
         } catch (err) {
             console.error(err);
             const message =
@@ -77,11 +128,17 @@ export const PlayerHistoryPage: React.FC = () => {
             return <p className="history-status">Loading…</p>;
         }
         if (error) {
-            return <p className="history-status history-status-error">{error}</p>;
+            return (
+                <p className="history-status history-status-error">
+                    {error}
+                </p>
+            );
         }
         if (!loading && !error && records.length === 0) {
             return (
-                <p className="history-status">You don’t have any history yet.</p>
+                <p className="history-status">
+                    You don’t have any history yet.
+                </p>
             );
         }
 
@@ -102,7 +159,6 @@ export const PlayerHistoryPage: React.FC = () => {
                     <tbody>
                     {records.map((r) => {
                         const fields = r.numbers.length;
-                        const totalAmount = fields * r.times * 20; // numbers * times * 20 DKK
 
                         return (
                             <tr key={r.id}>
@@ -110,18 +166,18 @@ export const PlayerHistoryPage: React.FC = () => {
                                 <td>{r.numbers.join(", ")}</td>
                                 <td>{fields}</td>
                                 <td>{r.times}</td>
-                                <td>{totalAmount} DKK</td>
+                                <td>{r.totalAmountDkk} DKK</td>
                                 <td>
-                                  <span
-                                      className={
-                                          "history-status-badge " +
-                                          (r.status === "Complete"
-                                              ? "history-status-badge--complete"
-                                              : "history-status-badge--pending")
-                                      }
-                                  >
-                                    {r.status}
-                                  </span>
+                    <span
+                        className={
+                            "history-status-badge " +
+                            (r.status === "Complete"
+                                ? "history-status-badge--complete"
+                                : "history-status-badge--pending")
+                        }
+                    >
+                      {r.status}
+                    </span>
                                 </td>
 
                                 <td className="history-actions-cell">
@@ -145,16 +201,14 @@ export const PlayerHistoryPage: React.FC = () => {
     function renderMyRepeatsTab() {
         return (
             <div className="history-myrepeats-wrapper">
-                <PlayerMyRepeatsPage
-                    initialNumbers={selectedForRepeat?.numbers}
-                />
+                <PlayerMyRepeatsPage initialNumbers={selectedForRepeat?.numbers} />
             </div>
         );
     }
 
     return (
         <div className="history-page">
-            <PlayerPageHeader userName="Mads Andersen" />
+            <PlayerPageHeader userName={playerName} />
 
             <div className="history-inner">
                 <h1 className="history-title">History</h1>

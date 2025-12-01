@@ -28,10 +28,17 @@ export const Login = () => {
             return;
         }
 
-        const data = await res.json();
+        //const data = await res.json();
 
+        //localStorage.setItem("token", data.token);
+        //localStorage.setItem("role", data.role);
+
+        const data: { token: string; role: number; userId: string } = await res.json();
+
+        // store everything we need
         localStorage.setItem("token", data.token);
-        localStorage.setItem("role", data.role);
+        localStorage.setItem("role", String(data.role));
+        localStorage.setItem("userId", data.userId); // PLAYER / USER ID
 
         if (data.role === 1) {
             navigate("/admin");

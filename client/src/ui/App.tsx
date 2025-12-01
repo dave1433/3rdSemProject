@@ -9,8 +9,8 @@ import { PlayerBoardPage } from "./pages/player/PlayerBoardPage";
 import { PlayerHistoryPage } from "./pages/player/PlayerHistoryPage";
 import { PlayerResultsPage } from "./pages/player/PlayerResultsPage";
 import { PlayerMyBalancePage } from "./pages/player/PlayerMyBalancePage";
-//import { Login } from "./pages/Login";
-//import { AdminDashboard } from "./pages/AdminDashboard";
+import { Login } from "./pages/Login";
+import { AdminDashboard } from "./pages/AdminDashboard";
 
 function PlayerRootLayout() {
     return <Outlet />;
@@ -18,13 +18,13 @@ function PlayerRootLayout() {
 
 const router = createBrowserRouter([
     // Redirect root → login
-    /*{ path: "/", element: <Navigate to="/login" replace /> },
+    { path: "/", element: <Navigate to="/login" replace /> },
 
     // Login page
     { path: "/login", element: <Login /> },
 
     // ADMIN
-    { path: "/admin", element: <AdminDashboard /> },*/
+    { path: "/admin", element: <AdminDashboard /> },
 
     // PLAYER
     { path: "/", element: <Navigate to="/player" replace /> },
