@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using api;
-using api.security;        // ✅ ADD THIS
+using api.security;
+using api.Services; // ✅ ADD THIS
 using efscaffold;
 using Microsoft.EntityFrameworkCore;
 
@@ -54,7 +55,7 @@ public class Program
         // TODO: register other services here, e.g.:
         // services.AddScoped<IPlayerService, PlayerService>();
         // services.AddScoped<IGameService, GameService>();
-        // services.AddScoped<IBoardService, BoardService>();
+        services.AddScoped<IBoardService, BoardService>();
         // services.AddScoped<IRepeatService, RepeatService>();
         // services.AddScoped<ITransactionService, TransactionService>();
     }
@@ -78,7 +79,7 @@ public class Program
 
         //when using proxy, below CORs settings are not needed
         app.UseCors("AllowFrontend");
-
+        app.GenerateApiClientsFromOpenApi("/../../client/src/generated-ts-client.ts").GetAwaiter().GetResult();
         app.MapControllers();
 
         app.Run();

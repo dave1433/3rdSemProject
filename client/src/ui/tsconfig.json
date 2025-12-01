@@ -1,6 +1,7 @@
 ﻿{
   "extends": "../../tsconfig.settings.json",
-  "include": ["**/*.ts", "**/*.tsx", "../vite-env.d.ts"],
+  "include": ["**/*.ts", "**/*.tsx", "../vite-env.d.ts", "../generated-ts-client.ts"],
+  "lib": ["DOM", "ES2017"],
   "references": [
     { "path": "../core"},
     { "path": "../utils"}

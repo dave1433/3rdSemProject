@@ -1,6 +1,11 @@
-import React, { useMemo, useState } from "react";
+import React, {useEffect, useMemo, useState} from "react";
 import "../../css/PlayerBoardPage.css";
 import { PlayerPageHeader } from "../../../ui/components/PlayerPageHeader.tsx";
+import { PlayerClient, BoardClient } from "../../../generated-ts-client";
+import type {
+    PlayerResponse,
+    CreateBoardRequest,
+} from "../../../generated-ts-client";
 
 type FieldsCount = 5 | 6 | 7 | 8;
 
@@ -12,21 +17,64 @@ interface BetPlacement {
     amountDkk: number;
 }
 
+// TODO: replace with real logged-in player id later
+const CURRENT_PLAYER_ID = "f2042bb0-c738-44ea-ac59-d8f18d9058f1";
+
+const playerClient = new PlayerClient();
+const boardClient = new BoardClient();
+
 export const PlayerBoardPage: React.FC = () => {
     const [fieldsCount, setFieldsCount] = useState<FieldsCount>(5);
     const [selectedNumbers, setSelectedNumbers] = useState<number[]>([]);
     const [times, setTimes] = useState<number>(1);
     const [bets, setBets] = useState<BetPlacement[]>([]);
 
+    const [playerName, setPlayerName] = useState<string>("Player");
+    const [balance, setBalance] = useState<number | null>(null);
+    const [loadingPlayer, setLoadingPlayer] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
+
     const fields = selectedNumbers.length;
     const valueDkk = fields * times * 20;
-    const canMakeBet =
-        fields === fieldsCount && fields > 0 && times > 0;
+    const canMakeBet = fields === fieldsCount && fields > 0 && times > 0;
 
     const totalAmount = useMemo(
         () => bets.reduce((sum, b) => sum + b.amountDkk, 0),
         [bets]
     );
+
+    const numbers = useMemo(
+        () => Array.from({ length: 16 }, (_, i) => i + 1),
+        []
+    );
+
+    // -------------------------------------------------
+    // 1) Load player info from backend
+    // -------------------------------------------------
+    useEffect(() => {
+        async function loadPlayer() {
+            try {
+                setLoadingPlayer(true);
+
+                // there is no getById, so I fetch all and find the current one
+                const players: PlayerResponse[] = await playerClient.getPlayers();
+                const current = players.find((p) => p.id === CURRENT_PLAYER_ID);
+
+                if (current) {
+                    setPlayerName(current.fullName);
+                    setBalance(current.balance);
+                } else {
+                    console.warn("Player not found for id", CURRENT_PLAYER_ID);
+                }
+            } catch (err) {
+                console.error("Failed to load player", err);
+            } finally {
+                setLoadingPlayer(false);
+            }
+        }
+
+        void loadPlayer();
+    }, []);
 
     // ---- number selection ----
     function toggleNumber(n: number) {
@@ -38,7 +86,7 @@ export const PlayerBoardPage: React.FC = () => {
         }
 
         if (selectedNumbers.length >= fieldsCount) {
-               return;
+            return;
         }
         setSelectedNumbers((prev) => [...prev, n].sort((a, b) => a - b));
     }
@@ -60,7 +108,7 @@ export const PlayerBoardPage: React.FC = () => {
         }
     }
 
-    // ---- actions ----
+    // ---- actions (left panel) ----
     function handleClearSelection() {
         setSelectedNumbers([]);
         setTimes(1);
@@ -79,7 +127,6 @@ export const PlayerBoardPage: React.FC = () => {
 
         setBets((prev) => [...prev, bet]);
 
-        // reset left panel for next bet
         setSelectedNumbers([]);
         setTimes(1);
     }
@@ -92,21 +139,46 @@ export const PlayerBoardPage: React.FC = () => {
         setBets([]);
     }
 
-    function handleSubmitBets() {
-        if (bets.length === 0) return;
+    // -------------------------------------------------
+    // 2) Submit bets to backend
+    // -------------------------------------------------
+    async function handleSubmitBets() {
+        if (bets.length === 0 || submitting) return;
 
-        // TODO: call backend to submit all bets
-        console.log("Submitting bets:", bets);
+        try {
+            setSubmitting(true);
+
+            const payload: CreateBoardRequest[] = bets.map((b) => ({
+                playerId: CURRENT_PLAYER_ID,
+                numbers: b.numbers,
+                times: b.times,
+            }));
+
+            // POST /api/Board/purchase
+            await boardClient.purchase(payload);
+
+            // Clear "cart"
+            setBets([]);
+
+            // Update balance locally, or refetch from backend if you want
+            if (balance != null) {
+                setBalance(balance - totalAmount);
+            } else {
+                const players = await playerClient.getPlayers();
+                const current = players.find((p) => p.id === CURRENT_PLAYER_ID);
+                if (current) setBalance(current.balance);
+            }
+        } catch (err) {
+            console.error("Failed to submit bets", err);
+            alert("Failed to submit bets. Please try again.");
+        } finally {
+            setSubmitting(false);
+        }
     }
-
-    const numbers = useMemo(
-        () => Array.from({ length: 16 }, (_, i) => i + 1),
-        []
-    );
 
     return (
         <div className="player-board-page">
-            <PlayerPageHeader userName="Mads Andersen" />
+            <PlayerPageHeader userName={playerName} />
 
             <main className="player-board-main">
                 {/* LEFT PANEL */}
@@ -155,7 +227,6 @@ export const PlayerBoardPage: React.FC = () => {
                                     }
                                     onClick={() => {
                                         setFieldsCount(f as FieldsCount);
-                                        // trim selection if too many when lowering
                                         setSelectedNumbers((prev) => prev.slice(0, f));
                                     }}
                                 >
@@ -169,10 +240,7 @@ export const PlayerBoardPage: React.FC = () => {
                             <div className="player-board-times">
                                 <span className="player-board-meta-label">Times</span>
                                 <div className="player-board-times-control">
-                                    <button
-                                        type="button"
-                                        onClick={() => changeTimes(-1)}
-                                    >
+                                    <button type="button" onClick={() => changeTimes(-1)}>
                                         −
                                     </button>
                                     <input
@@ -181,10 +249,7 @@ export const PlayerBoardPage: React.FC = () => {
                                         value={times}
                                         onChange={handleTimesInput}
                                     />
-                                    <button
-                                        type="button"
-                                        onClick={() => changeTimes(1)}
-                                    >
+                                    <button type="button" onClick={() => changeTimes(1)}>
                                         +
                                     </button>
                                 </div>
@@ -192,9 +257,7 @@ export const PlayerBoardPage: React.FC = () => {
 
                             <div className="player-board-value">
                                 <span className="player-board-meta-label">Value</span>
-                                <div className="player-board-value-box">
-                                    {valueDkk} DKK
-                                </div>
+                                <div className="player-board-value-box">{valueDkk} DKK</div>
                             </div>
                         </div>
 
@@ -228,8 +291,8 @@ export const PlayerBoardPage: React.FC = () => {
 
                         {bets.length === 0 ? (
                             <p className="player-board-bets-empty">
-                                No bets yet. Choose your numbers and click
-                                &nbsp;<strong>Make a bet</strong>.
+                                No bets yet. Choose your numbers and click{" "}
+                                <strong>Make a bet</strong>.
                             </p>
                         ) : (
                             <table className="player-board-bets-table">
@@ -269,13 +332,19 @@ export const PlayerBoardPage: React.FC = () => {
                             <div className="player-board-bets-total-label">Total</div>
 
                             <div className="player-board-bets-summary-row">
+                <span>
+                  Amount: <strong>{totalAmount} DKK</strong>
+                </span>
                                 <span>
-                                  Amount: <strong>{totalAmount} DKK</strong>
-                                </span>
-                                <span>
-                                  Balance: <strong>200 DKK</strong>
-                                {/* TODO: replace with real balance */}
-                                </span>
+                  Balance:{" "}
+                                    <strong>
+                    {loadingPlayer
+                        ? "…"
+                        : balance != null
+                            ? `${balance} DKK`
+                            : "N/A"}
+                  </strong>
+                </span>
                             </div>
 
                             <div className="player-board-bets-buttons">
@@ -291,13 +360,13 @@ export const PlayerBoardPage: React.FC = () => {
                                     type="button"
                                     className="player-board-bets-btn player-board-bets-btn--submit"
                                     onClick={handleSubmitBets}
-                                    disabled={bets.length === 0}
+                                    disabled={bets.length === 0 || submitting}
                                 >
-                                    Submit
+                                    {submitting ? "Submitting…" : "Submit"}
                                 </button>
                             </div>
                         </div>
-                        </div>
+                    </div>
                 </section>
             </main>
         </div>
