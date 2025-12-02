@@ -1,7 +1,7 @@
-import React, {useEffect, useMemo, useState} from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import "../../css/PlayerBoardPage.css";
-import { PlayerPageHeader } from "../../../ui/components/PlayerPageHeader.tsx";
-import { PlayerClient, BoardClient } from "../../../generated-ts-client";
+import { PlayerPageHeader } from "../../../ui/components/PlayerPageHeader";
+import { BoardClient, PlayerClient } from "../../../generated-ts-client";
 import type {
     PlayerResponse,
     CreateBoardRequest,
@@ -17,7 +17,7 @@ interface BetPlacement {
     amountDkk: number;
 }
 
-// price per board for each fields count (same as boardprice table)
+// Simple UI helper: price per board for each fieldsCount
 const PRICE_PER_FIELDS: Record<FieldsCount, number> = {
     5: 20,
     6: 40,
@@ -40,7 +40,6 @@ export const PlayerBoardPage: React.FC = () => {
     const [submitting, setSubmitting] = useState(false);
     const [authError, setAuthError] = useState<string | null>(null);
 
-    // get logged-in user id from localStorage (set in Login page)
     const CURRENT_PLAYER_ID = localStorage.getItem("userId") ?? "";
 
     const fields = selectedNumbers.length;
@@ -49,7 +48,6 @@ export const PlayerBoardPage: React.FC = () => {
         []
     );
 
-    // price for current selection
     const basePrice =
         (PRICE_PER_FIELDS[fields as FieldsCount] as number | undefined) ?? 0;
     const valueDkk = basePrice * times;
@@ -62,9 +60,7 @@ export const PlayerBoardPage: React.FC = () => {
         [bets]
     );
 
-    // -------------------------------------------------
-    // 1) Load player info from backend
-    // -------------------------------------------------
+    // Load player info
     useEffect(() => {
         if (!CURRENT_PLAYER_ID) {
             setAuthError("No player is logged in. Please log in again.");
@@ -147,8 +143,6 @@ export const PlayerBoardPage: React.FC = () => {
         };
 
         setBets((prev) => [...prev, bet]);
-
-        // reset for next bet
         setSelectedNumbers([]);
         setTimes(1);
     }
@@ -161,15 +155,12 @@ export const PlayerBoardPage: React.FC = () => {
         setBets([]);
     }
 
-    // -------------------------------------------------
-    // 2) Submit bets to backend
-    // -------------------------------------------------
+    // Submit bets to backend
     async function handleSubmitBets() {
         if (!CURRENT_PLAYER_ID) {
             alert("No player id found. Please log in again.");
             return;
         }
-
         if (bets.length === 0 || submitting) return;
 
         try {
@@ -181,13 +172,10 @@ export const PlayerBoardPage: React.FC = () => {
                 times: b.times,
             }));
 
-            // POST /api/Board/purchase
             await boardClient.purchase(payload);
 
-            // Clear current "cart"
             setBets([]);
 
-            // refetch balance from backend
             const players: PlayerResponse[] = await playerClient.getPlayers();
             const current = players.find((p) => p.id === CURRENT_PLAYER_ID);
             if (current) {
@@ -213,9 +201,7 @@ export const PlayerBoardPage: React.FC = () => {
                     </div>
 
                     {authError && (
-                        <p className="history-status history-status-error">
-                            {authError}
-                        </p>
+                        <p className="history-status history-status-error">{authError}</p>
                     )}
 
                     {/* Board grid */}
@@ -258,7 +244,6 @@ export const PlayerBoardPage: React.FC = () => {
                                     }
                                     onClick={() => {
                                         setFieldsCount(f as FieldsCount);
-                                        // trim selection if too many when lowering
                                         setSelectedNumbers((prev) => prev.slice(0, f));
                                     }}
                                 >
@@ -272,10 +257,7 @@ export const PlayerBoardPage: React.FC = () => {
                             <div className="player-board-times">
                                 <span className="player-board-meta-label">Times</span>
                                 <div className="player-board-times-control">
-                                    <button
-                                        type="button"
-                                        onClick={() => changeTimes(-1)}
-                                    >
+                                    <button type="button" onClick={() => changeTimes(-1)}>
                                         −
                                     </button>
                                     <input
@@ -284,10 +266,7 @@ export const PlayerBoardPage: React.FC = () => {
                                         value={times}
                                         onChange={handleTimesInput}
                                     />
-                                    <button
-                                        type="button"
-                                        onClick={() => changeTimes(1)}
-                                    >
+                                    <button type="button" onClick={() => changeTimes(1)}>
                                         +
                                     </button>
                                 </div>
@@ -295,9 +274,7 @@ export const PlayerBoardPage: React.FC = () => {
 
                             <div className="player-board-value">
                                 <span className="player-board-meta-label">Value</span>
-                                <div className="player-board-value-box">
-                                    {valueDkk} DKK
-                                </div>
+                                <div className="player-board-value-box">{valueDkk} DKK</div>
                             </div>
                         </div>
 

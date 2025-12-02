@@ -3,7 +3,7 @@ import "../../css/PlayerHistoryPage.css";
 import { PlayerPageHeader } from "../../components/PlayerPageHeader";
 import { PlayerMyRepeatsPage } from "./PlayerMyRepeatsPage";
 import { BoardClient, PlayerClient } from "../../../generated-ts-client";
-import type { Board, PlayerResponse } from "../../../generated-ts-client";
+import type { BoardDto, PlayerResponse } from "../../../generated-ts-client";
 
 type RecordStatus = "Pending" | "Complete";
 type HistoryTab = "all" | "myRepeats";
@@ -17,14 +17,6 @@ interface PlayerRecord {
     totalAmountDkk: number;
 }
 
-// same mapping as your price table
-const PRICE_PER_FIELDS: Record<number, number> = {
-    5: 20,
-    6: 40,
-    7: 80,
-    8: 160,
-};
-
 const boardClient = new BoardClient();
 const playerClient = new PlayerClient();
 
@@ -35,7 +27,6 @@ export const PlayerHistoryPage: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [playerName, setPlayerName] = useState<string>("Player");
 
-    // when clicking "Reorder" we remember that row and pass its numbers to MyRepeats
     const [selectedForRepeat, setSelectedForRepeat] =
         useState<PlayerRecord | null>(null);
 
@@ -47,7 +38,6 @@ export const PlayerHistoryPage: React.FC = () => {
             return;
         }
 
-        // load history + player name in parallel
         void (async () => {
             await Promise.all([
                 loadRecords(CURRENT_PLAYER_ID),
@@ -65,7 +55,6 @@ export const PlayerHistoryPage: React.FC = () => {
             }
         } catch (err) {
             console.error("Failed to load player", err);
-            // we don't show an error banner just for the name; history is more important
         }
     }
 
@@ -74,21 +63,15 @@ export const PlayerHistoryPage: React.FC = () => {
             setLoading(true);
             setError(null);
 
-            // GET /api/Board/player/{playerId}
-            const boards: Board[] = await boardClient.getByPlayer(playerId);
+            const boards: BoardDto[] = await boardClient.getByPlayer(playerId);
 
             const mapped: PlayerRecord[] = boards.map((b) => {
-                const fields = b.numbers.length;
+               // const fields = b.numbers.length;
 
-                // price stored in DB is total amount for that board
+                // we now TRUST backend: b.price is total, b.times is times
                 const totalAmount = b.price;
+                const times = b.times ?? 1;
 
-                // derive "times" from total price and base price for this fieldsCount
-                const basePrice = PRICE_PER_FIELDS[fields] ?? 0;
-                const times =
-                    basePrice > 0 ? Math.max(1, Math.round(totalAmount / basePrice)) : 1;
-
-                // map transaction status -> Pending / Complete
                 const purchaseTx = b.transactions?.find(
                     (t) => t.type === "purchase"
                 );
@@ -99,7 +82,7 @@ export const PlayerHistoryPage: React.FC = () => {
 
                 return {
                     id: b.id,
-                    createdAt: b.createdat ?? new Date().toISOString(),
+                    createdAt: b.createdAt ?? new Date().toISOString(),
                     numbers: b.numbers,
                     times,
                     status,
@@ -179,7 +162,6 @@ export const PlayerHistoryPage: React.FC = () => {
                       {r.status}
                     </span>
                                 </td>
-
                                 <td className="history-actions-cell">
                                     <button
                                         type="button"

@@ -25,6 +25,8 @@ public partial class User
 
     public virtual ICollection<Board> Boards { get; set; } = new List<Board>();
 
+    public virtual ICollection<Player> Players { get; set; } = new List<Player>();
+
     public virtual ICollection<Repeat> Repeats { get; set; } = new List<Repeat>();
 
     public virtual ICollection<Transaction> TransactionPlayers { get; set; } = new List<Transaction>();

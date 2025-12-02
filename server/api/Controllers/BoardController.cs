@@ -1,27 +1,36 @@
-using api.dtos;
-using api.dtos.Responses;
+using api.DTOs.Requests;
+using api.DTOs.Responses;
 using api.Services;
-using efscaffold.Entities;
 using Microsoft.AspNetCore.Mvc;
 
 namespace api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class BoardController(IBoardService boardService) : ControllerBase
+public class BoardController : ControllerBase
 {
-    [HttpGet("player/{playerId}")]
-    public async Task<ActionResult<List<BoardDtos.BoardDto>>> GetByPlayer(string playerId)
+    private readonly IBoardService _boardService;
+
+    public BoardController(IBoardService boardService)
     {
-        var boards = await boardService.GetByPlayerAsync(playerId);
+        _boardService = boardService;
+    }
+
+    [HttpGet("player/{playerId}")]
+    public async Task<ActionResult<List<BoardDto>>> GetByPlayer(string playerId)
+    {
+        var boards = await _boardService.GetByPlayerAsync(playerId);
         return Ok(boards);
     }
 
     [HttpPost("purchase")]
-    public async Task<ActionResult<List<BoardDtos.BoardDto>>> Purchase(
-        [FromBody] List<CreateBoardRequestDto> dtos)
+    public async Task<ActionResult<List<BoardDto>>> Purchase(
+        [FromBody] List<CreateBoardRequest> dtos)
     {
-        var result = await boardService.CreateBetsAsync(dtos);
+        if (dtos == null || dtos.Count == 0)
+            return BadRequest("No boards to purchase.");
+
+        var result = await _boardService.CreateBetsAsync(dtos);
         return Ok(result);
     }
 }

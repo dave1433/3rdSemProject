@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using efscaffold.Entities;
 
-namespace efscaffold;
+namespace Infrastructure.Postgres.Scaffolding;
 
 public partial class MyDbContext : DbContext
 {
@@ -17,6 +17,8 @@ public partial class MyDbContext : DbContext
     public virtual DbSet<Boardprice> Boardprices { get; set; }
 
     public virtual DbSet<Game> Games { get; set; }
+
+    public virtual DbSet<Player> Players { get; set; }
 
     public virtual DbSet<Repeat> Repeats { get; set; }
 
@@ -45,6 +47,9 @@ public partial class MyDbContext : DbContext
             entity.Property(e => e.Playerid).HasColumnName("playerid");
             entity.Property(e => e.Price).HasColumnName("price");
             entity.Property(e => e.Repeatid).HasColumnName("repeatid");
+            entity.Property(e => e.Times)
+                .HasDefaultValue(1)
+                .HasColumnName("times");
 
             entity.HasOne(d => d.Game).WithMany(p => p.Boards)
                 .HasForeignKey(d => d.Gameid)
@@ -86,6 +91,33 @@ public partial class MyDbContext : DbContext
             entity.Property(e => e.Weeknumber).HasColumnName("weeknumber");
             entity.Property(e => e.Winningnumbers).HasColumnName("winningnumbers");
             entity.Property(e => e.Year).HasColumnName("year");
+        });
+
+        modelBuilder.Entity<Player>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("player_pkey");
+
+            entity.ToTable("player", "deadpigeons");
+
+            entity.HasIndex(e => e.Email, "player_email_key").IsUnique();
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Active)
+                .HasDefaultValue(false)
+                .HasColumnName("active");
+            entity.Property(e => e.Balance)
+                .HasDefaultValue(0)
+                .HasColumnName("balance");
+            entity.Property(e => e.Createdat)
+                .HasDefaultValueSql("now()")
+                .HasColumnName("createdat");
+            entity.Property(e => e.Email).HasColumnName("email");
+            entity.Property(e => e.Fullname).HasColumnName("fullname");
+            entity.Property(e => e.Userid).HasColumnName("userid");
+
+            entity.HasOne(d => d.User).WithMany(p => p.Players)
+                .HasForeignKey(d => d.Userid)
+                .HasConstraintName("player_userid_fkey");
         });
 
         modelBuilder.Entity<Repeat>(entity =>

@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using api.security;  
+using Infrastructure.Postgres.Scaffolding; 
 
 
 namespace api.dtos

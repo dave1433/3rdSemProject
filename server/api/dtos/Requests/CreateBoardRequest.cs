@@ -1,17 +1,18 @@
 using System.ComponentModel.DataAnnotations;
-//for player to create a new board
-public record CreateBoardRequestDto
+
+namespace api.DTOs.Requests;
+
+public class CreateBoardRequest
 {
     [Required]
     public string PlayerId { get; set; } = null!;
 
-    // 5–8 numbers, 1–16. We validate the length here
+    // 5–8 numbers from 1–16
     [Required]
     [MinLength(5)]
     [MaxLength(8)]
-    public int[] Numbers { get; set; } = Array.Empty<int>();
+    public List<int> Numbers { get; set; } = new();
 
-    // How many identical boards the player buys
     [Range(1, int.MaxValue)]
     public int Times { get; set; } = 1;
 }

@@ -1,14 +1,10 @@
-using api.dtos;
-using api.dtos.Responses;
-using efscaffold.Entities;
+using api.DTOs.Requests;
+using api.DTOs.Responses;
 
 namespace api.Services;
 
 public interface IBoardService
 {
-    /// Returns all boards for a given player, newest first.
-    Task<List<BoardDtos.BoardDto>> GetByPlayerAsync(string playerId);
-
-    /// Creates one or more bets (boards + transactions) for the given player(s).
-    Task<List<BoardDtos.BoardDto>> CreateBetsAsync(IEnumerable<CreateBoardRequestDto> dtos);
+    Task<List<BoardDto>> GetByPlayerAsync(string playerId);
+    Task<List<BoardDto>> CreateBetsAsync(IEnumerable<CreateBoardRequest> dtos);
 }
