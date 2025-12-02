@@ -1,21 +1,23 @@
-﻿FROM node:22-alpine AS build
+﻿# 1. Create a stage for building the application.
+FROM node:22-alpine AS build
 WORKDIR /app
-COPY package.json ./
-RUN npm install
+# 2. Copy package.json and package-lock.json
+COPY package*.json ./
+# 3. Install dependencies
+RUN npm clean-install
+# Copy the rest of the application source code
 COPY . .
+# 4. Build the React application
 RUN npm run build
 
-FROM nginx:alpine
-
-# Copy frontend build output
+# 5. Stage 2: Serve the React app using nginx
+FROM nginx:alpine AS final
+# 6. Custom nginx config
+COPY nginx.conf.template /
+# 7. Copy the build output from the first stage to nginx's html directory
 COPY --from=build /app/dist /usr/share/nginx/html
-
-# Copy nginx template (with variables like $BACKEND_URL)
-COPY nginx.conf.template /etc/nginx/templates/default.conf.template
-
-# Enable environment variable substitution
-RUN apk add --no-cache gettext
-
-EXPOSE 8080
-
-CMD ["/bin/sh", "-c", "envsubst < /etc/nginx/templates/default.conf.template > /etc/nginx/conf.d/default.conf && exec nginx -g 'daemon off;'"]
+# 8. Expose port 80
+EXPOSE 80
+# 9. Start nginx
+CMD envsubst '$BACKEND_URL' < /nginx.conf.template > /etc/nginx/conf.d/default.conf \
+  && nginx -g 'daemon off;'

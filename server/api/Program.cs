@@ -80,15 +80,6 @@ public class Program
         app.UseCors("AllowFrontend");
 
         app.MapControllers();
-app.GenerateApiClientsFromOpenApi("/../../client/src/generated-ts-client.ts").GetAwaiter().GetResult();
-
-app.UseCors();
-app.UseOpenApi();
-app.UseSwaggerUi();
-
-app.MapGet("/api/health", () => new { status = "ok" });
-
-app.MapControllers();
 
         app.Run();
     }

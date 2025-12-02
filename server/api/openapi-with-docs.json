@@ -7,532 +7,18 @@
     "version": "1.0.0"
   },
   "paths": {
-    "/api/admin/games": {
-      "get": {
-        "tags": [
-          "Games"
-        ],
-        "operationId": "Games_GetAll",
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/GameResponse"
-                  }
-                }
-              }
-            }
-          }
-        }
-      },
+    "/api/Player": {
       "post": {
         "tags": [
-          "Games"
+          "Player"
         ],
-        "operationId": "Games_Create",
+        "operationId": "Player_CreatePlayer",
         "requestBody": {
-          "x-name": "dto",
+          "x-name": "request",
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateGameDto"
-              }
-            }
-          },
-          "required": true,
-          "x-position": 1
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/GameResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/admin/games/{id}": {
-      "get": {
-        "tags": [
-          "Games"
-        ],
-        "operationId": "Games_GetById",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "x-position": 1
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/GameResponse"
-                }
-              }
-            }
-          }
-        }
-      },
-      "put": {
-        "tags": [
-          "Games"
-        ],
-        "operationId": "Games_Update",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "x-position": 1
-          }
-        ],
-        "requestBody": {
-          "x-name": "dto",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateGameDto"
-              }
-            }
-          },
-          "required": true,
-          "x-position": 2
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/GameResponse"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "Games"
-        ],
-        "operationId": "Games_Delete",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "x-position": 1
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/octet-stream": {
-                "schema": {
-                  "type": "string",
-                  "format": "binary"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/player/boards": {
-      "get": {
-        "tags": [
-          "MyBoards"
-        ],
-        "operationId": "MyBoards_GetMyBoards",
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/BoardResponse"
-                  }
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "MyBoards"
-        ],
-        "operationId": "MyBoards_Create",
-        "requestBody": {
-          "x-name": "dto",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateBoardDto"
-              }
-            }
-          },
-          "required": true,
-          "x-position": 1
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BoardResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/player/repeats": {
-      "get": {
-        "tags": [
-          "MyRepeats"
-        ],
-        "operationId": "MyRepeats_GetMyRepeats",
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/RepeatResponse"
-                  }
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "MyRepeats"
-        ],
-        "operationId": "MyRepeats_Create",
-        "requestBody": {
-          "x-name": "dto",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateRepeatDto"
-              }
-            }
-          },
-          "required": true,
-          "x-position": 1
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RepeatResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/player/repeats/{id}": {
-      "put": {
-        "tags": [
-          "MyRepeats"
-        ],
-        "operationId": "MyRepeats_Update",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "x-position": 1
-          }
-        ],
-        "requestBody": {
-          "x-name": "dto",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateRepeatDto"
-              }
-            }
-          },
-          "required": true,
-          "x-position": 2
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RepeatResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/player/transactions": {
-      "get": {
-        "tags": [
-          "MyTransactions"
-        ],
-        "operationId": "MyTransactions_GetMyTransactions",
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/TransactionResponse"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/player/transactions/deposit": {
-      "post": {
-        "tags": [
-          "MyTransactions"
-        ],
-        "operationId": "MyTransactions_CreateDeposit",
-        "requestBody": {
-          "x-name": "dto",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateTransactionDto"
-              }
-            }
-          },
-          "required": true,
-          "x-position": 1
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TransactionResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/admin/boards": {
-      "get": {
-        "tags": [
-          "Boards"
-        ],
-        "operationId": "Boards_GetAll",
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/BoardResponse"
-                  }
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "Boards"
-        ],
-        "operationId": "Boards_Create",
-        "requestBody": {
-          "x-name": "dto",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateBoardDto"
-              }
-            }
-          },
-          "required": true,
-          "x-position": 1
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BoardResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/admin/boards/{id}": {
-      "get": {
-        "tags": [
-          "Boards"
-        ],
-        "operationId": "Boards_GetById",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "x-position": 1
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BoardResponse"
-                }
-              }
-            }
-          }
-        }
-      },
-      "put": {
-        "tags": [
-          "Boards"
-        ],
-        "operationId": "Boards_Update",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "x-position": 1
-          }
-        ],
-        "requestBody": {
-          "x-name": "dto",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateBoardDto"
-              }
-            }
-          },
-          "required": true,
-          "x-position": 2
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BoardResponse"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "Boards"
-        ],
-        "operationId": "Boards_Delete",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "x-position": 1
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/octet-stream": {
-                "schema": {
-                  "type": "string",
-                  "format": "binary"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/admin/players": {
-      "post": {
-        "tags": [
-          "Players"
-        ],
-        "operationId": "Players_Create",
-        "requestBody": {
-          "x-name": "dto",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreatePlayerDto"
+                "$ref": "#/components/schemas/CreatePlayerRequest"
               }
             }
           },
@@ -551,86 +37,12 @@
             }
           }
         }
-      }
-    },
-    "/api/admin/players/{id}": {
-      "put": {
-        "tags": [
-          "Players"
-        ],
-        "operationId": "Players_Update",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "x-position": 1
-          }
-        ],
-        "requestBody": {
-          "x-name": "dto",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdatePlayerDto"
-              }
-            }
-          },
-          "required": true,
-          "x-position": 2
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UpdatePlayerResponse"
-                }
-              }
-            }
-          }
-        }
       },
       "get": {
         "tags": [
-          "Players"
+          "Player"
         ],
-        "operationId": "Players_GetById",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "x-position": 1
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PlayerResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/admin/repeats": {
-      "get": {
-        "tags": [
-          "Repeats"
-        ],
-        "operationId": "Repeats_GetAll",
+        "operationId": "Player_GetPlayers",
         "responses": {
           "200": {
             "description": "",
@@ -639,38 +51,8 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/RepeatResponse"
+                    "$ref": "#/components/schemas/PlayerResponse"
                   }
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "Repeats"
-        ],
-        "operationId": "Repeats_Create",
-        "requestBody": {
-          "x-name": "dto",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateRepeatDto"
-              }
-            }
-          },
-          "required": true,
-          "x-position": 1
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RepeatResponse"
                 }
               }
             }
@@ -678,93 +60,12 @@
         }
       }
     },
-    "/api/admin/repeats/{id}": {
+    "/api/Health": {
       "get": {
         "tags": [
-          "Repeats"
+          "Health"
         ],
-        "operationId": "Repeats_GetById",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "x-position": 1
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RepeatResponse"
-                }
-              }
-            }
-          }
-        }
-      },
-      "put": {
-        "tags": [
-          "Repeats"
-        ],
-        "operationId": "Repeats_Update",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "x-position": 1
-          }
-        ],
-        "requestBody": {
-          "x-name": "dto",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateRepeatDto"
-              }
-            }
-          },
-          "required": true,
-          "x-position": 2
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RepeatResponse"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "Repeats"
-        ],
-        "operationId": "Repeats_Delete",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "x-position": 1
-          }
-        ],
+        "operationId": "Health_GetHealth",
         "responses": {
           "200": {
             "description": "",
@@ -780,39 +81,18 @@
         }
       }
     },
-    "/api/admin/transactions": {
-      "get": {
-        "tags": [
-          "Transactions"
-        ],
-        "operationId": "Transactions_GetAll",
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/TransactionResponse"
-                  }
-                }
-              }
-            }
-          }
-        }
-      },
+    "/api/admin/games/draw": {
       "post": {
         "tags": [
-          "Transactions"
+          "AdminGame"
         ],
-        "operationId": "Transactions_Create",
+        "operationId": "AdminGame_EnterWinningNumbers",
         "requestBody": {
-          "x-name": "dto",
+          "x-name": "request",
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateTransactionDto"
+                "$ref": "#/components/schemas/CreateGameDrawRequest"
               }
             }
           },
@@ -825,7 +105,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/TransactionResponse"
+                  "$ref": "#/components/schemas/GameResponse"
                 }
               }
             }
@@ -833,21 +113,30 @@
         }
       }
     },
-    "/api/admin/transactions/{id}": {
+    "/api/admin/games/draw/status": {
       "get": {
         "tags": [
-          "Transactions"
+          "AdminGame"
         ],
-        "operationId": "Transactions_GetById",
+        "operationId": "AdminGame_IsWeekLocked",
         "parameters": [
           {
-            "name": "id",
-            "in": "path",
-            "required": true,
+            "name": "year",
+            "in": "query",
             "schema": {
-              "type": "string"
+              "type": "integer",
+              "format": "int32"
             },
             "x-position": 1
+          },
+          {
+            "name": "weekNumber",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "x-position": 2
           }
         ],
         "responses": {
@@ -856,37 +145,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/TransactionResponse"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "Transactions"
-        ],
-        "operationId": "Transactions_Delete",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "x-position": 1
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/octet-stream": {
-                "schema": {
-                  "type": "string",
-                  "format": "binary"
+                  "type": "boolean"
                 }
               }
             }
@@ -894,34 +153,46 @@
         }
       }
     },
-    "/api/admin/transactions/{id}/approve": {
-      "put": {
+    "/api/admin/games/draw/history": {
+      "get": {
         "tags": [
-          "Transactions"
+          "AdminGame"
         ],
-        "operationId": "Transactions_Approve",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "x-position": 1
+        "operationId": "AdminGame_GetDrawHistory",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/GameHistoryResponse"
+                  }
+                }
+              }
+            }
           }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "tags": [
+          "Auth"
         ],
+        "operationId": "Auth_Login",
         "requestBody": {
-          "x-name": "dto",
+          "x-name": "request",
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/UpdateTransactionDto"
+                "$ref": "#/components/schemas/LoginRequest"
               }
             }
           },
           "required": true,
-          "x-position": 2
+          "x-position": 1
         },
         "responses": {
           "200": {
@@ -929,7 +200,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/TransactionResponse"
+                  "$ref": "#/components/schemas/LoginResponse"
                 }
               }
             }
@@ -940,6 +211,50 @@
   },
   "components": {
     "schemas": {
+      "PlayerResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "fullName": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "active": {
+            "type": "boolean"
+          },
+          "balance": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "CreatePlayerRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "fullName": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          },
+          "role": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "GameResponse": {
         "type": "object",
         "additionalProperties": false,
@@ -955,19 +270,8 @@
             "type": "integer",
             "format": "int32"
           },
-          "startAt": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          },
-          "joinDeadline": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          },
           "winningNumbers": {
             "type": "array",
-            "nullable": true,
             "items": {
               "type": "integer",
               "format": "int32"
@@ -975,12 +279,11 @@
           },
           "createdAt": {
             "type": "string",
-            "format": "date-time",
-            "nullable": true
+            "format": "date-time"
           }
         }
       },
-      "CreateGameDto": {
+      "CreateGameDrawRequest": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
@@ -992,379 +295,68 @@
             "type": "integer",
             "format": "int32"
           },
-          "startAt": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          },
-          "joinDeadline": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
+          "winningNumbers": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            }
           }
         }
       },
-      "UpdateGameDto": {
+      "GameHistoryResponse": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
-          "startAt": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
+          "id": {
+            "type": "string"
           },
-          "joinDeadline": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
+          "year": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "weekNumber": {
+            "type": "integer",
+            "format": "int32"
           },
           "winningNumbers": {
             "type": "array",
-            "nullable": true,
             "items": {
               "type": "integer",
               "format": "int32"
             }
-          }
-        }
-      },
-      "BoardResponse": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "playerId": {
-            "type": "string"
-          },
-          "gameId": {
-            "type": "string"
-          },
-          "numbers": {
-            "type": "array",
-            "items": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          "price": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "repeatId": {
-            "type": "string",
-            "nullable": true
           },
           "createdAt": {
             "type": "string",
-            "format": "date-time",
-            "nullable": true
-          },
-          "isWinningBoard": {
-            "type": "boolean"
+            "format": "date-time"
           }
         }
       },
-      "CreateBoardDto": {
+      "LoginResponse": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
-          "playerId": {
+          "token": {
             "type": "string"
           },
-          "gameId": {
-            "type": "string"
-          },
-          "numbers": {
-            "type": "array",
-            "items": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          "repeatId": {
-            "type": "string",
-            "nullable": true
-          }
-        }
-      },
-      "RepeatResponse": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "playerId": {
-            "type": "string"
-          },
-          "numbers": {
-            "type": "array",
-            "items": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          "price": {
+          "role": {
             "type": "integer",
             "format": "int32"
           },
-          "remainingWeeks": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "optOut": {
-            "type": "boolean"
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
+          "userId": {
+            "type": "string"
           }
         }
       },
-      "CreateRepeatDto": {
+      "LoginRequest": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
-          "playerId": {
-            "type": "string"
-          },
-          "numbers": {
-            "type": "array",
-            "items": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          "remainingWeeks": {
-            "type": "integer",
-            "format": "int32"
-          }
-        }
-      },
-      "UpdateRepeatDto": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "numbers": {
-            "type": "array",
-            "nullable": true,
-            "items": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          "remainingWeeks": {
-            "type": "integer",
-            "format": "int32",
-            "nullable": true
-          },
-          "optOut": {
-            "type": "boolean",
-            "nullable": true
-          }
-        }
-      },
-      "TransactionResponse": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "playerId": {
-            "type": "string"
-          },
-          "type": {
-            "type": "string"
-          },
-          "amount": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "boardId": {
-            "type": "string",
-            "nullable": true
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          },
-          "processedBy": {
-            "type": "string",
-            "nullable": true
-          },
-          "processedAt": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          },
-          "isPending": {
-            "type": "boolean"
-          }
-        }
-      },
-      "CreateTransactionDto": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "playerId": {
-            "type": "string"
-          },
-          "type": {
-            "type": "string"
-          },
-          "amount": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "boardId": {
-            "type": "string",
-            "nullable": true
-          }
-        }
-      },
-      "UpdateBoardDto": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "numbers": {
-            "type": "array",
-            "nullable": true,
-            "items": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          "repeatId": {
-            "type": "string",
-            "nullable": true
-          }
-        }
-      },
-      "PlayerResponse": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "fullName": {
-            "type": "string"
-          },
-          "phone": {
-            "type": "string",
-            "nullable": true
-          },
           "email": {
-            "type": "string",
-            "nullable": true
-          },
-          "active": {
-            "type": "boolean"
-          },
-          "balance": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          }
-        }
-      },
-      "CreatePlayerDto": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "id": {
             "type": "string"
           },
-          "fullName": {
+          "password": {
             "type": "string"
-          },
-          "phone": {
-            "type": "string",
-            "nullable": true
-          },
-          "email": {
-            "type": "string",
-            "nullable": true
-          },
-          "active": {
-            "type": "boolean"
-          },
-          "balance": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          }
-        }
-      },
-      "UpdatePlayerResponse": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "fullName": {
-            "type": "string"
-          },
-          "phone": {
-            "type": "string",
-            "nullable": true
-          },
-          "email": {
-            "type": "string",
-            "nullable": true
-          },
-          "active": {
-            "type": "boolean"
-          },
-          "balance": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "updatedAt": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          }
-        }
-      },
-      "UpdatePlayerDto": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "fullName": {
-            "type": "string"
-          },
-          "phone": {
-            "type": "string",
-            "nullable": true
-          },
-          "email": {
-            "type": "string",
-            "nullable": true
-          }
-        }
-      },
-      "UpdateTransactionDto": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "processedBy": {
-            "type": "string",
-            "nullable": true
           }
         }
       }

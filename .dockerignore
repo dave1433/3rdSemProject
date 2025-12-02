@@ -1,0 +1,22 @@
+# Node dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+output/
+
+# Git / version control
+.git/
+.gitignore
+
+# Editor config
+.vscode/
+.DS_Store
+
+# System files
+*.log
+*.tmp
+
+# Optional: ignore tests
+tests/
