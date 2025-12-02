@@ -8,7 +8,7 @@ public class AppSettings
     [MinLength(1)]
     public required string DefaultConnection { get; init; }
 
-    [Required]
+    
     [MinLength(1)]
     public required string JwtSecret { get; init; }
 }

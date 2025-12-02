@@ -1,35 +1,24 @@
-﻿FROM mcr.microsoft.com/dotnet/sdk:9.0-alpine AS build
+﻿FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
-# Copy solution file if it exists (OPTIONAL)
-# COPY *.sln ./
-
-# Copy project files
-COPY api/api.csproj api/
-COPY efscaffold/efscaffold.csproj efscaffold/
-
-# Restore dependencies
+COPY ./api/api.csproj api/
+COPY ./efscaffold/efscaffold.csproj efscaffold/
 RUN dotnet restore api/api.csproj
 
-# Copy full source
-COPY api/ api/
-COPY efscaffold/ efscaffold/
+COPY ./api api/
+COPY ./efscaffold efscaffold/
 
-# Publish
 RUN dotnet publish api/api.csproj \
     -c Release \
     -o /app/publish \
-    --runtime linux-musl-x64 \
-    --self-contained true \
-    /p:PublishSingleFile=true
+    --no-self-contained
 
-# Runtime image
-FROM mcr.microsoft.com/dotnet/runtime-deps:9.0-alpine
+FROM mcr.microsoft.com/dotnet/aspnet:9.0
+
 WORKDIR /app
-
 COPY --from=build /app/publish .
 
 ENV ASPNETCORE_URLS=http://0.0.0.0:8080
 EXPOSE 8080
 
-ENTRYPOINT ["./api"]
+ENTRYPOINT ["dotnet", "api.dll"]

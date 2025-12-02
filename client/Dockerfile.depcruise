@@ -1,0 +1,19 @@
+FROM node:20-alpine
+
+RUN apk add --no-cache graphviz
+
+WORKDIR /app
+
+# copy package files (these are relative to the build context ./client)
+COPY package.json ./
+COPY package-lock.json ./  # harmless if file doesn't exist; Docker will ignore
+
+RUN npm ci --prefer-offline --no-audit --no-fund
+
+# copy only the source we analyse
+COPY src ./src
+
+# create an output dir inside container; graph will be written there
+VOLUME ["/output"]
+
+CMD ["sh", "-c", "npx depcruise src --include-only '^src' --output-type dot | dot -T svg > /output/dependency-graph.svg && echo 'Dependency graph generated at /output/dependency-graph.svg'"]

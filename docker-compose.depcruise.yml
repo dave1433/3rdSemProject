@@ -1,0 +1,11 @@
+version: "3.9"
+
+services:
+  depcruise:
+    build:
+      context: ./client              # <- small, safe build context
+      dockerfile: Dockerfile.depcruise
+    image: depcruise:local
+    volumes:
+      - ./output:/output            # <-- map ONLY a host output folder
+    # don't publish ports — this is a build-only utility
