@@ -65,6 +65,7 @@ create table deadpigeons.board (
                                        on delete cascade,
                                    numbers    int[] not null,           -- 5–8 numbers (1–16)
                                    price      int not null,             -- from boardprice
+                                   times      int not null default 1,
                                    repeatId   text,                      -- links to repeat table
                                    createdAt  timestamptz default now()
 );

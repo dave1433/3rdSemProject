@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+//import { useEffect } from "react";
 import {
     createBrowserRouter,
     Navigate,
@@ -27,6 +27,7 @@ const router = createBrowserRouter([
     { path: "/admin", element: <AdminDashboard /> },
 
     // PLAYER
+    { path: "/", element: <Navigate to="/player" replace /> },
     {
         path: "/player",
         element: <PlayerRootLayout />,

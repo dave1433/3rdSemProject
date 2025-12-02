@@ -1,5 +1,6 @@
 {
   "files": [],
+  "lib": ["DOM", "ES2017"],
   "references": [
     { "path": "./tsconfig.node.json" },
     { "path": "./src/core/tsconfig.json" },

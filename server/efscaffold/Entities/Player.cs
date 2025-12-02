@@ -9,11 +9,9 @@ public partial class Player
 
     public string Email { get; set; } = null!;
 
-    public string Password { get; set; } = null!;
+    public string Userid { get; set; } = null!;
 
     public string Fullname { get; set; } = null!;
-
-    public string? Phone { get; set; }
 
     public bool Active { get; set; }
 
@@ -21,9 +19,5 @@ public partial class Player
 
     public DateTime Createdat { get; set; }
 
-    public virtual ICollection<Board> Boards { get; set; } = new List<Board>();
-
-    public virtual ICollection<Repeat> Repeats { get; set; } = new List<Repeat>();
-
-    public virtual ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
+    public virtual User User { get; set; } = null!;
 }

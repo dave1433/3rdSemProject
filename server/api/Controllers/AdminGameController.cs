@@ -4,7 +4,7 @@ using efscaffold;
 using efscaffold.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-
+using Infrastructure.Postgres.Scaffolding; 
 namespace api.controllers;
 
 [ApiController]
