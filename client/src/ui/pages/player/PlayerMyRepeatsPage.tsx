@@ -1,81 +1,36 @@
 import React, { useEffect, useMemo, useState } from "react";
 import "../../css/PlayerMyRepeatsPage.css";
-import { apiPost } from "../../../api/connection";
 
-interface PlayerMyRepeatsPageProps {
+interface Props {
     initialNumbers?: number[];
 }
 
-export const PlayerMyRepeatsPage: React.FC<PlayerMyRepeatsPageProps> = ({
-                                                                            initialNumbers,
-                                                                        }) => {
-
-    const playerId = localStorage.getItem("userId") ?? "";
-
+export const PlayerMyRepeatsPage: React.FC<Props> = ({
+                                                         initialNumbers,
+                                                     }) => {
     const [numbers, setNumbers] = useState<number[]>(initialNumbers ?? []);
+    const [times, setTimes] = useState(1);
 
     useEffect(() => {
         if (initialNumbers && initialNumbers.length > 0) {
             setNumbers(initialNumbers);
+            setTimes(1);
         }
     }, [initialNumbers]);
 
     const fields = numbers.length;
-    const [times, setTimes] = useState<number>(1);
 
-    const todayLabel = useMemo(() => formatFullDate(new Date()), []);
-    const pricePerGame = useMemo(() => fields * 20, [fields]);
+    const todayLabel = useMemo(() => {
+        return new Date().toLocaleDateString(undefined, {
+            weekday: "short",
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+        });
+    }, []);
 
-    const totalAmount = useMemo(
-        () => (fields > 0 ? pricePerGame * times : 0),
-        [pricePerGame, fields, times]
-    );
-
-    function handleTimesInput(e: React.ChangeEvent<HTMLInputElement>) {
-        const value = Number(e.target.value);
-        setTimes(value > 0 ? value : 1);
-    }
-
-    function changeTimes(delta: number) {
-        setTimes((prev) => Math.max(1, prev + delta));
-    }
-
-    function handleCancel() {
-        setTimes(1);
-    }
-
-    async function handleConfirm() {
-        if (!canConfirm) return;
-
-        try {
-            const body = [
-                {
-                    playerId,
-                    numbers,
-                    times,
-                }
-            ];
-
-            const res = await apiPost("/board/purchase", body);
-
-            if (!res.ok) {
-                const msg = await res.text();
-                alert(msg || "Failed to repeat board");
-                return;
-            }
-
-            alert("Repeat added successfully!");
-
-            // reset only times (user may repeat again)
-            setTimes(1);
-
-            // optional event if other pages need to refresh
-            window.dispatchEvent(new Event("player-updated"));
-        } catch (err) {
-            console.error("Repeat failed:", err);
-            alert("Error repeating game");
-        }
-    }
+    const pricePerGame = fields * 20;
+    const totalAmount = pricePerGame * times;
 
     const canConfirm = fields > 0 && times > 0;
 
@@ -110,58 +65,63 @@ export const PlayerMyRepeatsPage: React.FC<PlayerMyRepeatsPageProps> = ({
             {/* Date */}
             <div className="myrepeats-row">
                 <div className="myrepeats-label">Date</div>
-                <div className="myrepeats-date-display">
-                    <span className="myrepeats-week-text-main">{todayLabel}</span>
-                </div>
+                <div className="myrepeats-value">{todayLabel}</div>
             </div>
 
-            {/* Times */}
+            {/* Times Input */}
             <div className="myrepeats-row">
                 <div className="myrepeats-label">Times</div>
-                <div className="myrepeats-input-wrapper">
-                    <div className="myrepeats-times-control">
-                        <button type="button" onClick={() => changeTimes(-1)}>
-                            −
-                        </button>
-                        <input
-                            type="number"
-                            min={1}
-                            value={times}
-                            onChange={handleTimesInput}
-                        />
-                        <button type="button" onClick={() => changeTimes(1)}>
-                            +
-                        </button>
-                    </div>
+
+                <div className="myrepeats-times-control">
+                    <button onClick={() => setTimes((t) => Math.max(1, t - 1))}>
+                        −
+                    </button>
+
+                    <input
+                        type="number"
+                        min={1}
+                        value={times}
+                        onChange={(e) =>
+                            setTimes(Math.max(1, Number(e.target.value)))
+                        }
+                    />
+
+                    <button onClick={() => setTimes((t) => t + 1)}>+</button>
                 </div>
             </div>
 
             {/* Preview */}
             <div className="myrepeats-preview">
                 <div>
-                    <div className="myrepeats-preview-label">Price per game</div>
-                    <div className="myrepeats-preview-value">{pricePerGame} DKK</div>
+                    <div className="myrepeats-preview-label">
+                        Price per game
+                    </div>
+                    <div className="myrepeats-preview-value">
+                        {pricePerGame} DKK
+                    </div>
                 </div>
+
                 <div>
                     <div className="myrepeats-preview-label">Total amount</div>
-                    <div className="myrepeats-preview-value">{totalAmount} DKK</div>
+                    <div className="myrepeats-preview-value">
+                        {totalAmount} DKK
+                    </div>
                 </div>
             </div>
 
-            {/* Actions */}
+            {/* Buttons */}
             <div className="myrepeats-actions">
                 <button
-                    type="button"
                     className="myrepeats-btn myrepeats-btn-cancel"
-                    onClick={handleCancel}
+                    onClick={() => setTimes(1)}
                 >
                     Cancel
                 </button>
+
                 <button
-                    type="button"
                     className="myrepeats-btn myrepeats-btn-confirm"
-                    onClick={handleConfirm}
                     disabled={!canConfirm}
+                    onClick={() => console.log("TODO: confirm repeat", numbers)}
                 >
                     Confirm
                 </button>
@@ -169,13 +129,3 @@ export const PlayerMyRepeatsPage: React.FC<PlayerMyRepeatsPageProps> = ({
         </div>
     );
 };
-
-/* ---------- helpers ---------- */
-function formatFullDate(date: Date): string {
-    return date.toLocaleDateString(undefined, {
-        weekday: "short",
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-    });
-}
