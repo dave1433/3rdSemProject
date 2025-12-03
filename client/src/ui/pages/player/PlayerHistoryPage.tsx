@@ -10,8 +10,8 @@ export const PlayerHistoryPage = () => {
 
     useEffect(() => {
         Promise.all([
-            apiGet(`/board/player/${playerId}`).then(r => r.json()),
-            apiGet("/player").then(r => r.json())
+            apiGet(`/board/user/${playerId}`).then(r => r.json()),
+            apiGet("/user").then(r => r.json())
         ]).then(([boards, players]) => {
             setRecords(boards);
             const me = players.find((p: any) => p.id === playerId);
