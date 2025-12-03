@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using api;
+using api.Services;
 using Infrastructure.Postgres.Scaffolding;
 using Microsoft.EntityFrameworkCore;
 
@@ -40,6 +41,15 @@ builder.Services.AddDbContext<MyDbContext>((sp, options) =>
 builder.Services.AddControllers();
 
 // =======================
+// Services (IMPORTANT!)
+// =======================
+builder.Services.AddScoped<IBoardService, BoardService>();
+
+// Add other services here if you have them:
+// builder.Services.AddScoped<IUserService, UserService>();
+// builder.Services.AddScoped<IAuthService, AuthService>();
+
+// =======================
 // CORS
 // =======================
 builder.Services.AddCors(options =>
@@ -66,7 +76,7 @@ builder.Services.AddOpenApiDocument(c => c.Title = "DeadPigeons API");
 var app = builder.Build();
 
 // =======================
-// Middleware order
+// Middleware
 // =======================
 app.UseRouting();
 app.UseCors("AllowFrontend");
@@ -79,4 +89,5 @@ if (!app.Environment.IsProduction())
 }
 
 app.MapControllers();
+
 app.Run();

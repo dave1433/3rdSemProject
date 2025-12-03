@@ -9,14 +9,48 @@ export const PlayerHistoryPage = () => {
     const playerId = localStorage.getItem("userId") ?? "";
 
     useEffect(() => {
-        Promise.all([
-            apiGet(`/board/user/${playerId}`).then(r => r.json()),
-            apiGet("/user").then(r => r.json())
-        ]).then(([boards, players]) => {
-            setRecords(boards);
-            const me = players.find((p: any) => p.id === playerId);
-            if (me) setPlayerName(me.fullName);
-        });
+        const load = async () => {
+            try {
+                const [boardsRes, usersRes] = await Promise.all([
+                    apiGet(`/board/user/${playerId}`),
+                    apiGet("/user"),
+                ]);
+
+                let boards: any[] = [];
+                let users: any[] = [];
+
+                if (boardsRes.ok) {
+                    boards = await boardsRes.json();
+                } else {
+                    const txt = await boardsRes.text();
+                    console.error(
+                        "Failed to load boards",
+                        boardsRes.status,
+                        txt
+                    );
+                }
+
+                if (usersRes.ok) {
+                    users = await usersRes.json();
+                } else {
+                    const txt = await usersRes.text();
+                    console.error(
+                        "Failed to load users",
+                        usersRes.status,
+                        txt
+                    );
+                }
+
+                setRecords(boards);
+
+                const me = users.find((u: any) => u.id === playerId);
+                if (me) setPlayerName(me.fullName);
+            } catch (err) {
+                console.error("History load error:", err);
+            }
+        };
+
+        load();
     }, [playerId]);
 
     return (
