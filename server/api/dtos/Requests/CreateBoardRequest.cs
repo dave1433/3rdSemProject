@@ -7,7 +7,7 @@ public class CreateBoardRequest
     [Required]
     public string UserId { get; set; } = null!;
 
-    // 5–8 numbers from 1–16
+    // 5–8 numbers
     [Required]
     [MinLength(5)]
     [MaxLength(8)]

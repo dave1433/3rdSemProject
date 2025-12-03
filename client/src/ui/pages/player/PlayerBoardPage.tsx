@@ -30,43 +30,44 @@ export const PlayerBoardPage: React.FC = () => {
 
     const playerId = localStorage.getItem("userId") ?? "";
 
-    const numbers = useMemo(() => Array.from({ length: 16 }, (_, i) => i + 1), []);
+    const numbers = useMemo(
+        () => Array.from({ length: 16 }, (_, i) => i + 1),
+        []
+    );
 
     const fields = selectedNumbers.length;
-
     const price =
-        fields > 0
-            ? (PRICE_PER_FIELDS[fields as FieldsCount] ?? 0) * times
-            : 0;
+        fields > 0 ? (PRICE_PER_FIELDS[fields as FieldsCount] ?? 0) * times : 0;
 
     // ------------------- LOAD PLAYER -------------------
+    async function reloadPlayer() {
+        const res = await apiGet("/user");
+        const players = await res.json();
+        const p = players.find((x: any) => x.id === playerId);
+        if (p) {
+            setPlayerName(p.fullName);
+            setBalance(p.balance);
+        }
+    }
+
     useEffect(() => {
-        apiGet("/user")
-            .then(r => r.json())
-            .then(players => {
-                const p = players.find((x: any) => x.id === playerId);
-                if (p) {
-                    setPlayerName(p.fullName);
-                    setBalance(p.balance);
-                }
-            })
-            .catch(() => {});
+        reloadPlayer();
     }, [playerId]);
 
     // ------------------- NUMBER SELECTION -------------------
     function toggleNumber(n: number) {
-        setSelectedNumbers(prev => {
-            if (prev.includes(n)) return prev.filter(x => x !== n);
+        setSelectedNumbers((prev) => {
+            if (prev.includes(n)) return prev.filter((x) => x !== n);
             if (prev.length >= fieldsCount) return prev;
             return [...prev, n].sort((a, b) => a - b);
         });
     }
 
-    // ------------------- ACTIONS -------------------
+    // ------------------- MAKE A BET -------------------
     function handleMakeBet() {
         if (fields !== fieldsCount) return;
 
-        setBets(b => [
+        setBets((b) => [
             ...b,
             {
                 id: Date.now().toString(),
@@ -81,19 +82,21 @@ export const PlayerBoardPage: React.FC = () => {
         setTimes(1);
     }
 
+    // ------------------- SUBMIT PURCHASE -------------------
     async function handleSubmit() {
         if (bets.length === 0) return;
 
         await apiPost(
             "/board/user/purchase",
-            bets.map(b => ({
-                userId: playerId,     // ✅ FIXED
+            bets.map((b) => ({
+                userId: playerId,   // <-- CORRECT
                 numbers: b.numbers,
                 times: b.times,
             }))
         );
 
         setBets([]);
+        await reloadPlayer(); // <-- BALANCE UPDATE
     }
 
     // ======================= RENDER =======================
@@ -102,14 +105,18 @@ export const PlayerBoardPage: React.FC = () => {
             <PlayerPageHeader userName={playerName} />
 
             <main className="player-board-main">
+
                 {/* LEFT PANEL */}
                 <section className="player-board-left">
-                    <div className="player-board-week">Week 47, 2025</div>
+                    <div className="player-board-week">
+                        Week 47, 2025
+                    </div>
 
                     <div className="player-board-card">
+
                         {/* NUMBER GRID */}
                         <div className="player-board-grid">
-                            {numbers.map(n => {
+                            {numbers.map((n) => {
                                 const isSelected = selectedNumbers.includes(n);
                                 const disabled =
                                     !isSelected &&
@@ -139,7 +146,7 @@ export const PlayerBoardPage: React.FC = () => {
 
                         {/* FIELD TABS */}
                         <div className="player-board-fields-tabs">
-                            {[5, 6, 7, 8].map(f => (
+                            {[5, 6, 7, 8].map((f) => (
                                 <button
                                     key={f}
                                     type="button"
@@ -151,7 +158,7 @@ export const PlayerBoardPage: React.FC = () => {
                                     }
                                     onClick={() => {
                                         setFieldsCount(f as FieldsCount);
-                                        setSelectedNumbers(prev =>
+                                        setSelectedNumbers((prev) =>
                                             prev.slice(0, f)
                                         );
                                     }}
@@ -168,18 +175,31 @@ export const PlayerBoardPage: React.FC = () => {
                                     Times
                                 </span>
                                 <div className="player-board-times-control">
-                                    <button onClick={() => setTimes(t => Math.max(1, t - 1))}>
+                                    <button
+                                        onClick={() =>
+                                            setTimes((t) => Math.max(1, t - 1))
+                                        }
+                                    >
                                         −
                                     </button>
                                     <input
                                         type="number"
                                         value={times}
                                         min={1}
-                                        onChange={e =>
-                                            setTimes(Math.max(1, Number(e.target.value) || 1))
+                                        onChange={(e) =>
+                                            setTimes(
+                                                Math.max(
+                                                    1,
+                                                    Number(e.target.value) || 1
+                                                )
+                                            )
                                         }
                                     />
-                                    <button onClick={() => setTimes(t => t + 1)}>
+                                    <button
+                                        onClick={() =>
+                                            setTimes((t) => t + 1)
+                                        }
+                                    >
                                         +
                                     </button>
                                 </div>
@@ -224,7 +244,9 @@ export const PlayerBoardPage: React.FC = () => {
                         <h2>My Bets</h2>
 
                         {bets.length === 0 ? (
-                            <p className="player-board-bets-empty">No bets yet.</p>
+                            <p className="player-board-bets-empty">
+                                No bets yet.
+                            </p>
                         ) : (
                             <table className="player-board-bets-table">
                                 <thead>
@@ -236,7 +258,7 @@ export const PlayerBoardPage: React.FC = () => {
                                 </tr>
                                 </thead>
                                 <tbody>
-                                {bets.map(b => (
+                                {bets.map((b) => (
                                     <tr key={b.id}>
                                         <td>{b.numbers.join(", ")}</td>
                                         <td>{b.times}</td>
@@ -245,8 +267,12 @@ export const PlayerBoardPage: React.FC = () => {
                                             <button
                                                 className="player-board-bets-remove-btn"
                                                 onClick={() =>
-                                                    setBets(bs =>
-                                                        bs.filter(x => x.id !== b.id)
+                                                    setBets((bs) =>
+                                                        bs.filter(
+                                                            (x) =>
+                                                                x.id !==
+                                                                b.id
+                                                        )
                                                     )
                                                 }
                                             >
@@ -262,10 +288,12 @@ export const PlayerBoardPage: React.FC = () => {
                         <div className="player-board-bets-footer">
                             <div className="player-board-bets-summary-row">
                                 <span>
-                                    Amount:<strong> {price} DKK</strong>
+                                    Amount:
+                                    <strong> {price} DKK</strong>
                                 </span>
                                 <span>
-                                    Balance:<strong> {balance ?? "–"} DKK</strong>
+                                    Balance:
+                                    <strong> {balance ?? "–"} DKK</strong>
                                 </span>
                             </div>
 
@@ -281,6 +309,7 @@ export const PlayerBoardPage: React.FC = () => {
                         </div>
                     </div>
                 </section>
+
             </main>
         </div>
     );

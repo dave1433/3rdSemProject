@@ -34,13 +34,22 @@ public class BoardService : IBoardService
 
         var now = DateTime.UtcNow;
 
+        // Latest game
         var game = await _db.Games
             .OrderByDescending(g => g.Createdat)
             .FirstOrDefaultAsync();
 
         var gameId = game?.Id;
 
+        // All requests must belong to same user
+        var userId = list.First().UserId;
+
+        var player = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId);
+        if (player == null)
+            throw new Exception("User not found");
+
         var boardsToAdd = new List<Board>();
+        var totalCost = 0;
 
         foreach (var dto in list)
         {
@@ -52,20 +61,45 @@ public class BoardService : IBoardService
                 .SingleOrDefaultAsync();
 
             if (basePrice == null)
-                throw new Exception($"No price for {fields} fields.");
+                throw new Exception($"No price found for {fields} fields.");
+
+            var boardPrice = basePrice.Value * dto.Times;
+            totalCost += boardPrice;
 
             var board = new Board
             {
                 Id = Guid.NewGuid().ToString(),
-                Playerid = dto.UserId,
+                Playerid = userId,           // <-- mapping UserId → EF property
                 Gameid = gameId,
                 Numbers = dto.Numbers,
                 Times = dto.Times,
-                Price = basePrice.Value * dto.Times,
+                Price = boardPrice,
                 Createdat = now
             };
 
             boardsToAdd.Add(board);
+        }
+
+        // Validate balance
+        if (player.Balance < totalCost)
+            throw new Exception($"Insufficient balance: need {totalCost}, have {player.Balance}");
+
+        // Deduct user's balance
+        player.Balance -= totalCost;
+
+        // Add purchase transactions
+        foreach (var board in boardsToAdd)
+        {
+            _db.Transactions.Add(new efscaffold.Entities.Transaction
+            {
+                Id = Guid.NewGuid().ToString(),
+                Playerid = userId,
+                Type = "purchase",
+                Amount = -board.Price,
+                Status = "approved",
+                Boardid = board.Id,
+                Createdat = now
+            });
         }
 
         await _db.Boards.AddRangeAsync(boardsToAdd);
