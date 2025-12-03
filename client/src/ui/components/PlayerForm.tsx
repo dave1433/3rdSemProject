@@ -23,7 +23,7 @@ export const PlayerForm = () => {
         e.preventDefault();
 
         try {
-            const res = await apiPost("/player", {
+            const res = await apiPost("/user", {
                 fullName: form.fullName,
                 phone: form.phone,
                 email: form.email,

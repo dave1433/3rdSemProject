@@ -11,6 +11,11 @@ type LoginResponse = {
     userId: string;
 };
 
+const API =
+    import.meta.env.MODE === "development"
+        ? "http://localhost:5237" // LOCAL API
+        : "https://deadpigeons-api-project.fly.dev"; // PRODUCTION API
+
 export const Login = () => {
     const navigate = useNavigate();
 
@@ -23,14 +28,11 @@ export const Login = () => {
 
         if (!email || !password) return alert("Missing credentials");
 
-        const res = await fetch(
-            "https://deadpigeons-api-project.fly.dev/api/auth/login",
-            {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email, password }),
-            }
-        );
+        const res = await fetch(`${API}/api/auth/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password }),
+        });
 
         if (!res.ok) return alert("Invalid login");
 

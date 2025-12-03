@@ -1,14 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Authorization; // ✅ REQUIRED
-using efscaffold;
-using efscaffold.Entities;
-using api.security;
-using Microsoft.IdentityModel.Tokens;
+using Microsoft.AspNetCore.Authorization;
+using Infrastructure.Postgres.Scaffolding;
 using System.IdentityModel.Tokens.Jwt;
+using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
 using System.Text;
-using Infrastructure.Postgres.Scaffolding;
 
 namespace api.Controllers
 {
@@ -26,15 +23,10 @@ namespace api.Controllers
         }
 
         public record LoginRequest(string Email, string Password);
-
-        public record LoginResponse(
-            string Token,
-            int Role,
-            string UserId
-        );
+        public record LoginResponse(string Token, int Role, string UserId);
 
         [HttpPost("login")]
-        [AllowAnonymous] // ✅✅✅ THIS FIXES CORS
+        [AllowAnonymous]
         public async Task<ActionResult<LoginResponse>> Login(LoginRequest request)
         {
             var user = await _db.Users
@@ -43,7 +35,7 @@ namespace api.Controllers
             if (user == null)
                 return Unauthorized("Invalid credentials");
 
-            bool passwordValid = PasswordHasher.Verify(
+            bool passwordValid = api.security.PasswordHasher.Verify(
                 user.Password,
                 request.Password
             );
@@ -51,6 +43,7 @@ namespace api.Controllers
             if (!passwordValid)
                 return Unauthorized("Invalid credentials");
 
+            // Generate JWT
             var secret = _config["AppSettings:JwtSecret"]!;
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);

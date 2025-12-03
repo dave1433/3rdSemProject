@@ -12,9 +12,9 @@ builder.Services.AddSingleton<AppSettings>(sp =>
 {
     var config = sp.GetRequiredService<IConfiguration>();
     var settings = config
-        .GetSection(nameof(AppSettings))
-        .Get<AppSettings>()
-        ?? throw new Exception("AppSettings missing");
+                       .GetSection(nameof(AppSettings))
+                       .Get<AppSettings>()
+                   ?? throw new Exception("AppSettings missing");
 
     Validator.ValidateObject(
         settings,
@@ -40,19 +40,20 @@ builder.Services.AddDbContext<MyDbContext>((sp, options) =>
 builder.Services.AddControllers();
 
 // =======================
-// ✅ CORS (PRE-FLIGHT SAFE)
+// CORS
 // =======================
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
         policy
-            .SetIsOriginAllowed(origin =>
-                origin == "https://deadpigeons-frontend.fly.dev" ||
-                origin == "http://localhost:5173"
+            .WithOrigins(
+                "http://localhost:5173",
+                "https://deadpigeons-frontend.fly.dev"
             )
             .AllowAnyHeader()
-            .AllowAnyMethod();
+            .AllowAnyMethod()
+            .AllowCredentials();
     });
 });
 
@@ -65,15 +66,10 @@ builder.Services.AddOpenApiDocument(c => c.Title = "DeadPigeons API");
 var app = builder.Build();
 
 // =======================
-// ✅ PIPELINE (ORDER IS CRITICAL)
+// Middleware order
 // =======================
-
 app.UseRouting();
-
-// ✅ THIS MUST BE HERE
 app.UseCors("AllowFrontend");
-
-// ✅ Because OPTIONS is not authenticated
 app.UseAuthorization();
 
 if (!app.Environment.IsProduction())
@@ -83,5 +79,4 @@ if (!app.Environment.IsProduction())
 }
 
 app.MapControllers();
-
 app.Run();

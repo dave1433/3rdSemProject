@@ -17,7 +17,7 @@ export const PlayerList = () => {
         try {
             setLoading(true);
 
-            const res = await apiGet("/player");
+            const res = await apiGet("/user");
             if (!res.ok) {
                 console.error("Failed to load players");
                 return;
