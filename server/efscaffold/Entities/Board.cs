@@ -19,6 +19,8 @@ public partial class Board
 
     public DateTime? Createdat { get; set; }
 
+    public int Times { get; set; }
+
     public virtual Game? Game { get; set; }
 
     public virtual User? Player { get; set; }
