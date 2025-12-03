@@ -2,6 +2,7 @@ import { Input } from "./Input";
 import { Button } from "./Button";
 import { PhoneInput } from "./PhoneInput";
 import { useState } from "react";
+import { apiPost } from "../../api/connection";
 
 export const PlayerForm = () => {
     const [form, setForm] = useState({
@@ -9,7 +10,7 @@ export const PlayerForm = () => {
         phone: "",
         email: "",
         password: "",
-        role: "2"   // default: Player
+        role: "2", // default: Player
     });
 
     function handleChange(
@@ -21,28 +22,35 @@ export const PlayerForm = () => {
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
 
-        await fetch("http://localhost:5237/api/player", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
+        try {
+            const res = await apiPost("/player", {
                 fullName: form.fullName,
                 phone: form.phone,
                 email: form.email,
                 password: form.password,
-                role: parseInt(form.role) // backend expects int
-            })
-        });
+                role: Number(form.role),
+            });
 
-        window.dispatchEvent(new Event("player-updated"));
+            if (!res.ok) {
+                const msg = await res.text();
+                throw new Error(msg || "Failed to create user");
+            }
 
-        setForm({
-            fullName: "",
-            phone: "",
-            email: "",
-            password: "",
-            role: "2" // reset to default: Player
-        });
+            window.dispatchEvent(new Event("player-updated"));
+
+            setForm({
+                fullName: "",
+                phone: "",
+                email: "",
+                password: "",
+                role: "2",
+            });
+        } catch (err) {
+            console.error("Create user failed:", err);
+            alert("Failed to create user");
+        }
     }
+
 
     return (
         <div className="bg-white rounded-2xl shadow-md p-6 w-full">
@@ -51,7 +59,6 @@ export const PlayerForm = () => {
             </h2>
 
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-
                 <Input
                     name="fullName"
                     value={form.fullName}
@@ -97,8 +104,8 @@ export const PlayerForm = () => {
                         onChange={handleChange}
                         className="border border-gray-300 rounded-lg p-2"
                     >
-                        <option value="2">Player</option> {/* Player = 2 */}
-                        <option value="1">Admin</option>  {/* Admin = 1 */}
+                        <option value="2">Player</option>
+                        <option value="1">Admin</option>
                     </select>
                 </div>
 

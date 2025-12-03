@@ -5,67 +5,51 @@ import { DefaultLayout } from "../layout/DefaultLayout";
 import { Logo } from "../components/Logo";
 import { useNavigate } from "react-router";
 
+type LoginResponse = {
+    token: string;
+    role: number;
+    userId: string;
+};
+
 export const Login = () => {
     const navigate = useNavigate();
 
-    async function handleLogin(e: React.FormEvent) {
+    async function handleLogin(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
 
-        const form = e.currentTarget as HTMLFormElement;
-        const formData = new FormData(form);
+        const formData = new FormData(e.currentTarget);
+        const email = String(formData.get("email") ?? "");
+        const password = String(formData.get("password") ?? "");
 
-        const email = formData.get("email");
-        const password = formData.get("password");
+        if (!email || !password) return alert("Missing credentials");
 
-        const res = await fetch("/api/auth/login", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email, password })
-        });
+        const res = await fetch(
+            "https://deadpigeons-api-project.fly.dev/api/auth/login",
+            {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, password }),
+            }
+        );
 
-        if (!res.ok) {
-            alert("Invalid credentials");
-            return;
-        }
+        if (!res.ok) return alert("Invalid login");
 
-        //const data = await res.json();
+        const data: LoginResponse = await res.json();
 
-        //localStorage.setItem("token", data.token);
-        //localStorage.setItem("role", data.role);
-
-        const data: { token: string; role: number; userId: string } = await res.json();
-
-        // store everything we need
         localStorage.setItem("token", data.token);
         localStorage.setItem("role", String(data.role));
-        localStorage.setItem("userId", data.userId); // PLAYER / USER ID
+        localStorage.setItem("userId", data.userId);
 
-        if (data.role === 1) {
-            navigate("/admin");
-        } else {
-            navigate("/player");
-        }
+        navigate(data.role === 1 ? "/admin" : "/player");
     }
-
 
     return (
         <DefaultLayout>
             <Logo />
             <Card>
-                <form className="flex flex-col gap-4" onSubmit={handleLogin}>
-                    <Input
-                        label="Email"
-                        name="email"
-                        type="email"
-                        required
-                    />
-                    <Input
-                        label="Password"
-                        name="password"
-                        type="password"
-                        required
-                    />
-
+                <form onSubmit={handleLogin} className="flex flex-col gap-4">
+                    <Input label="Email" name="email" type="email" required />
+                    <Input label="Password" name="password" type="password" required />
                     <Button type="submit">Login</Button>
                 </form>
             </Card>

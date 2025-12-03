@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization; // ✅ REQUIRED
 using efscaffold;
 using efscaffold.Entities;
 using api.security;
@@ -7,9 +8,9 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using Infrastructure.Postgres.Scaffolding; 
+using Infrastructure.Postgres.Scaffolding;
 
-namespace api.controllers
+namespace api.Controllers
 {
     [ApiController]
     [Route("api/auth")]
@@ -33,34 +34,23 @@ namespace api.controllers
         );
 
         [HttpPost("login")]
+        [AllowAnonymous] // ✅✅✅ THIS FIXES CORS
         public async Task<ActionResult<LoginResponse>> Login(LoginRequest request)
         {
-            // 🔎 DEBUG LOGS
-            Console.WriteLine("=== LOGIN ATTEMPT ===");
-            Console.WriteLine($"Email received: '{request.Email}'");
-            Console.WriteLine($"Password received: '{request.Password}'");
-
             var user = await _db.Users
                 .FirstOrDefaultAsync(u => u.Email == request.Email && u.Active);
 
-            Console.WriteLine($"User found: {user != null}");
-
             if (user == null)
                 return Unauthorized("Invalid credentials");
-
-            
 
             bool passwordValid = PasswordHasher.Verify(
                 user.Password,
                 request.Password
             );
 
-            Console.WriteLine($"Password valid: {passwordValid}");
-
             if (!passwordValid)
                 return Unauthorized("Invalid credentials");
 
-            // ---- JWT ----
             var secret = _config["AppSettings:JwtSecret"]!;
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -77,15 +67,11 @@ namespace api.controllers
                 signingCredentials: creds
             );
 
-            Console.WriteLine("✅ LOGIN SUCCESS");
-
             return Ok(new LoginResponse(
                 new JwtSecurityTokenHandler().WriteToken(token),
                 user.Role,
                 user.Id
             ));
         }
-
     }
-
 }

@@ -1,92 +1,87 @@
 using System.ComponentModel.DataAnnotations;
-using System.Text.Json.Serialization;
 using api;
-using api.security;
-using api.Services; // ✅ ADD THIS
-using efscaffold;
 using Infrastructure.Postgres.Scaffolding;
 using Microsoft.EntityFrameworkCore;
 
-public class Program
-{ 
-    public static void ConfigureServices(IServiceCollection services)
+var builder = WebApplication.CreateBuilder(args);
+
+// =======================
+// AppSettings
+// =======================
+builder.Services.AddSingleton<AppSettings>(sp =>
+{
+    var config = sp.GetRequiredService<IConfiguration>();
+    var settings = config
+        .GetSection(nameof(AppSettings))
+        .Get<AppSettings>()
+        ?? throw new Exception("AppSettings missing");
+
+    Validator.ValidateObject(
+        settings,
+        new ValidationContext(settings),
+        validateAllProperties: true
+    );
+
+    return settings;
+});
+
+// =======================
+// Database
+// =======================
+builder.Services.AddDbContext<MyDbContext>((sp, options) =>
+{
+    var appSettings = sp.GetRequiredService<AppSettings>();
+    options.UseNpgsql(appSettings.DefaultConnection);
+});
+
+// =======================
+// Controllers
+// =======================
+builder.Services.AddControllers();
+
+// =======================
+// ✅ CORS (PRE-FLIGHT SAFE)
+// =======================
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
     {
-        services.AddSingleton<AppSettings>(provider =>
-        {
-            var configuration = provider.GetRequiredService<IConfiguration>();
+        policy
+            .SetIsOriginAllowed(origin =>
+                origin == "https://deadpigeons-frontend.fly.dev" ||
+                origin == "http://localhost:5173"
+            )
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
 
-            var appSettings = configuration
-                .GetSection(nameof(AppSettings))
-                .Get<AppSettings>();
+// =======================
+// Swagger
+// =======================
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddOpenApiDocument(c => c.Title = "DeadPigeons API");
 
-            if (appSettings is null)
-                throw new InvalidOperationException("AppSettings section is missing in configuration.");
+var app = builder.Build();
 
-            return appSettings;
-        });
+// =======================
+// ✅ PIPELINE (ORDER IS CRITICAL)
+// =======================
 
-        // DbContext using AppSettings from DI
-        services.AddDbContext<MyDbContext>((sp, options) =>
-        {
-            var appSettings = sp.GetRequiredService<AppSettings>();
-            options.UseNpgsql(appSettings.DefaultConnection);
-        });
+app.UseRouting();
 
-        // Controllers
-        services.AddControllers();
+// ✅ THIS MUST BE HERE
+app.UseCors("AllowFrontend");
 
-        // CORS
-        services.AddCors(options =>
-        {
-            options.AddPolicy("AllowFrontend", policy =>
-            {
-                policy.WithOrigins("http://localhost:5173")
-                      .AllowAnyHeader()
-                      .AllowAnyMethod();
-            });
-        });
+// ✅ Because OPTIONS is not authenticated
+app.UseAuthorization();
 
-        // Swagger / OpenAPI
-        services.AddEndpointsApiExplorer();
-        services.AddOpenApiDocument(config =>
-        {
-            config.Title = "DeadPigeons API";
-            config.Description = "3rd Semester Project API documentation";
-        });
-
-        // TODO: register other services here, e.g.:
-        // services.AddScoped<IPlayerService, PlayerService>();
-        // services.AddScoped<IGameService, GameService>();
-        services.AddScoped<IBoardService, BoardService>();
-        services.AddScoped<IBoardPriceService, BoardPriceService>();
-
-        // services.AddScoped<IRepeatService, RepeatService>();
-        // services.AddScoped<ITransactionService, TransactionService>();
-        
-    }
-
-    public static void Main()
-    {
-        var builder = WebApplication.CreateBuilder();
-        ConfigureServices(builder.Services);
-
-        var app = builder.Build();
-        
-        var appSettings = app.Services.GetRequiredService<AppSettings>();
-        //Trigger the DataAnnotations validations for AppSettings properties
-        Validator.ValidateObject(appSettings, new ValidationContext(appSettings), validateAllProperties: true);
-
-        if (app.Environment.IsDevelopment())
-        {
-            app.UseOpenApi();
-            app.UseSwaggerUi();
-        }
-
-        //when using proxy, below CORs settings are not needed
-        app.UseCors("AllowFrontend");
-        app.GenerateApiClientsFromOpenApi("/../../client/src/generated-ts-client.ts").GetAwaiter().GetResult();
-        app.MapControllers();
-
-        app.Run();
-    }
+if (!app.Environment.IsProduction())
+{
+    app.UseOpenApi();
+    app.UseSwaggerUi();
 }
+
+app.MapControllers();
+
+app.Run();
