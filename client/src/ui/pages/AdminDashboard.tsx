@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { AdminHeader } from "../components/AdminHeader";
-import { PlayerForm } from "../components/PlayerForm";
+import { PlayerForm } from "../components/PlayerForm.tsx";
 import { PlayerList } from "../components/PlayerList";
 import { WinningNumbersCard } from "../components/WinningNumbersCard";
 import { DrawHistoryTable } from "../components/DrawHistoryTable";
