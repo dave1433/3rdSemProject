@@ -5,6 +5,6 @@ namespace api.Services;
 
 public interface IBoardService
 {
-    Task<List<BoardDto>> GetByPlayerAsync(string playerId);
-    Task<List<BoardDto>> CreateBetsAsync(IEnumerable<CreateBoardRequest> dtos);
+    Task<List<BoardDtoResponse>> GetByPlayerAsync(string playerId);
+    Task<List<BoardDtoResponse>> CreateBetsAsync(IEnumerable<CreateBoardRequest> dtos);
 }

@@ -15,7 +15,7 @@ public class BoardService : IBoardService
         _db = db;
     }
 
-    public async Task<List<BoardDto>> GetByPlayerAsync(string playerId)
+    public async Task<List<BoardDtoResponse>> GetByPlayerAsync(string playerId)
     {
         var boards = await _db.Boards
             .Include(b => b.Transactions)
@@ -23,14 +23,14 @@ public class BoardService : IBoardService
             .OrderByDescending(b => b.Createdat)
             .ToListAsync();
 
-        return boards.Select(b => new BoardDto(b)).ToList();
+        return boards.Select(b => new BoardDtoResponse(b)).ToList();
     }
 
-    public async Task<List<BoardDto>> CreateBetsAsync(IEnumerable<CreateBoardRequest> dtos)
+    public async Task<List<BoardDtoResponse>> CreateBetsAsync(IEnumerable<CreateBoardRequest> dtos)
     {
         var list = dtos.ToList();
         if (list.Count == 0)
-            return new List<BoardDto>();
+            return new List<BoardDtoResponse>();
 
         var currentGameId = await GetCurrentGameIdAsync();
         var now = DateTime.UtcNow;
@@ -77,7 +77,7 @@ public class BoardService : IBoardService
 
         await _db.SaveChangesAsync();
 
-        return boardsToAdd.Select(b => new BoardDto(b)).ToList();
+        return boardsToAdd.Select(b => new BoardDtoResponse(b)).ToList();
     }
 
     private async Task<string?> GetCurrentGameIdAsync()

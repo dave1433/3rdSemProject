@@ -85,7 +85,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/BoardDto"
+                    "$ref": "#/components/schemas/BoardDtoResponse"
                   }
                 }
               }
@@ -123,7 +123,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/BoardDto"
+                    "$ref": "#/components/schemas/BoardDtoResponse"
                   }
                 }
               }
@@ -146,7 +146,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/BoardPriceDto"
+                    "$ref": "#/components/schemas/BoardPriceDtoResponse"
                   }
                 }
               }
@@ -329,7 +329,7 @@
           }
         }
       },
-      "BoardDto": {
+      "BoardDtoResponse": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
@@ -425,7 +425,7 @@
           }
         }
       },
-      "BoardPriceDto": {
+      "BoardPriceDtoResponse": {
         "type": "object",
         "additionalProperties": false,
         "properties": {

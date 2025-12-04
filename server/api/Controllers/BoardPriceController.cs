@@ -18,10 +18,10 @@ public class BoardPriceController : ControllerBase
 
     // GET /api/BoardPrice
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<BoardPriceDto>>> GetAll()
+    public async Task<ActionResult<IEnumerable<BoardPriceDtoResponse>>> GetAll()
     {
         var entities = await _service.GetAllAsync();
-        var dtos = entities.Select(bp => new BoardPriceDto(bp)).ToList();
+        var dtos = entities.Select(bp => new BoardPriceDtoResponse(bp)).ToList();
         return Ok(dtos);
     }
 }

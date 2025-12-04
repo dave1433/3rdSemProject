@@ -17,14 +17,14 @@ public class BoardController : ControllerBase
     }
 
     [HttpGet("player/{playerId}")]
-    public async Task<ActionResult<List<BoardDto>>> GetByPlayer(string playerId)
+    public async Task<ActionResult<List<BoardDtoResponse>>> GetByPlayer(string playerId)
     {
         var boards = await _boardService.GetByPlayerAsync(playerId);
         return Ok(boards);
     }
 
     [HttpPost("purchase")]
-    public async Task<ActionResult<List<BoardDto>>> Purchase(
+    public async Task<ActionResult<List<BoardDtoResponse>>> Purchase(
         [FromBody] List<CreateBoardRequest> dtos)
     {
         if (dtos == null || dtos.Count == 0)

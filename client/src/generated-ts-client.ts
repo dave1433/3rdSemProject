@@ -98,7 +98,7 @@ export class BoardClient {
         this.baseUrl = baseUrl ?? "";
     }
 
-    getByPlayer(playerId: string): Promise<BoardDto[]> {
+    getByPlayer(playerId: string): Promise<BoardDtoResponse[]> {
         let url_ = this.baseUrl + "/api/Board/player/{playerId}";
         if (playerId === undefined || playerId === null)
             throw new globalThis.Error("The parameter 'playerId' must be defined.");
@@ -117,13 +117,13 @@ export class BoardClient {
         });
     }
 
-    protected processGetByPlayer(response: Response): Promise<BoardDto[]> {
+    protected processGetByPlayer(response: Response): Promise<BoardDtoResponse[]> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
             return response.text().then((_responseText) => {
             let result200: any = null;
-            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as BoardDto[];
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as BoardDtoResponse[];
             return result200;
             });
         } else if (status !== 200 && status !== 204) {
@@ -131,10 +131,10 @@ export class BoardClient {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
             });
         }
-        return Promise.resolve<BoardDto[]>(null as any);
+        return Promise.resolve<BoardDtoResponse[]>(null as any);
     }
 
-    purchase(dtos: CreateBoardRequest[]): Promise<BoardDto[]> {
+    purchase(dtos: CreateBoardRequest[]): Promise<BoardDtoResponse[]> {
         let url_ = this.baseUrl + "/api/Board/purchase";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -154,13 +154,13 @@ export class BoardClient {
         });
     }
 
-    protected processPurchase(response: Response): Promise<BoardDto[]> {
+    protected processPurchase(response: Response): Promise<BoardDtoResponse[]> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
             return response.text().then((_responseText) => {
             let result200: any = null;
-            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as BoardDto[];
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as BoardDtoResponse[];
             return result200;
             });
         } else if (status !== 200 && status !== 204) {
@@ -168,7 +168,7 @@ export class BoardClient {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
             });
         }
-        return Promise.resolve<BoardDto[]>(null as any);
+        return Promise.resolve<BoardDtoResponse[]>(null as any);
     }
 }
 
@@ -182,7 +182,7 @@ export class BoardPriceClient {
         this.baseUrl = baseUrl ?? "";
     }
 
-    getAll(): Promise<BoardPriceDto[]> {
+    getAll(): Promise<BoardPriceDtoResponse[]> {
         let url_ = this.baseUrl + "/api/BoardPrice";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -198,13 +198,13 @@ export class BoardPriceClient {
         });
     }
 
-    protected processGetAll(response: Response): Promise<BoardPriceDto[]> {
+    protected processGetAll(response: Response): Promise<BoardPriceDtoResponse[]> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
             return response.text().then((_responseText) => {
             let result200: any = null;
-            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as BoardPriceDto[];
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as BoardPriceDtoResponse[];
             return result200;
             });
         } else if (status !== 200 && status !== 204) {
@@ -212,7 +212,7 @@ export class BoardPriceClient {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
             });
         }
-        return Promise.resolve<BoardPriceDto[]>(null as any);
+        return Promise.resolve<BoardPriceDtoResponse[]>(null as any);
     }
 }
 
@@ -402,7 +402,7 @@ export interface CreatePlayerRequest {
     role: number;
 }
 
-export interface BoardDto {
+export interface BoardDtoResponse {
     id: string;
     playerId: string | undefined;
     gameId: string | undefined;
@@ -427,7 +427,7 @@ export interface CreateBoardRequest {
     times: number;
 }
 
-export interface BoardPriceDto {
+export interface BoardPriceDtoResponse {
     fieldsCount: number;
     price: number;
 }

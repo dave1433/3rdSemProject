@@ -2,9 +2,9 @@ using efscaffold.Entities;
 
 namespace api.DTOs.Responses;
 
-public class BoardDto
+public class BoardDtoResponse
 {
-    public BoardDto(Board entity)
+    public BoardDtoResponse(Board entity)
     {
         Id = entity.Id;
         PlayerId = entity.Playerid;
