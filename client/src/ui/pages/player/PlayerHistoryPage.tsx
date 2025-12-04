@@ -4,6 +4,7 @@ import { PlayerPageHeader } from "../../components/PlayerPageHeader";
 import { PlayerMyRepeatsPage } from "./PlayerMyRepeatsPage";
 import { BoardClient, PlayerClient } from "../../../generated-ts-client";
 import type { BoardDto, PlayerResponse } from "../../../generated-ts-client";
+import {apiGet} from "../../../api/connection.ts";
 
 type RecordStatus = "Pending" | "Complete";
 type HistoryTab = "all" | "myRepeats";
@@ -16,9 +17,6 @@ interface PlayerRecord {
     status: RecordStatus;
     totalAmountDkk: number;
 }
-
-const boardClient = new BoardClient();
-const playerClient = new PlayerClient();
 
 export const PlayerHistoryPage: React.FC = () => {
     const [activeTab, setActiveTab] = useState<HistoryTab>("all");
@@ -53,11 +51,14 @@ export const PlayerHistoryPage: React.FC = () => {
 
     async function loadPlayer(playerId: string) {
         try {
-            const players: PlayerResponse[] = await playerClient.getPlayers();
+            const res = await apiGet("/User");
+
+            if (!res.ok) throw new Error("Failed to load players");
+
+            const players: PlayerResponse[] = await res.json();
             const current = players.find((p) => p.id === playerId);
-            if (current) {
-                setPlayerName(current.fullName);
-            }
+
+            if (current) setPlayerName(current.fullName);
         } catch (err) {
             console.error("Failed to load player", err);
         }
@@ -68,7 +69,13 @@ export const PlayerHistoryPage: React.FC = () => {
             setLoading(true);
             setError(null);
 
-            const boards: BoardDto[] = await boardClient.getByPlayer(playerId);
+            const res = await apiGet(`/Board/user/${playerId}`);
+
+            if (!res.ok) {
+                throw new Error(`Failed to load history (status ${res.status})`);
+            }
+
+            const boards: BoardDto[] = await res.json();
 
             const mapped: PlayerRecord[] = boards.map((b) => {
                 const totalAmount = b.price;
@@ -79,10 +86,7 @@ export const PlayerHistoryPage: React.FC = () => {
                 );
 
                 let status: RecordStatus = "Pending";
-                if (
-                    purchaseTx &&
-                    purchaseTx.status.toLowerCase() === "approved"
-                ) {
+                if (purchaseTx && purchaseTx.status.toLowerCase() === "approved") {
                     status = "Complete";
                 }
 
@@ -99,9 +103,7 @@ export const PlayerHistoryPage: React.FC = () => {
             setRecords(mapped);
         } catch (err) {
             console.error(err);
-            const message =
-                err instanceof Error ? err.message : "Failed to load history";
-            setError(message);
+            setError("Failed to load history");
         } finally {
             setLoading(false);
         }
