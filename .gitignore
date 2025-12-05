@@ -8,7 +8,7 @@
 server/.env
 appsettings.json
 appsettings.Development.json
-.env.production
+client/.env.production
 
 # User-specific files
 *.rsuser
