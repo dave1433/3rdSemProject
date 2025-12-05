@@ -1,12 +1,11 @@
 using api.DTOs.Requests;
-using api.DTOs.Responses;
 using api.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace api.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/board")]
 public class BoardController : ControllerBase
 {
     private readonly IBoardService _boardService;
@@ -16,21 +15,38 @@ public class BoardController : ControllerBase
         _boardService = boardService;
     }
 
-    [HttpGet("player/{playerId}")]
-    public async Task<ActionResult<List<BoardDto>>> GetByPlayer(string playerId)
+    // GET /api/board/user/{userId}
+    [HttpGet("user/{userId}")]
+    public async Task<IActionResult> GetByUser(string userId)
     {
-        var boards = await _boardService.GetByPlayerAsync(playerId);
-        return Ok(boards);
+        try
+        {
+            var boards = await _boardService.GetByUserAsync(userId);
+            return Ok(boards);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"ERROR GetByUser: {ex}");
+            return StatusCode(500, new { message = "Failed to load boards", detail = ex.Message });
+        }
     }
 
-    [HttpPost("purchase")]
-    public async Task<ActionResult<List<BoardDto>>> Purchase(
-        [FromBody] List<CreateBoardRequest> dtos)
+    // POST /api/board/user/purchase
+    [HttpPost("user/purchase")]
+    public async Task<IActionResult> Purchase([FromBody] List<CreateBoardRequest> dtos)
     {
-        if (dtos == null || dtos.Count == 0)
-            return BadRequest("No boards to purchase.");
+        try
+        {
+            if (dtos == null || dtos.Count == 0)
+                return BadRequest("No boards to purchase.");
 
-        var result = await _boardService.CreateBetsAsync(dtos);
-        return Ok(result);
+            var result = await _boardService.CreateBetsAsync(dtos);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"ERROR Purchase: {ex}");
+            return StatusCode(500, new { message = "Failed to purchase", detail = ex.Message });
+        }
     }
 }

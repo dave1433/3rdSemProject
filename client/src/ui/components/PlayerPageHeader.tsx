@@ -2,6 +2,8 @@ import React from "react";
 import { NavLink } from "react-router";
 import "../css/PlayerPageHeader.css";
 
+import logo from "../../assets/logo1.png";
+
 interface PlayerPageHeaderProps {
     userName: string;
 }
@@ -13,14 +15,12 @@ const navItems = [
     { label: "My Balance", path: "/player/balance" },
 ];
 
-export const PlayerPageHeader: React.FC<PlayerPageHeaderProps> = ({
-                                                                      userName,
-                                                                  }) => {
+export const PlayerPageHeader: React.FC<PlayerPageHeaderProps> = ({ userName }) => {
     return (
         <header className="player-header">
             {/* Logo */}
             <div className="player-header_logo">
-                 <img src="../../../src/assets/logo1.png" alt="Jerne IF" />
+                <img src={logo} alt="Jerne IF" />
             </div>
 
             {/* Navigation */}
