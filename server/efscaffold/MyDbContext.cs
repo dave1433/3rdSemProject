@@ -18,7 +18,7 @@ public partial class MyDbContext : DbContext
 
     public virtual DbSet<Game> Games { get; set; }
 
-    public virtual DbSet<Player> Players { get; set; }
+   // public virtual DbSet<Player> Players { get; set; }
 
     public virtual DbSet<Repeat> Repeats { get; set; }
 
@@ -93,7 +93,7 @@ public partial class MyDbContext : DbContext
             entity.Property(e => e.Year).HasColumnName("year");
         });
 
-        modelBuilder.Entity<Player>(entity =>
+        /*modelBuilder.Entity<Player>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("player_pkey");
 
@@ -118,7 +118,7 @@ public partial class MyDbContext : DbContext
             entity.HasOne(d => d.User).WithMany(p => p.Players)
                 .HasForeignKey(d => d.Userid)
                 .HasConstraintName("player_userid_fkey");
-        });
+        });*/
 
         modelBuilder.Entity<Repeat>(entity =>
         {
