@@ -1,4 +1,4 @@
-import {type ChangeEvent, type FormEvent, useState} from "react";
+import { useState, type ChangeEvent, type FormEvent } from "react";
 import { apiPost } from "../../api/connection";
 
 export const usePlayerForm = () => {
@@ -10,9 +10,7 @@ export const usePlayerForm = () => {
         role: "2", // default: Player
     });
 
-    function handleChange(
-        e: ChangeEvent<HTMLInputElement | HTMLSelectElement>
-    ) {
+    function handleChange(e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
         setForm({ ...form, [e.target.name]: e.target.value });
     }
 
@@ -51,6 +49,6 @@ export const usePlayerForm = () => {
     return {
         form,
         handleChange,
-        handleSubmit
+        handleSubmit,
     };
 };
