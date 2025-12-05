@@ -61,7 +61,7 @@ public class Program
         services.AddScoped<IBoardPriceService, BoardPriceService>();
 
         // services.AddScoped<IRepeatService, RepeatService>();
-        // services.AddScoped<ITransactionService, TransactionService>();
+        services.AddScoped<ITransactionService, TransactionService>();
         
     }
 

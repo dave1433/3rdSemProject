@@ -3,7 +3,7 @@ import "../../css/PlayerHistoryPage.css";
 import { PlayerPageHeader } from "../../components/PlayerPageHeader";
 import { PlayerMyRepeatsPage } from "./PlayerMyRepeatsPage";
 import { BoardClient, PlayerClient } from "../../../generated-ts-client";
-import type { BoardDto, PlayerResponse } from "../../../generated-ts-client";
+import type { BoardDtoResponse, PlayerResponse } from "../../../generated-ts-client";
 
 type RecordStatus = "Pending" | "Complete";
 type HistoryTab = "all" | "myRepeats";
@@ -63,7 +63,7 @@ export const PlayerHistoryPage: React.FC = () => {
             setLoading(true);
             setError(null);
 
-            const boards: BoardDto[] = await boardClient.getByPlayer(playerId);
+            const boards: BoardDtoResponse[] = await boardClient.getByPlayer(playerId);
 
             const mapped: PlayerRecord[] = boards.map((b) => {
                // const fields = b.numbers.length;

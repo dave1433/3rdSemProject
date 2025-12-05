@@ -78,3 +78,24 @@
     font-weight: 500;
     color: white;
 }
+
+.player-header_user {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.player-header_logout-btn {
+    padding: 0.35rem 0.75rem;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.7);
+    background: transparent;
+    color: #ffffff;
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+
+.player-header_logout-btn:hover {
+    background: rgba(255,255,255,0.12);
+}
+

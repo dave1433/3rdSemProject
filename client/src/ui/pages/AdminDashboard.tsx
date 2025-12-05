@@ -4,6 +4,7 @@ import { AdminHeader } from "../components/AdminHeader";
 import { PlayerForm } from "../components/PlayerForm";
 import { PlayerList } from "../components/PlayerList";
 import { TransactionList } from "../components/TransactionList";
+import { PendingTransactions } from "../components/PendingTransactions";
 import { WinningNumbersCard } from "../components/WinningNumbersCard";
 import { DrawHistoryTable } from "../components/DrawHistoryTable";
 
@@ -31,6 +32,9 @@ export const AdminDashboard = () => {
                     {/* Transactions */}
                     <div className="col-span-12 xl:col-span-3">
                         <TransactionList />
+                    </div>
+                    <div className="col-span-12 xl:col-span-3">
+                        <PendingTransactions />
                     </div>
                 </div>
 
