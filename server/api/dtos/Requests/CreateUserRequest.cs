@@ -1,4 +1,4 @@
-﻿public class CreatePlayerRequest
+﻿public class CreateUserRequest
 {
     public string FullName { get; set; } = default!;
     public string Phone { get; set; } = default!;

@@ -14,11 +14,11 @@ namespace api.dtos
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class PlayerController : ControllerBase
+    public class UserController : ControllerBase
     {
         private readonly MyDbContext _db;
 
-        public PlayerController(MyDbContext db)
+        public UserController(MyDbContext db)
         {
             _db = db;
         }
@@ -28,7 +28,7 @@ namespace api.dtos
         // -----------------------------
 
         [HttpPost]
-        public async Task<ActionResult<PlayerResponse>> CreatePlayer(CreatePlayerRequest request)
+        public async Task<ActionResult<UserResponse>> CreateUser(CreateUserRequest request)
         {
             var user = new User
             {
@@ -46,7 +46,7 @@ namespace api.dtos
             _db.Users.Add(user);
             await _db.SaveChangesAsync();
 
-            return Ok(new PlayerResponse
+            return Ok(new UserResponse
             {
                 Id = user.Id,
                 FullName = user.Fullname ?? "",
@@ -60,10 +60,10 @@ namespace api.dtos
         // GET /api/player
         // -----------------------------
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<PlayerResponse>>> GetPlayers()
+        public async Task<ActionResult<IEnumerable<UserResponse>>> GetUser()
         {
             var users = await _db.Users
-                .Select(u => new PlayerResponse
+                .Select(u => new UserResponse
                 {
                     Id = u.Id,
                     FullName = u.Fullname ?? "",

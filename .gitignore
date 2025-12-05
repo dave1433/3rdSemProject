@@ -8,6 +8,7 @@
 server/.env
 appsettings.json
 appsettings.Development.json
+client/.env.production
 
 # User-specific files
 *.rsuser
@@ -485,3 +486,5 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+/client/dist/
+/dist

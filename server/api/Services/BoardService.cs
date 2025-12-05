@@ -15,11 +15,11 @@ public class BoardService : IBoardService
         _db = db;
     }
 
-    public async Task<List<BoardDto>> GetByPlayerAsync(string playerId)
+    public async Task<List<BoardDto>> GetByUserAsync(string userId)
     {
         var boards = await _db.Boards
             .Include(b => b.Transactions)
-            .Where(b => b.Playerid == playerId)
+            .Where(b => b.Playerid == userId)
             .OrderByDescending(b => b.Createdat)
             .ToListAsync();
 
@@ -32,60 +32,79 @@ public class BoardService : IBoardService
         if (list.Count == 0)
             return new List<BoardDto>();
 
-        var currentGameId = await GetCurrentGameIdAsync();
         var now = DateTime.UtcNow;
+
+        // Latest game
+        var game = await _db.Games
+            .OrderByDescending(g => g.Createdat)
+            .FirstOrDefaultAsync();
+
+        var gameId = game?.Id;
+
+        // All requests must belong to same user
+        var userId = list.First().UserId;
+
+        var player = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId);
+        if (player == null)
+            throw new Exception("User not found");
+
         var boardsToAdd = new List<Board>();
+        var totalCost = 0;
 
         foreach (var dto in list)
         {
-            if (dto.Numbers == null)
-                throw new ArgumentException("Numbers are required.", nameof(dto.Numbers));
-
             var fields = dto.Numbers.Count;
-            if (fields < 5 || fields > 8)
-                throw new ArgumentException("Numbers must be between 5 and 8.", nameof(dto.Numbers));
 
-            // Look up base price from boardprice table
             var basePrice = await _db.Boardprices
-                .Where(p => p.Fieldscount == fields)
-                .Select(p => (int?)p.Price)
+                .Where(x => x.Fieldscount == fields)
+                .Select(x => (int?)x.Price)
                 .SingleOrDefaultAsync();
 
             if (basePrice == null)
-                throw new InvalidOperationException($"No board price configured for {fields} fields.");
+                throw new Exception($"No price found for {fields} fields.");
 
-            var totalPrice = basePrice.Value * dto.Times;
+            var boardPrice = basePrice.Value * dto.Times;
+            totalCost += boardPrice;
 
             var board = new Board
             {
                 Id = Guid.NewGuid().ToString(),
-                Playerid = dto.PlayerId,
-                Gameid = currentGameId,
+                Playerid = userId,           // <-- mapping UserId → EF property
+                Gameid = gameId,
                 Numbers = dto.Numbers,
-                Price = totalPrice,
                 Times = dto.Times,
+                Price = boardPrice,
                 Createdat = now
             };
 
             boardsToAdd.Add(board);
         }
 
+        // Validate balance
+        if (player.Balance < totalCost)
+            throw new Exception($"Insufficient balance: need {totalCost}, have {player.Balance}");
+
+        // Deduct user's balance
+        player.Balance -= totalCost;
+
+        // Add purchase transactions
+        foreach (var board in boardsToAdd)
+        {
+            _db.Transactions.Add(new efscaffold.Entities.Transaction
+            {
+                Id = Guid.NewGuid().ToString(),
+                Playerid = userId,
+                Type = "purchase",
+                Amount = -board.Price,
+                Status = "approved",
+                Boardid = board.Id,
+                Createdat = now
+            });
+        }
+
         await _db.Boards.AddRangeAsync(boardsToAdd);
-
-        // TODO: if you also adjust player balance / create Transaction rows,
-        // keep that logic here, just remember to set board.Times & board.Price as above.
-
         await _db.SaveChangesAsync();
 
         return boardsToAdd.Select(b => new BoardDto(b)).ToList();
-    }
-
-    private async Task<string?> GetCurrentGameIdAsync()
-    {
-        var game = await _db.Games
-            .OrderByDescending(g => g.Createdat)
-            .FirstOrDefaultAsync();
-
-        return game?.Id;
     }
 }
