@@ -7,18 +7,18 @@
     "version": "1.0.0"
   },
   "paths": {
-    "/api/Player": {
+    "/api/User": {
       "post": {
         "tags": [
-          "Player"
+          "User"
         ],
-        "operationId": "Player_CreatePlayer",
+        "operationId": "User_CreateUser",
         "requestBody": {
           "x-name": "request",
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreatePlayerRequest"
+                "$ref": "#/components/schemas/CreateUserRequest"
               }
             }
           },
@@ -31,7 +31,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PlayerResponse"
+                  "$ref": "#/components/schemas/UserResponse"
                 }
               }
             }
@@ -40,9 +40,9 @@
       },
       "get": {
         "tags": [
-          "Player"
+          "User"
         ],
-        "operationId": "Player_GetPlayers",
+        "operationId": "User_GetUser",
         "responses": {
           "200": {
             "description": "",
@@ -51,7 +51,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/PlayerResponse"
+                    "$ref": "#/components/schemas/UserResponse"
                   }
                 }
               }
@@ -60,15 +60,47 @@
         }
       }
     },
-    "/api/Board/player/{playerId}": {
+    "/api/auth/login": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "operationId": "Auth_Login",
+        "requestBody": {
+          "x-name": "request",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/board/user/{userId}": {
       "get": {
         "tags": [
           "Board"
         ],
-        "operationId": "Board_GetByPlayer",
+        "operationId": "Board_GetByUser",
         "parameters": [
           {
-            "name": "playerId",
+            "name": "userId",
             "in": "path",
             "required": true,
             "schema": {
@@ -81,12 +113,10 @@
           "200": {
             "description": "",
             "content": {
-              "application/json": {
+              "application/octet-stream": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/BoardDto"
-                  }
+                  "type": "string",
+                  "format": "binary"
                 }
               }
             }
@@ -94,7 +124,7 @@
         }
       }
     },
-    "/api/Board/purchase": {
+    "/api/board/user/purchase": {
       "post": {
         "tags": [
           "Board"
@@ -119,12 +149,10 @@
           "200": {
             "description": "",
             "content": {
-              "application/json": {
+              "application/octet-stream": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/BoardDto"
-                  }
+                  "type": "string",
+                  "format": "binary"
                 }
               }
             }
@@ -148,6 +176,138 @@
                   "items": {
                     "$ref": "#/components/schemas/BoardPriceDto"
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Transaction/user/{userId}": {
+      "get": {
+        "tags": [
+          "Transaction"
+        ],
+        "operationId": "Transaction_GetByUser",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TransactionDtoResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Transaction/pending": {
+      "get": {
+        "tags": [
+          "Transaction"
+        ],
+        "operationId": "Transaction_GetPending",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TransactionDtoResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Transaction/deposit": {
+      "post": {
+        "tags": [
+          "Transaction"
+        ],
+        "operationId": "Transaction_CreateDeposit",
+        "requestBody": {
+          "x-name": "dto",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTransactionRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransactionDtoResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Transaction/{id}/status": {
+      "put": {
+        "tags": [
+          "Transaction"
+        ],
+        "operationId": "Transaction_UpdateStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "dto",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTransactionStatusRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransactionDtoResponse"
                 }
               }
             }
@@ -249,43 +409,11 @@
           }
         }
       }
-    },
-    "/api/auth/login": {
-      "post": {
-        "tags": [
-          "Auth"
-        ],
-        "operationId": "Auth_Login",
-        "requestBody": {
-          "x-name": "request",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/LoginRequest"
-              }
-            }
-          },
-          "required": true,
-          "x-position": 1
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LoginResponse"
-                }
-              }
-            }
-          }
-        }
-      }
     }
   },
   "components": {
     "schemas": {
-      "PlayerResponse": {
+      "UserResponse": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
@@ -307,7 +435,7 @@
           }
         }
       },
-      "CreatePlayerRequest": {
+      "CreateUserRequest": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
@@ -329,70 +457,31 @@
           }
         }
       },
-      "BoardDto": {
+      "LoginResponse": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
-          "id": {
+          "token": {
             "type": "string"
           },
-          "playerId": {
-            "type": "string",
-            "nullable": true
-          },
-          "gameId": {
-            "type": "string",
-            "nullable": true
-          },
-          "numbers": {
-            "type": "array",
-            "items": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          "price": {
+          "role": {
             "type": "integer",
             "format": "int32"
           },
-          "times": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          },
-          "transactions": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/BoardTransactionDto"
-            }
+          "userId": {
+            "type": "string"
           }
         }
       },
-      "BoardTransactionDto": {
+      "LoginRequest": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
-          "id": {
+          "email": {
             "type": "string"
           },
-          "type": {
+          "password": {
             "type": "string"
-          },
-          "amount": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "status": {
-            "type": "string"
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
           }
         }
       },
@@ -400,11 +489,11 @@
         "type": "object",
         "additionalProperties": false,
         "required": [
-          "playerId",
+          "userId",
           "numbers"
         ],
         "properties": {
-          "playerId": {
+          "userId": {
             "type": "string",
             "minLength": 1
           },
@@ -436,6 +525,92 @@
           "price": {
             "type": "integer",
             "format": "int32"
+          }
+        }
+      },
+      "TransactionDtoResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "userId": {
+            "type": "string",
+            "nullable": true
+          },
+          "fullName": {
+            "type": "string",
+            "nullable": true
+          },
+          "type": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "mobilePayRef": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "string"
+          },
+          "boardId": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "processedBy": {
+            "type": "string",
+            "nullable": true
+          },
+          "processedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        }
+      },
+      "CreateTransactionRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "userId"
+        ],
+        "properties": {
+          "userId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "amount": {
+            "type": "integer",
+            "format": "int32",
+            "maximum": 2147483647.0,
+            "minimum": 1.0
+          },
+          "mobilePayRef": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "UpdateTransactionStatusRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "status"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "approved|rejected"
           }
         }
       },
@@ -513,34 +688,6 @@
           "createdAt": {
             "type": "string",
             "format": "date-time"
-          }
-        }
-      },
-      "LoginResponse": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "token": {
-            "type": "string"
-          },
-          "role": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "userId": {
-            "type": "string"
-          }
-        }
-      },
-      "LoginRequest": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "email": {
-            "type": "string"
-          },
-          "password": {
-            "type": "string"
           }
         }
       }

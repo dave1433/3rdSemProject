@@ -1,8 +1,6 @@
 import React from "react";
-import { NavLink } from "react-router";
+import { NavLink, useNavigate } from "react-router";
 import "../css/PlayerPageHeader.css";
-
-import logo from "../../assets/logo1.png";
 
 interface PlayerPageHeaderProps {
     userName: string;
@@ -15,12 +13,25 @@ const navItems = [
     { label: "My Balance", path: "/player/balance" },
 ];
 
-export const PlayerPageHeader: React.FC<PlayerPageHeaderProps> = ({ userName }) => {
+export const PlayerPageHeader: React.FC<PlayerPageHeaderProps> = ({
+                                                                      userName,
+                                                                  }) => {
+    const navigate = useNavigate();
+
+    function handleLogout() {
+        // clear whatever you store on login
+        localStorage.removeItem("token");
+        localStorage.removeItem("role");
+        localStorage.removeItem("userId");
+
+        navigate("/");
+    }
+
     return (
         <header className="player-header">
             {/* Logo */}
             <div className="player-header_logo">
-                <img src={logo} alt="Jerne IF" />
+                <img src="../../../src/assets/logo1.png" alt="Jerne IF" />
             </div>
 
             {/* Navigation */}
@@ -42,10 +53,19 @@ export const PlayerPageHeader: React.FC<PlayerPageHeaderProps> = ({ userName }) 
                 </ul>
             </nav>
 
-            {/* User name */}
+            {/* User name + logout */}
             <div className="player-header_user">
-                <span className="player-header_user-label">Welcome back!</span>
-                <span className="player-header_user-name">{userName}</span>
+                <div className="player-header_user-text">
+                    <span className="player-header_user-label">Welcome back!</span>
+                    <span className="player-header_user-name">{userName}</span>
+                </div>
+                <button
+                    type="button"
+                    className="player-header_logout-btn"
+                    onClick={handleLogout}
+                >
+                    Log out
+                </button>
             </div>
         </header>
     );

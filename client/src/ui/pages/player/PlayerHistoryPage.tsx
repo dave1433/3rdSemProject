@@ -2,9 +2,13 @@ import React, { useEffect, useState } from "react";
 import "../../css/PlayerHistoryPage.css";
 import { PlayerPageHeader } from "../../components/PlayerPageHeader";
 import { PlayerMyRepeatsPage } from "./PlayerMyRepeatsPage";
-import { BoardClient, PlayerClient } from "../../../generated-ts-client";
-import type { BoardDto, PlayerResponse } from "../../../generated-ts-client";
-import {apiGet} from "../../../api/connection.ts";
+
+import { BoardClient, UserClient } from "../../../generated-ts-client";
+import type { BoardResponse, UserResponse } from "../../../generated-ts-client";
+
+import { apiGet } from "../../../api/connection.ts";
+
+
 
 type RecordStatus = "Pending" | "Complete";
 type HistoryTab = "all" | "myRepeats";
@@ -55,7 +59,7 @@ export const PlayerHistoryPage: React.FC = () => {
 
             if (!res.ok) throw new Error("Failed to load players");
 
-            const players: PlayerResponse[] = await res.json();
+            const players: UserResponse[] = await res.json();
             const current = players.find((p) => p.id === playerId);
 
             if (current) setPlayerName(current.fullName);
@@ -75,7 +79,7 @@ export const PlayerHistoryPage: React.FC = () => {
                 throw new Error(`Failed to load history (status ${res.status})`);
             }
 
-            const boards: BoardDto[] = await res.json();
+            const boards: BoardResponse[] = await res.json();
 
             const mapped: PlayerRecord[] = boards.map((b) => {
                 const totalAmount = b.price;

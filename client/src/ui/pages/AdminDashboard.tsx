@@ -5,6 +5,7 @@ import { PlayerForm } from "../components/PlayerForm";
 import { PlayerList } from "../components/PlayerList";
 import { WinningNumbersCard } from "../components/WinningNumbersCard";
 import { DrawHistoryTable } from "../components/DrawHistoryTable";
+import {PendingTransactions} from "../components/PendingTransactions.tsx";
 
 export const AdminDashboard = () => {
     const navigate = useNavigate();
@@ -29,6 +30,8 @@ export const AdminDashboard = () => {
             <PlayerList />
             <WinningNumbersCard />
             <DrawHistoryTable />
+            <PendingTransactions />
+            
         </>
     );
 };
