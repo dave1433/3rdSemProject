@@ -41,11 +41,15 @@ builder.Services.AddDbContext<MyDbContext>((sp, options) =>
 builder.Services.AddControllers();
 
 // =======================
-// Services (IMPORTANT!)
+// Services (FULL SET!)
 // =======================
 builder.Services.AddScoped<IBoardService, BoardService>();
+builder.Services.AddScoped<IBoardPriceService, BoardPriceService>();
 
-// Add other services here if you have them:
+// ⭐ Missing from your version — needed for deposits, balance updates, approvals!
+builder.Services.AddScoped<ITransactionService, TransactionService>();
+
+// Add user/auth services if you create them:
 // builder.Services.AddScoped<IUserService, UserService>();
 // builder.Services.AddScoped<IAuthService, AuthService>();
 
@@ -71,7 +75,11 @@ builder.Services.AddCors(options =>
 // Swagger
 // =======================
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddOpenApiDocument(c => c.Title = "DeadPigeons API");
+builder.Services.AddOpenApiDocument(c =>
+{
+    c.Title = "DeadPigeons API";
+    c.Description = "3rd Semester Project API documentation";
+});
 
 var app = builder.Build();
 
@@ -87,6 +95,11 @@ if (!app.Environment.IsProduction())
     app.UseOpenApi();
     app.UseSwaggerUi();
 }
+
+// IMPORTANT — must be AFTER Swagger is configured
+app.GenerateApiClientsFromOpenApi("/../../client/src/generated-ts-client.ts")
+   .GetAwaiter()
+   .GetResult();
 
 app.MapControllers();
 
