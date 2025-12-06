@@ -1,20 +1,22 @@
 import React from "react";
 import { NavLink, useNavigate } from "react-router";
 import "../css/PlayerPageHeader.css";
+import { User, LogOut } from 'lucide-react';
 
 interface PlayerPageHeaderProps {
     userName: string;
+    balance?: number | null;
 }
 
 const navItems = [
     { label: "Board", path: "/player/board" },
     { label: "History", path: "/player/history" },
     { label: "Results", path: "/player/results" },
-    { label: "My Balance", path: "/player/balance" },
+    { label: "My Transactions", path: "/player/balance" },
 ];
 
 export const PlayerPageHeader: React.FC<PlayerPageHeaderProps> = ({
-                                                                      userName,
+                                                                      userName, balance,
                                                                   }) => {
     const navigate = useNavigate();
 
@@ -26,6 +28,9 @@ export const PlayerPageHeader: React.FC<PlayerPageHeaderProps> = ({
 
         navigate("/");
     }
+
+    const balanceLabel =
+        balance == null ? "Balance: —" : `Balance: ${balance} DKK`;
 
     return (
         <header className="player-header">
@@ -53,20 +58,24 @@ export const PlayerPageHeader: React.FC<PlayerPageHeaderProps> = ({
                 </ul>
             </nav>
 
-            {/* User name + logout */}
-            <div className="player-header_user">
-                <div className="player-header_user-text">
-                    <span className="player-header_user-label">Welcome back!</span>
-                    <span className="player-header_user-name">{userName}</span>
+            {/* Right-side user/balance card */}
+            <div className="player-header_user-card">
+                <div className="player-header_user-avatar">
+                    <User size={20} />
                 </div>
-                <button
-                    type="button"
-                    className="player-header_logout-btn"
-                    onClick={handleLogout}
-                >
-                    Log out
-                </button>
+                <div className="player-header_user-text">
+                    <div className="player-header_user-name">{userName}</div>
+                    <div className="player-header_user-balance">{balanceLabel}</div>
+                </div>
             </div>
+            <button
+                type="button"
+                className="player-header_logout-btn"
+                onClick={handleLogout}
+                aria-label="Log out"
+            >
+                <LogOut size={20} />
+            </button>
         </header>
     );
 };
