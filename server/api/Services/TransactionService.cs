@@ -1,6 +1,5 @@
 ﻿using api.dtos.Requests;
 using api.dtos.Responses;
-using api.DTOs.Responses;
 using efscaffold.Entities;
 using Infrastructure.Postgres.Scaffolding;
 using Microsoft.EntityFrameworkCore;

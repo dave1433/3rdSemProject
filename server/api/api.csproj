@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.1" />
+    <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.15.0" />
     <PackageReference Include="NSwag.AspNetCore" Version="14.6.2" />
     <PackageReference Include="NSwag.CodeGeneration.TypeScript" Version="14.6.3" />
 

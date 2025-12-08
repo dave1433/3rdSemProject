@@ -1,6 +1,5 @@
 ﻿using api.dtos.Requests;
 using api.dtos.Responses;
-using api.DTOs.Responses;
 
 namespace api.Services;
 

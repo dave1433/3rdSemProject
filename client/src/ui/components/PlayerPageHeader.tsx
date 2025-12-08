@@ -30,7 +30,7 @@ export const PlayerPageHeader: React.FC<PlayerPageHeaderProps> = ({
     }
 
     const balanceLabel =
-        balance == null ? "Balance: —" : `Balance: ${balance} DKK`;
+        balance == null ? "Balance: 0 DKK" : `Balance: ${balance} DKK`;
 
     return (
         <header className="player-header">

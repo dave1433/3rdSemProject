@@ -62,7 +62,7 @@ const transactionClient = new TransactionClient();
 
 export const PlayerMyBalancePage: React.FC = () => {
     const [transactions, setTransactions] = useState<BalanceTransaction[]>([]);
-    const [playerName, setPlayerName] = useState<string>("Player");
+    const [playerName, setPlayerName] = useState<string>("");
 
     const [amountInput, setAmountInput] = useState("");
     const [mobilePayInput, setMobilePayInput] = useState("");
