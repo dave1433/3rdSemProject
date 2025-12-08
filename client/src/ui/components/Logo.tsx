@@ -1,5 +1,3 @@
-import logo from "../../assets/logo1.png";
-
 interface LogoProps {
     size?: number;
     className?: string;
@@ -13,7 +11,7 @@ export const Logo = ({
                      }: LogoProps) => {
     return (
         <img
-            src={logo}
+            src="/logo1.png"
             alt={alt}
             width={size}
             height={size}

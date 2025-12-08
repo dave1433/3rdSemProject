@@ -1,14 +1,16 @@
-﻿// ---------------------------------------------
-// BASE URL (NO /api HERE)
-// ---------------------------------------------
-export const API_BASE_URL = import.meta.env.VITE_API_URL;
-// dev: http://localhost:5237
-// prod: https://deadpigeons-api-project.fly.dev
+﻿// --------------------------------------------------
+// BASE URL — must come from .env (Vite injects on build)
+// --------------------------------------------------
+export const API_BASE_URL =
+    import.meta.env.VITE_API_URL || "http://localhost:5237";
+
+// local: http://localhost:5237
+// prod:  https://deadpigeons-api-project.fly.dev
 
 
-// ---------------------------------------------
+// --------------------------------------------------
 // AUTH HEADERS
-// ---------------------------------------------
+// --------------------------------------------------
 export function authHeaders(): HeadersInit {
     const token = localStorage.getItem("token");
 
@@ -19,9 +21,9 @@ export function authHeaders(): HeadersInit {
 }
 
 
-// ---------------------------------------------
-// MANUAL FETCH HELPERS  (MUST include /api/...)
-// ---------------------------------------------
+// --------------------------------------------------
+// RAW FETCH HELPERS (MANUAL ENDPOINTS MUST INCLUDE /api/...)
+// --------------------------------------------------
 export function apiGet(path: string) {
     return fetch(`${API_BASE_URL}${path}`, {
         headers: authHeaders(),
@@ -44,24 +46,24 @@ export function apiDelete(path: string) {
 }
 
 
-// ---------------------------------------------
-// OPENAPI ADAPTER (NO /api IN PATHS)
-// ---------------------------------------------
-// Your generated-ts-client already inserts /api internally
-// so OpenAPI calls must NOT add /api manually.
+// --------------------------------------------------
+// OPENAPI CLIENT ADAPTER
+// Your `generated-ts-client` already builds URLs like:
+//     `${baseUrl}/api/Transaction/...`
+// So DO NOT add /api manually.
+// --------------------------------------------------
 export function openapiAdapter(ClientClass: any) {
     const http = {
-        fetch: (url: string, options: any) => {
-            return fetch(url, {
+        fetch: (url: string, options: any) =>
+            fetch(url, {
                 ...options,
                 headers: {
                     ...options?.headers,
                     ...authHeaders(),
                 },
-            });
-        },
+            }),
     };
 
-    // IMPORTANT: BASE URL HAS NO /api
+    // BASE URL HAS **NO /api**
     return new ClientClass(API_BASE_URL, http);
 }
