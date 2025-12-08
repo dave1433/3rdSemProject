@@ -71,7 +71,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/LoginRequest"
+                "$ref": "#/components/schemas/AuthRequest"
               }
             }
           },
@@ -84,7 +84,27 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/LoginResponse"
+                  "$ref": "#/components/schemas/JwtResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/userinfo": {
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "operationId": "Auth_UserInfo",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthUserInfo"
                 }
               }
             }
@@ -113,10 +133,12 @@
           "200": {
             "description": "",
             "content": {
-              "application/octet-stream": {
+              "application/json": {
                 "schema": {
-                  "type": "string",
-                  "format": "binary"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BoardDtoResponse"
+                  }
                 }
               }
             }
@@ -149,10 +171,12 @@
           "200": {
             "description": "",
             "content": {
-              "application/octet-stream": {
+              "application/json": {
                 "schema": {
-                  "type": "string",
-                  "format": "binary"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BoardDtoResponse"
+                  }
                 }
               }
             }
@@ -174,7 +198,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/BoardPriceDto"
+                    "$ref": "#/components/schemas/BoardPriceDtoResponse"
                   }
                 }
               }
@@ -457,7 +481,7 @@
           }
         }
       },
-      "LoginResponse": {
+      "JwtResponse": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
@@ -473,15 +497,105 @@
           }
         }
       },
-      "LoginRequest": {
+      "AuthRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "email",
+          "password"
+        ],
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "minLength": 1
+          },
+          "password": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "AuthUserInfo": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
-          "email": {
+          "id": {
             "type": "string"
           },
-          "password": {
+          "role": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "fullName": {
             "type": "string"
+          }
+        }
+      },
+      "BoardDtoResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "playerId": {
+            "type": "string",
+            "nullable": true
+          },
+          "gameId": {
+            "type": "string",
+            "nullable": true
+          },
+          "numbers": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          "price": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "times": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "transactions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BoardTransactionDto"
+            }
+          }
+        }
+      },
+      "BoardTransactionDto": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "status": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
           }
         }
       },
@@ -514,7 +628,7 @@
           }
         }
       },
-      "BoardPriceDto": {
+      "BoardPriceDtoResponse": {
         "type": "object",
         "additionalProperties": false,
         "properties": {

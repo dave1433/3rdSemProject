@@ -12,6 +12,11 @@ interface BetPlacement {
     times: number;
     amountDkk: number;
 }
+interface UserDto {
+    id: string;
+    fullName: string;
+    balance: number;
+}
 
 const PRICE_PER_FIELDS: Record<FieldsCount, number> = {
     5: 20,
@@ -25,7 +30,7 @@ export const PlayerBoardPage: React.FC = () => {
     const [selectedNumbers, setSelectedNumbers] = useState<number[]>([]);
     const [times, setTimes] = useState(1);
     const [bets, setBets] = useState<BetPlacement[]>([]);
-    const [playerName, setPlayerName] = useState("Player");
+    const [playerName, setPlayerName] = useState<string>("");
     const [balance, setBalance] = useState<number | null>(null);
 
     const playerId = localStorage.getItem("userId") ?? "";
@@ -38,12 +43,15 @@ export const PlayerBoardPage: React.FC = () => {
     const fields = selectedNumbers.length;
     const price =
         fields > 0 ? (PRICE_PER_FIELDS[fields as FieldsCount] ?? 0) * times : 0;
-
+    const totalAmount = useMemo(
+        () => bets.reduce((sum, b) => sum + b.amountDkk, 0),
+        [bets]
+    );
     // ------------------- LOAD PLAYER -------------------
     async function reloadPlayer() {
         const res = await apiGet("/user");
-        const players = await res.json();
-        const p = players.find((x: any) => x.id === playerId);
+        const players: UserDto[] = await res.json();      // typed
+        const p = players.find((x) => x.id === playerId);
         if (p) {
             setPlayerName(p.fullName);
             setBalance(p.balance);
@@ -51,8 +59,10 @@ export const PlayerBoardPage: React.FC = () => {
     }
 
     useEffect(() => {
-        reloadPlayer();
+        if (!playerId) return;
+        void reloadPlayer();
     }, [playerId]);
+
 
     // ------------------- NUMBER SELECTION -------------------
     function toggleNumber(n: number) {
@@ -66,6 +76,7 @@ export const PlayerBoardPage: React.FC = () => {
     // ------------------- MAKE A BET -------------------
     function handleMakeBet() {
         if (fields !== fieldsCount) return;
+        if (price <= 0) return;
 
         setBets((b) => [
             ...b,
@@ -99,21 +110,17 @@ export const PlayerBoardPage: React.FC = () => {
         await reloadPlayer(); // <-- BALANCE UPDATE
     }
 
-    // ======================= RENDER =======================
     return (
         <div className="player-board-page">
-            <PlayerPageHeader userName={playerName} />
+            {/* 🔹 Pass balance into header so it can show it */}
+            <PlayerPageHeader userName={playerName} balance={balance} />
 
             <main className="player-board-main">
-
                 {/* LEFT PANEL */}
                 <section className="player-board-left">
-                    <div className="player-board-week">
-                        Week 47, 2025
-                    </div>
+                    <div className="player-board-week">Week 47, 2025</div>
 
                     <div className="player-board-card">
-
                         {/* NUMBER GRID */}
                         <div className="player-board-grid">
                             {numbers.map((n) => {
@@ -168,7 +175,7 @@ export const PlayerBoardPage: React.FC = () => {
                             ))}
                         </div>
 
-                        {/* TIMES + VALUE */}
+                        {/* TIMES + VALUE  */}
                         <div className="player-board-meta">
                             <div>
                                 <span className="player-board-meta-label">
@@ -287,13 +294,10 @@ export const PlayerBoardPage: React.FC = () => {
 
                         <div className="player-board-bets-footer">
                             <div className="player-board-bets-summary-row">
+                                {/* the SUM of all bets */}
                                 <span>
                                     Amount:
-                                    <strong> {price} DKK</strong>
-                                </span>
-                                <span>
-                                    Balance:
-                                    <strong> {balance ?? "–"} DKK</strong>
+                                    <strong> {totalAmount} DKK</strong>
                                 </span>
                             </div>
 
@@ -309,7 +313,6 @@ export const PlayerBoardPage: React.FC = () => {
                         </div>
                     </div>
                 </section>
-
             </main>
         </div>
     );

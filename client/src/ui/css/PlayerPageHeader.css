@@ -35,9 +35,8 @@
 
 .player-header_nav-link {
     text-decoration: none;
-    font-size: 0.95rem;
+    font-size: 1.2rem;
     letter-spacing: 0.08em;
-    text-transform: uppercase;
     color: white;
     padding-bottom: 4px;
     border-bottom: 2px solid transparent;
@@ -61,40 +60,63 @@
 }
 
 /* user */
-.player-header_user {
-    text-align: right;
-    min-width: 140px;
+.player-header_user-card {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+
+    /* glassmorphism */
+    background: rgba(255, 255, 255, 0.12);        /* transparent white */
+    border-radius: 999px;
+    padding: 0.35rem 0.8rem;
+
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);          /* Safari */
+
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
 }
 
-.player-header_user-label {
-    display: block;
-    font-size: 0.75rem;
-    letter-spacing: 0.1em;
+.player-header_user-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #e3e7f1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.player-header_user-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.1;
+    gap: 0.45rem;
     color: white;
+    padding-right: 0.25rem;
 }
 
 .player-header_user-name {
     font-size: 1rem;
     font-weight: 500;
-    color: white;
-}
 
-.player-header_user {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
+}
+.player-header_user-balance {
+    font-size: 0.9rem;
 }
 
 .player-header_logout-btn {
-    padding: 0.35rem 0.75rem;
-    border-radius: 999px;
-    border: 1px solid rgba(255,255,255,0.7);
+    border: none;
     background: transparent;
-    color: #ffffff;
-    font-size: 0.8rem;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    padding: 0.9rem;
+    border-radius: 999px;
+    color: #F2F2F2;
 }
 
 .player-header_logout-btn:hover {
-    background: rgba(255,255,255,0.12);
+    background: lightgray;
+    color: #C80000;
 }

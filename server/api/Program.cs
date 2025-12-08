@@ -1,8 +1,13 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text;
 using api;
+using api.security;
 using api.Services;
 using Infrastructure.Postgres.Scaffolding;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -40,18 +45,59 @@ builder.Services.AddDbContext<MyDbContext>((sp, options) =>
 // =======================
 builder.Services.AddControllers();
 
+// Authentication & Authorization
+builder
+    .Services
+    .AddAuthentication(options =>
+    {
+        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme    = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultScheme             = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultSignInScheme       = JwtBearerDefaults.AuthenticationScheme;
+    })
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = JwtService.ValidationParameters(builder.Configuration);
+
+        // Optional: debug logs
+        options.Events = new JwtBearerEvents
+        {
+            OnAuthenticationFailed = context =>
+            {
+                Console.WriteLine($"JWT auth failed: {context.Exception}");
+                return Task.CompletedTask;
+            },
+            OnTokenValidated = context =>
+            {
+                Console.WriteLine("JWT token validated");
+                return Task.CompletedTask;
+            }
+        };
+    });
+
+builder.Services.AddAuthorization(options =>
+{
+    options.FallbackPolicy = new AuthorizationPolicyBuilder()
+        .RequireAuthenticatedUser()
+        .Build();
+
+    // Policies for convenience
+    options.AddPolicy("AdminOnly",
+        policy => policy.RequireClaim("role", "1"));
+
+    options.AddPolicy("PlayerOnly",
+        policy => policy.RequireClaim("role", "2"));
+});
+
+
 // =======================
 // Services (FULL SET!)
 // =======================
 builder.Services.AddScoped<IBoardService, BoardService>();
 builder.Services.AddScoped<IBoardPriceService, BoardPriceService>();
-
-// ⭐ Missing from your version — needed for deposits, balance updates, approvals!
+builder.Services.AddScoped<ITokenService, JwtService>();
 builder.Services.AddScoped<ITransactionService, TransactionService>();
-
-// Add user/auth services if you create them:
-// builder.Services.AddScoped<IUserService, UserService>();
-// builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 
 // =======================
 // CORS
@@ -88,8 +134,8 @@ var app = builder.Build();
 // =======================
 app.UseRouting();
 app.UseCors("AllowFrontend");
+app.UseAuthentication();
 app.UseAuthorization();
-
 if (!app.Environment.IsProduction())
 {
     app.UseOpenApi();

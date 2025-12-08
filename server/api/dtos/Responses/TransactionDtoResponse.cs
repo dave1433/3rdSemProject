@@ -1,6 +1,6 @@
 ﻿using efscaffold.Entities;
 
-namespace api.DTOs.Responses;
+namespace api.dtos.Responses;
 
 public class TransactionDtoResponse
 {

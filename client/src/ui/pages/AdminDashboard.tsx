@@ -15,8 +15,15 @@ export const AdminDashboard = () => {
         const token = localStorage.getItem("token");
         const role = localStorage.getItem("role");
 
-        if (!token) return navigate("/login");
-        if (role !== "1") return navigate("/player");
+        if (!token) {
+            navigate("/login");
+            return;
+        }
+
+        if (role !== "1") {
+            navigate("/player");
+            return;
+        }
 
         setAuthorized(true);
     }, [navigate]);
