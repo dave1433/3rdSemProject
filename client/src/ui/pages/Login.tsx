@@ -4,17 +4,13 @@ import { Card } from "../components/Card";
 import { DefaultLayout } from "../layout/DefaultLayout";
 import { Logo } from "../components/Logo";
 import { useNavigate } from "react-router";
+import { apiPost } from "../../api/connection";
 
 type LoginResponse = {
     token: string;
     role: number;
     userId: string;
 };
-
-const API =
-    import.meta.env.MODE === "development"
-        ? "http://localhost:5237" // LOCAL API
-        : "https://deadpigeons-api-project.fly.dev"; // PRODUCTION API
 
 export const Login = () => {
     const navigate = useNavigate();
@@ -26,23 +22,34 @@ export const Login = () => {
         const email = String(formData.get("email") ?? "");
         const password = String(formData.get("password") ?? "");
 
-        if (!email || !password) return alert("Missing credentials");
+        if (!email || !password) {
+            alert("Missing credentials");
+            return;
+        }
 
-        const res = await fetch(`${API}/api/auth/login`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email, password }),
-        });
+        try {
+            // ✔ Correct API path
+            const res = await apiPost("/api/auth/login", { email, password });
 
-        if (!res.ok) return alert("Invalid login");
+            if (!res.ok) {
+                alert("Invalid login");
+                return;
+            }
 
-        const data: LoginResponse = await res.json();
+            const data: LoginResponse = await res.json();
 
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("role", String(data.role));
-        localStorage.setItem("userId", data.userId);
+            // ✔ Save session
+            localStorage.setItem("token", data.token);
+            localStorage.setItem("role", String(data.role));
+            localStorage.setItem("userId", data.userId);
 
-        navigate(data.role === 1 ? "/admin" : "/player");
+            // ✔ Redirect by role
+            navigate(data.role === 1 ? "/admin" : "/player");
+
+        } catch (err) {
+            console.error("Login failed:", err);
+            alert("Login failed — server error");
+        }
     }
 
     return (
@@ -50,8 +57,20 @@ export const Login = () => {
             <Logo />
             <Card>
                 <form onSubmit={handleLogin} className="flex flex-col gap-4">
-                    <Input label="Email" name="email" type="email" required />
-                    <Input label="Password" name="password" type="password" required />
+                    <Input
+                        name="email"
+                        label="Email"
+                        type="email"
+                        required
+                    />
+
+                    <Input
+                        name="password"
+                        label="Password"
+                        type="password"
+                        required
+                    />
+
                     <Button type="submit">Login</Button>
                 </form>
             </Card>

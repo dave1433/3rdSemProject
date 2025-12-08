@@ -5,12 +5,11 @@ interface Props {
     initialNumbers?: number[];
 }
 
-export const PlayerMyRepeatsPage: React.FC<Props> = ({
-                                                         initialNumbers,
-                                                     }) => {
+export const PlayerMyRepeatsPage: React.FC<Props> = ({ initialNumbers }) => {
     const [numbers, setNumbers] = useState<number[]>(initialNumbers ?? []);
     const [times, setTimes] = useState(1);
 
+    // When user selects a board from history
     useEffect(() => {
         if (initialNumbers && initialNumbers.length > 0) {
             setNumbers(initialNumbers);
@@ -29,10 +28,32 @@ export const PlayerMyRepeatsPage: React.FC<Props> = ({
         });
     }, []);
 
-    const pricePerGame = fields * 20;
+    const pricePerGame = fields * 20; // matches your board pricing
     const totalAmount = pricePerGame * times;
 
     const canConfirm = fields > 0 && times > 0;
+
+    // --------------------------------------------
+    //   FUTURE BACKEND ENDPOINT HERE
+    // --------------------------------------------
+    async function handleConfirmRepeat() {
+        if (!canConfirm) return;
+
+        console.log("TODO: Send repeat order to backend", {
+            numbers,
+            times,
+            pricePerGame,
+            totalAmount,
+        });
+
+        // Example when backend exists:
+        //
+        // await boardClient.repeat({
+        //     userId: CURRENT_USER_ID,
+        //     numbers,
+        //     times,
+        // });
+    }
 
     return (
         <div className="myrepeats-card">
@@ -71,7 +92,6 @@ export const PlayerMyRepeatsPage: React.FC<Props> = ({
             {/* Times Input */}
             <div className="myrepeats-row">
                 <div className="myrepeats-label">Times</div>
-
                 <div className="myrepeats-times-control">
                     <button onClick={() => setTimes((t) => Math.max(1, t - 1))}>
                         −
@@ -90,12 +110,10 @@ export const PlayerMyRepeatsPage: React.FC<Props> = ({
                 </div>
             </div>
 
-            {/* Preview */}
+            {/* Price Preview */}
             <div className="myrepeats-preview">
                 <div>
-                    <div className="myrepeats-preview-label">
-                        Price per game
-                    </div>
+                    <div className="myrepeats-preview-label">Price per game</div>
                     <div className="myrepeats-preview-value">
                         {pricePerGame} DKK
                     </div>
@@ -121,7 +139,7 @@ export const PlayerMyRepeatsPage: React.FC<Props> = ({
                 <button
                     className="myrepeats-btn myrepeats-btn-confirm"
                     disabled={!canConfirm}
-                    onClick={() => console.log("TODO: confirm repeat", numbers)}
+                    onClick={handleConfirmRepeat}
                 >
                     Confirm
                 </button>

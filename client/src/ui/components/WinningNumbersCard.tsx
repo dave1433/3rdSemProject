@@ -3,32 +3,29 @@ import { apiGet, apiPost } from "../../api/connection";
 
 export const WinningNumbersCard = () => {
     const [selected, setSelected] = useState<number[]>([]);
-    const [loading, setLoading] = useState(false);
     const [locked, setLocked] = useState(false);
+    const [loading, setLoading] = useState(false);
 
     const now = new Date();
     const year = now.getFullYear();
-    const weekNumber = getWeekNumber(now);
+    const week = getWeekNumber(now);
 
-    // 🔒 check lock status
     useEffect(() => {
-        apiGet(`/admin/games/draw/status?year=${year}&weekNumber=${weekNumber}`)
-            .then(res => res.json())
-            .then(setLocked)
-            .catch(() => {});
-    }, [year, weekNumber]);
+        async function loadStatus() {
+            const res = await apiGet(`/api/admin/games/draw/status?year=${year}&weekNumber=${week}`);
+            if (res.ok) setLocked(await res.json());
+        }
+        loadStatus();
+    }, [year, week]);
 
-    const toggleNumber = (n: number) => {
+    function toggle(n: number) {
         if (locked) return;
+        setSelected(prev =>
+            prev.includes(n) ? prev.filter(x => x !== n) : prev.length < 3 ? [...prev, n] : prev
+        );
+    }
 
-        setSelected(prev => {
-            if (prev.includes(n)) return prev.filter(x => x !== n);
-            if (prev.length === 3) return prev;
-            return [...prev, n];
-        });
-    };
-
-    const submitDraw = async () => {
+    async function submit() {
         if (selected.length !== 3) {
             alert("Select exactly 3 numbers");
             return;
@@ -36,33 +33,28 @@ export const WinningNumbersCard = () => {
 
         setLoading(true);
 
-        try {
-            const res = await apiPost("/admin/games/draw", {
-                year,
-                weekNumber,
-                winningNumbers: selected,
-            });
+        const res = await apiPost("/api/admin/games/draw", {
+            year,
+            weekNumber: week,
+            winningNumbers: selected,
+        });
 
-            if (!res.ok) {
-                const msg = await res.text();
-                alert(msg || "Failed to save draw");
-                return;
-            }
+        setLoading(false);
 
-            alert("Winning numbers saved");
-            setLocked(true);
-            setSelected([]);
-        } finally {
-            setLoading(false);
+        if (!res.ok) {
+            alert("Failed to save draw");
+            return;
         }
-    };
+
+        setLocked(true);
+        setSelected([]);
+        alert("Winning numbers saved!");
+    }
 
     return (
         <div className="bg-white rounded-2xl shadow-lg p-6 w-full">
             <div className="flex justify-between mb-4">
-                <span className="font-semibold">
-                    Winning Numbers – Week {weekNumber}
-                </span>
+                <span className="font-semibold">Winning Numbers – Week {week}</span>
                 {locked && <span className="text-red-600">LOCKED</span>}
             </div>
 
@@ -71,11 +63,9 @@ export const WinningNumbersCard = () => {
                     <button
                         key={n}
                         disabled={locked || loading}
-                        onClick={() => toggleNumber(n)}
-                        className={`h-12 rounded-md border ${
-                            selected.includes(n)
-                                ? "bg-jerneRed text-white"
-                                : "bg-gray-100"
+                        onClick={() => toggle(n)}
+                        className={`h-12 rounded-md ${
+                            selected.includes(n) ? "bg-jerneRed text-white" : "bg-gray-100"
                         }`}
                     >
                         {n}
@@ -85,7 +75,7 @@ export const WinningNumbersCard = () => {
 
             <div className="mt-6 flex justify-end">
                 <button
-                    onClick={submitDraw}
+                    onClick={submit}
                     disabled={locked || loading || selected.length !== 3}
                     className="px-4 py-2 bg-jerneRed text-white rounded-lg"
                 >
@@ -97,11 +87,7 @@ export const WinningNumbersCard = () => {
 };
 
 function getWeekNumber(date: Date) {
-    const d = new Date(Date.UTC(
-        date.getFullYear(),
-        date.getMonth(),
-        date.getDate()
-    ));
+    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
     const dayNum = d.getUTCDay() || 7;
     d.setUTCDate(d.getUTCDate() + 4 - dayNum);
     const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));

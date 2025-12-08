@@ -1,6 +1,15 @@
-﻿export const API_BASE_URL = import.meta.env.VITE_API_URL + "/api";
+﻿// ---------------------------------------------
+// BASE URL (NO /api HERE)
+// ---------------------------------------------
+export const API_BASE_URL = import.meta.env.VITE_API_URL;
+// dev: http://localhost:5237
+// prod: https://deadpigeons-api-project.fly.dev
 
-function authHeaders(): HeadersInit {
+
+// ---------------------------------------------
+// AUTH HEADERS
+// ---------------------------------------------
+export function authHeaders(): HeadersInit {
     const token = localStorage.getItem("token");
 
     return {
@@ -9,6 +18,10 @@ function authHeaders(): HeadersInit {
     };
 }
 
+
+// ---------------------------------------------
+// MANUAL FETCH HELPERS  (MUST include /api/...)
+// ---------------------------------------------
 export function apiGet(path: string) {
     return fetch(`${API_BASE_URL}${path}`, {
         headers: authHeaders(),
@@ -28,4 +41,27 @@ export function apiDelete(path: string) {
         method: "DELETE",
         headers: authHeaders(),
     });
+}
+
+
+// ---------------------------------------------
+// OPENAPI ADAPTER (NO /api IN PATHS)
+// ---------------------------------------------
+// Your generated-ts-client already inserts /api internally
+// so OpenAPI calls must NOT add /api manually.
+export function openapiAdapter(ClientClass: any) {
+    const http = {
+        fetch: (url: string, options: any) => {
+            return fetch(url, {
+                ...options,
+                headers: {
+                    ...options?.headers,
+                    ...authHeaders(),
+                },
+            });
+        },
+    };
+
+    // IMPORTANT: BASE URL HAS NO /api
+    return new ClientClass(API_BASE_URL, http);
 }
