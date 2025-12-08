@@ -7,7 +7,7 @@
 /* eslint-disable */
 // ReSharper disable InconsistentNaming
 
-export class PlayerClient {
+export class UserClient {
     private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
     private baseUrl: string;
     protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
@@ -17,8 +17,7 @@ export class PlayerClient {
         this.baseUrl = baseUrl ?? "";
     }
 
-    /** FIX: /api/Player → /api/User */
-    createPlayer(request: CreatePlayerRequest): Promise<PlayerResponse> {
+    createUser(request: CreateUserRequest): Promise<UserResponse> {
         let url_ = this.baseUrl + "/api/User";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -34,33 +33,28 @@ export class PlayerClient {
         };
 
         return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processCreatePlayer(_response);
+            return this.processCreateUser(_response);
         });
     }
 
-    protected processCreatePlayer(response: Response): Promise<PlayerResponse> {
+    protected processCreateUser(response: Response): Promise<UserResponse> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
             return response.text().then((_responseText) => {
-                let result200: any = null;
-                result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as PlayerResponse;
-                return result200;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as UserResponse;
+            return result200;
             });
         } else if (status !== 200 && status !== 204) {
             return response.text().then((_responseText) => {
-                return throwException(
-                    "An unexpected server error occurred.",
-                    status,
-                    _responseText,
-                    _headers
-                );
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
             });
         }
-        return Promise.resolve<PlayerResponse>(null as any);
+        return Promise.resolve<UserResponse>(null as any);
     }
 
-    getPlayers(): Promise<PlayerResponse[]> {
+    getUser(): Promise<UserResponse[]> {
         let url_ = this.baseUrl + "/api/User";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -72,30 +66,106 @@ export class PlayerClient {
         };
 
         return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processGetPlayers(_response);
+            return this.processGetUser(_response);
         });
     }
 
-    protected processGetPlayers(response: Response): Promise<PlayerResponse[]> {
+    protected processGetUser(response: Response): Promise<UserResponse[]> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
             return response.text().then((_responseText) => {
-                let result200: any = null;
-                result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as PlayerResponse[];
-                return result200;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as UserResponse[];
+            return result200;
             });
         } else if (status !== 200 && status !== 204) {
             return response.text().then((_responseText) => {
-                return throwException(
-                    "An unexpected server error occurred.",
-                    status,
-                    _responseText,
-                    _headers
-                );
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
             });
         }
-        return Promise.resolve<PlayerResponse[]>(null as any);
+        return Promise.resolve<UserResponse[]>(null as any);
+    }
+}
+
+export class AuthClient {
+    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
+        this.http = http ? http : window as any;
+        this.baseUrl = baseUrl ?? "";
+    }
+
+    login(request: AuthRequest): Promise<JwtResponse> {
+        let url_ = this.baseUrl + "/api/auth/login";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(request);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processLogin(_response);
+        });
+    }
+
+    protected processLogin(response: Response): Promise<JwtResponse> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as JwtResponse;
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<JwtResponse>(null as any);
+    }
+
+    userInfo(): Promise<AuthUserInfo> {
+        let url_ = this.baseUrl + "/api/auth/userinfo";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processUserInfo(_response);
+        });
+    }
+
+    protected processUserInfo(response: Response): Promise<AuthUserInfo> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as AuthUserInfo;
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<AuthUserInfo>(null as any);
     }
 }
 
@@ -109,11 +179,11 @@ export class BoardClient {
         this.baseUrl = baseUrl ?? "";
     }
 
-    getByPlayer(playerId: string): Promise<BoardDto[]> {
-        let url_ = this.baseUrl + "/api/Board/user/{playerId}";
-        if (playerId === undefined || playerId === null)
-            throw new globalThis.Error("The parameter 'playerId' must be defined.");
-        url_ = url_.replace("{playerId}", encodeURIComponent("" + playerId));
+    getByUser(userId: string): Promise<BoardDtoResponse[]> {
+        let url_ = this.baseUrl + "/api/board/user/{userId}";
+        if (userId === undefined || userId === null)
+            throw new globalThis.Error("The parameter 'userId' must be defined.");
+        url_ = url_.replace("{userId}", encodeURIComponent("" + userId));
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {
@@ -124,34 +194,29 @@ export class BoardClient {
         };
 
         return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processGetByPlayer(_response);
+            return this.processGetByUser(_response);
         });
     }
 
-    protected processGetByPlayer(response: Response): Promise<BoardDto[]> {
+    protected processGetByUser(response: Response): Promise<BoardDtoResponse[]> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
             return response.text().then((_responseText) => {
-                let result200: any = null;
-                result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as BoardDto[];
-                return result200;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as BoardDtoResponse[];
+            return result200;
             });
         } else if (status !== 200 && status !== 204) {
             return response.text().then((_responseText) => {
-                return throwException(
-                    "An unexpected server error occurred.",
-                    status,
-                    _responseText,
-                    _headers
-                );
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
             });
         }
-        return Promise.resolve<BoardDto[]>(null as any);
+        return Promise.resolve<BoardDtoResponse[]>(null as any);
     }
 
-    purchase(dtos: CreateBoardRequest[]): Promise<BoardDto[]> {
-        let url_ = this.baseUrl + "/api/Board/purchase";
+    purchase(dtos: CreateBoardRequest[]): Promise<BoardDtoResponse[]> {
+        let url_ = this.baseUrl + "/api/board/user/purchase";
         url_ = url_.replace(/[?&]$/, "");
 
         const content_ = JSON.stringify(dtos);
@@ -170,26 +235,21 @@ export class BoardClient {
         });
     }
 
-    protected processPurchase(response: Response): Promise<BoardDto[]> {
+    protected processPurchase(response: Response): Promise<BoardDtoResponse[]> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
             return response.text().then((_responseText) => {
-                let result200: any = null;
-                result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as BoardDto[];
-                return result200;
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as BoardDtoResponse[];
+            return result200;
             });
         } else if (status !== 200 && status !== 204) {
             return response.text().then((_responseText) => {
-                return throwException(
-                    "An unexpected server error occurred.",
-                    status,
-                    _responseText,
-                    _headers
-                );
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
             });
         }
-        return Promise.resolve<BoardDto[]>(null as any);
+        return Promise.resolve<BoardDtoResponse[]>(null as any);
     }
 }
 
@@ -203,7 +263,7 @@ export class BoardPriceClient {
         this.baseUrl = baseUrl ?? "";
     }
 
-    getAll(): Promise<BoardPriceDto[]> {
+    getAll(): Promise<BoardPriceDtoResponse[]> {
         let url_ = this.baseUrl + "/api/BoardPrice";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -219,13 +279,13 @@ export class BoardPriceClient {
         });
     }
 
-    protected processGetAll(response: Response): Promise<BoardPriceDto[]> {
+    protected processGetAll(response: Response): Promise<BoardPriceDtoResponse[]> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
             return response.text().then((_responseText) => {
             let result200: any = null;
-            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as BoardPriceDto[];
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as BoardPriceDtoResponse[];
             return result200;
             });
         } else if (status !== 200 && status !== 204) {
@@ -233,7 +293,164 @@ export class BoardPriceClient {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
             });
         }
-        return Promise.resolve<BoardPriceDto[]>(null as any);
+        return Promise.resolve<BoardPriceDtoResponse[]>(null as any);
+    }
+}
+
+export class TransactionClient {
+    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
+        this.http = http ? http : window as any;
+        this.baseUrl = baseUrl ?? "";
+    }
+
+    getByUser(userId: string): Promise<TransactionDtoResponse[]> {
+        let url_ = this.baseUrl + "/api/Transaction/user/{userId}";
+        if (userId === undefined || userId === null)
+            throw new globalThis.Error("The parameter 'userId' must be defined.");
+        url_ = url_.replace("{userId}", encodeURIComponent("" + userId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetByUser(_response);
+        });
+    }
+
+    protected processGetByUser(response: Response): Promise<TransactionDtoResponse[]> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as TransactionDtoResponse[];
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<TransactionDtoResponse[]>(null as any);
+    }
+
+    getPending(): Promise<TransactionDtoResponse[]> {
+        let url_ = this.baseUrl + "/api/Transaction/pending";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetPending(_response);
+        });
+    }
+
+    protected processGetPending(response: Response): Promise<TransactionDtoResponse[]> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as TransactionDtoResponse[];
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<TransactionDtoResponse[]>(null as any);
+    }
+
+    createDeposit(dto: CreateTransactionRequest): Promise<TransactionDtoResponse> {
+        let url_ = this.baseUrl + "/api/Transaction/deposit";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(dto);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processCreateDeposit(_response);
+        });
+    }
+
+    protected processCreateDeposit(response: Response): Promise<TransactionDtoResponse> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as TransactionDtoResponse;
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<TransactionDtoResponse>(null as any);
+    }
+
+    updateStatus(id: string, dto: UpdateTransactionStatusRequest): Promise<TransactionDtoResponse> {
+        let url_ = this.baseUrl + "/api/Transaction/{id}/status";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(dto);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processUpdateStatus(_response);
+        });
+    }
+
+    protected processUpdateStatus(response: Response): Promise<TransactionDtoResponse> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as TransactionDtoResponse;
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<TransactionDtoResponse>(null as any);
     }
 }
 
@@ -359,55 +576,7 @@ export class AdminGameClient {
     }
 }
 
-export class AuthClient {
-    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
-    private baseUrl: string;
-    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
-
-    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
-        this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "";
-    }
-
-    login(request: LoginRequest): Promise<LoginResponse> {
-        let url_ = this.baseUrl + "/api/auth/login";
-        url_ = url_.replace(/[?&]$/, "");
-
-        const content_ = JSON.stringify(request);
-
-        let options_: RequestInit = {
-            body: content_,
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Accept": "application/json"
-            }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processLogin(_response);
-        });
-    }
-
-    protected processLogin(response: Response): Promise<LoginResponse> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            let result200: any = null;
-            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as LoginResponse;
-            return result200;
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<LoginResponse>(null as any);
-    }
-}
-
-export interface PlayerResponse {
+export interface UserResponse {
     id: string;
     fullName: string;
     phone: string;
@@ -415,7 +584,7 @@ export interface PlayerResponse {
     balance: number;
 }
 
-export interface CreatePlayerRequest {
+export interface CreateUserRequest {
     fullName: string;
     phone: string;
     email: string;
@@ -423,7 +592,24 @@ export interface CreatePlayerRequest {
     role: number;
 }
 
-export interface BoardDto {
+export interface JwtResponse {
+    token: string;
+    role: number;
+    userId: string;
+}
+
+export interface AuthRequest {
+    email: string;
+    password: string;
+}
+
+export interface AuthUserInfo {
+    id: string;
+    role: number;
+    fullName: string;
+}
+
+export interface BoardDtoResponse {
     id: string;
     playerId: string | undefined;
     gameId: string | undefined;
@@ -443,14 +629,38 @@ export interface BoardTransactionDto {
 }
 
 export interface CreateBoardRequest {
-    playerId: string;
+    userId: string;
     numbers: number[];
     times: number;
 }
 
-export interface BoardPriceDto {
+export interface BoardPriceDtoResponse {
     fieldsCount: number;
     price: number;
+}
+
+export interface TransactionDtoResponse {
+    id: string;
+    userId: string | undefined;
+    fullName: string | undefined;
+    type: string;
+    amount: number;
+    mobilePayRef: string | undefined;
+    status: string;
+    boardId: string | undefined;
+    createdAt: string | undefined;
+    processedBy: string | undefined;
+    processedAt: string | undefined;
+}
+
+export interface CreateTransactionRequest {
+    userId: string;
+    amount: number;
+    mobilePayRef: string | undefined;
+}
+
+export interface UpdateTransactionStatusRequest {
+    status: string;
 }
 
 export interface GameResponse {
@@ -473,17 +683,6 @@ export interface GameHistoryResponse {
     weekNumber: number;
     winningNumbers: number[];
     createdAt: string;
-}
-
-export interface LoginResponse {
-    token: string;
-    role: number;
-    userId: string;
-}
-
-export interface LoginRequest {
-    email: string;
-    password: string;
 }
 
 export class ApiException extends Error {

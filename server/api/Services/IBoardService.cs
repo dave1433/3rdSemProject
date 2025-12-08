@@ -1,10 +1,10 @@
-using api.DTOs.Requests;
-using api.DTOs.Responses;
+using api.dtos.Requests;
+using api.dtos.Responses;
 
 namespace api.Services;
 
 public interface IBoardService
 {
-    Task<List<BoardDto>> GetByUserAsync(string userId);
-    Task<List<BoardDto>> CreateBetsAsync(IEnumerable<CreateBoardRequest> dtos);
+    Task<List<BoardDtoResponse>> GetByUserAsync(string userId);
+    Task<List<BoardDtoResponse>> CreateBetsAsync(string userId, IEnumerable<CreateBoardRequest> dtos);
 }

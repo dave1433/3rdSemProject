@@ -1,26 +1,42 @@
 import React from "react";
-import { NavLink } from "react-router";
+import { NavLink, useNavigate } from "react-router";
 import "../css/PlayerPageHeader.css";
-
-import logo from "../../assets/logo1.png";
+import { User, LogOut } from 'lucide-react';
 
 interface PlayerPageHeaderProps {
     userName: string;
+    balance?: number | null;
 }
 
 const navItems = [
     { label: "Board", path: "/player/board" },
     { label: "History", path: "/player/history" },
     { label: "Results", path: "/player/results" },
-    { label: "My Balance", path: "/player/balance" },
+    { label: "My Transactions", path: "/player/balance" },
 ];
 
-export const PlayerPageHeader: React.FC<PlayerPageHeaderProps> = ({ userName }) => {
+export const PlayerPageHeader: React.FC<PlayerPageHeaderProps> = ({
+                                                                      userName, balance,
+                                                                  }) => {
+    const navigate = useNavigate();
+
+    function handleLogout() {
+        // clear whatever you store on login
+        localStorage.removeItem("token");
+        localStorage.removeItem("role");
+        localStorage.removeItem("userId");
+
+        navigate("/");
+    }
+
+    const balanceLabel =
+        balance == null ? "Balance: 0 DKK" : `Balance: ${balance} DKK`;
+
     return (
         <header className="player-header">
             {/* Logo */}
             <div className="player-header_logo">
-                <img src={logo} alt="Jerne IF" />
+                <img src="../../../src/assets/logo1.png" alt="Jerne IF" />
             </div>
 
             {/* Navigation */}
@@ -42,11 +58,24 @@ export const PlayerPageHeader: React.FC<PlayerPageHeaderProps> = ({ userName }) 
                 </ul>
             </nav>
 
-            {/* User name */}
-            <div className="player-header_user">
-                <span className="player-header_user-label">Welcome back!</span>
-                <span className="player-header_user-name">{userName}</span>
+            {/* Right-side user/balance card */}
+            <div className="player-header_user-card">
+                <div className="player-header_user-avatar">
+                    <User size={20} />
+                </div>
+                <div className="player-header_user-text">
+                    <div className="player-header_user-name">{userName}</div>
+                    <div className="player-header_user-balance">{balanceLabel}</div>
+                </div>
             </div>
+            <button
+                type="button"
+                className="player-header_logout-btn"
+                onClick={handleLogout}
+                aria-label="Log out"
+            >
+                <LogOut size={20} />
+            </button>
         </header>
     );
 };

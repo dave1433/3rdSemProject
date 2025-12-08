@@ -2,12 +2,29 @@ import React, { useEffect, useState } from "react";
 import "../../css/PlayerHistoryPage.css";
 import { PlayerPageHeader } from "../../components/PlayerPageHeader";
 import { PlayerMyRepeatsPage } from "./PlayerMyRepeatsPage";
-import { BoardClient, PlayerClient } from "../../../generated-ts-client";
-import type { BoardDto, PlayerResponse } from "../../../generated-ts-client";
-import {apiGet} from "../../../api/connection.ts";
+import { apiGet } from "../../../api/connection";
 
 type RecordStatus = "Pending" | "Complete";
 type HistoryTab = "all" | "myRepeats";
+
+interface BoardTransactionDto {
+    id: string;
+    type: string;
+    amount: number;
+    status: string;
+    createdAt?: string | null;
+}
+
+interface BoardDtoResponse {
+    id: string;
+    playerId?: string | null;
+    gameId?: string | null;
+    numbers: number[];
+    price: number;
+    times: number;
+    createdAt?: string | null;
+    transactions: BoardTransactionDto[];
+}
 
 interface PlayerRecord {
     id: string;
@@ -18,22 +35,19 @@ interface PlayerRecord {
     totalAmountDkk: number;
 }
 
+// --- Component ---
+
 export const PlayerHistoryPage: React.FC = () => {
     const [activeTab, setActiveTab] = useState<HistoryTab>("all");
     const [records, setRecords] = useState<PlayerRecord[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [playerName, setPlayerName] = useState<string>("Player");
+    const [playerName, setPlayerName] = useState<string>("");
 
     const [selectedForRepeat, setSelectedForRepeat] =
         useState<PlayerRecord | null>(null);
 
     const CURRENT_PLAYER_ID = localStorage.getItem("userId") ?? "";
-
-    // Force default to "ALL" on page load
-    useEffect(() => {
-        setActiveTab("all");
-    }, []);
 
     useEffect(() => {
         if (!CURRENT_PLAYER_ID) {
@@ -44,38 +58,40 @@ export const PlayerHistoryPage: React.FC = () => {
         void (async () => {
             await Promise.all([
                 loadRecords(CURRENT_PLAYER_ID),
-                loadPlayer(CURRENT_PLAYER_ID),
+                loadPlayerName(CURRENT_PLAYER_ID),
             ]);
         })();
     }, [CURRENT_PLAYER_ID]);
 
-    async function loadPlayer(playerId: string) {
+    // --------- load player name (simple version using /User) ---------
+    async function loadPlayerName(playerId: string): Promise<void> {
         try {
             const res = await apiGet("/User");
+            if (!res.ok) {
+                throw new Error(`Failed to load players (status ${res.status})`);
+            }
 
-            if (!res.ok) throw new Error("Failed to load players");
-
-            const players: PlayerResponse[] = await res.json();
+            const players: { id: string; fullName: string }[] = await res.json();
             const current = players.find((p) => p.id === playerId);
-
             if (current) setPlayerName(current.fullName);
         } catch (err) {
             console.error("Failed to load player", err);
+            // keep default "Player" if it fails
         }
     }
 
-    async function loadRecords(playerId: string) {
+    // --------- load boards history (uses JWT via apiGet) ---------
+    async function loadRecords(userId: string): Promise<void> {
         try {
             setLoading(true);
             setError(null);
 
-            const res = await apiGet(`/Board/user/${playerId}`);
-
+            const res = await apiGet(`/board/user/${userId}`);
             if (!res.ok) {
                 throw new Error(`Failed to load history (status ${res.status})`);
             }
 
-            const boards: BoardDto[] = await res.json();
+            const boards: BoardDtoResponse[] = await res.json();
 
             const mapped: PlayerRecord[] = boards.map((b) => {
                 const totalAmount = b.price;
@@ -86,7 +102,11 @@ export const PlayerHistoryPage: React.FC = () => {
                 );
 
                 let status: RecordStatus = "Pending";
-                if (purchaseTx && purchaseTx.status.toLowerCase() === "approved") {
+                if (
+                    purchaseTx &&
+                    purchaseTx.status &&
+                    purchaseTx.status.toLowerCase() === "approved"
+                ) {
                     status = "Complete";
                 }
 
@@ -103,13 +123,15 @@ export const PlayerHistoryPage: React.FC = () => {
             setRecords(mapped);
         } catch (err) {
             console.error(err);
-            setError("Failed to load history");
+            const message =
+                err instanceof Error ? err.message : "Failed to load history";
+            setError(message);
         } finally {
             setLoading(false);
         }
     }
 
-    function handleReorderClick(record: PlayerRecord) {
+    function handleReorderClick(record: PlayerRecord): void {
         setSelectedForRepeat(record);
         setActiveTab("myRepeats");
     }
@@ -153,24 +175,22 @@ export const PlayerHistoryPage: React.FC = () => {
 
                         return (
                             <tr key={r.id}>
-                                <td>
-                                    {new Date(r.createdAt).toLocaleDateString()}
-                                </td>
+                                <td>{new Date(r.createdAt).toLocaleDateString()}</td>
                                 <td>{r.numbers.join(", ")}</td>
                                 <td>{fields}</td>
                                 <td>{r.times}</td>
                                 <td>{r.totalAmountDkk} DKK</td>
                                 <td>
-                                        <span
-                                            className={
-                                                "history-status-badge " +
-                                                (r.status === "Complete"
-                                                    ? "history-status-badge--complete"
-                                                    : "history-status-badge--pending")
-                                            }
-                                        >
-                                            {r.status}
-                                        </span>
+                    <span
+                        className={
+                            "history-status-badge " +
+                            (r.status === "Complete"
+                                ? "history-status-badge--complete"
+                                : "history-status-badge--pending")
+                        }
+                    >
+                      {r.status}
+                    </span>
                                 </td>
                                 <td className="history-actions-cell">
                                     <button
@@ -193,9 +213,7 @@ export const PlayerHistoryPage: React.FC = () => {
     function renderMyRepeatsTab() {
         return (
             <div className="history-myrepeats-wrapper">
-                <PlayerMyRepeatsPage
-                    initialNumbers={selectedForRepeat?.numbers}
-                />
+                <PlayerMyRepeatsPage initialNumbers={selectedForRepeat?.numbers} />
             </div>
         );
     }
@@ -210,40 +228,31 @@ export const PlayerHistoryPage: React.FC = () => {
                     Overview of my past boards and repeat orders.
                 </p>
 
-                {/* Tabs */}
                 <div className="history-tabs">
                     <button
                         type="button"
                         className={
                             "history-tab-btn" +
-                            (activeTab === "all"
-                                ? " history-tab-btn-active"
-                                : "")
+                            (activeTab === "all" ? " history-tab-btn-active" : "")
                         }
                         onClick={() => setActiveTab("all")}
                     >
-                        ALL
+                        All
                     </button>
-
                     <button
                         type="button"
                         className={
                             "history-tab-btn" +
-                            (activeTab === "myRepeats"
-                                ? " history-tab-btn-active"
-                                : "")
+                            (activeTab === "myRepeats" ? " history-tab-btn-active" : "")
                         }
                         onClick={() => setActiveTab("myRepeats")}
                     >
-                        MY REPEATS
+                        My repeats
                     </button>
                 </div>
 
-                {/* Tab Content */}
                 <div className="history-content">
-                    {activeTab === "all"
-                        ? renderAllTab()
-                        : renderMyRepeatsTab()}
+                    {activeTab === "all" ? renderAllTab() : renderMyRepeatsTab()}
                 </div>
             </div>
         </div>

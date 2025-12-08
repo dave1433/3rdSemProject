@@ -1,12 +1,24 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import "../../css/PlayerMyBalancePage.css";
 import { PlayerPageHeader } from "../../components/PlayerPageHeader";
+
+// 👉 match your generated-ts-client exactly
+import {
+    UserClient,
+    TransactionClient,
+} from "../../../generated-ts-client";
+
+import type {
+    UserResponse,
+    TransactionDtoResponse,
+    CreateTransactionRequest,
+} from "../../../generated-ts-client";
 
 type TransactionStatus = "Pending" | "Approved" | "Rejected";
 type TransactionType = "Deposit" | "BoardPurchase";
 
 interface BalanceTransaction {
-    id: number;
+    id: string;
     date: string;
     type: TransactionType;
     amountDkk: number;
@@ -15,53 +27,82 @@ interface BalanceTransaction {
     description?: string;
 }
 
-// some fake data(should be deleted later: 2 approved deposits, 1 approved purchase, 1 pending deposit
-const initialTransactions: BalanceTransaction[] = [
-    {
-        id: 1,
-        date: "2025-11-15T10:22:00Z",
-        type: "Deposit",
-        amountDkk: 500,
-        mobilePayRef: "MP-123456",
-        status: "Approved",
-        description: "Initial deposit",
-    },
-    {
-        id: 2,
-        date: "2025-11-18T09:05:00Z",
-        type: "BoardPurchase",
-        amountDkk: 160,
-        status: "Approved",
-        description: "Board with 8 fields (x1)",
-    },
-    {
-        id: 3,
-        date: "2025-11-20T14:10:00Z",
-        type: "Deposit",
-        amountDkk: 200,
-        mobilePayRef: "MP-789012",
-        status: "Approved",
-        description: "Top up",
-    },
-    {
-        id: 4,
-        date: "2025-11-22T16:40:00Z",
-        type: "Deposit",
-        amountDkk: 300,
-        mobilePayRef: "MP-987654",
-        status: "Pending",
-        description: "Waiting for admin approval",
-    },
-];
+function mapTransaction(t: TransactionDtoResponse): BalanceTransaction {
+    const rawType = (t.type ?? "").toLowerCase();
+    const rawStatus = (t.status ?? "").toLowerCase();
+
+    const type: TransactionType =
+        rawType === "deposit" ? "Deposit" : "BoardPurchase";
+
+    const status: TransactionStatus =
+        rawStatus === "approved"
+            ? "Approved"
+            : rawStatus === "rejected"
+                ? "Rejected"
+                : "Pending";
+
+    return {
+        id: t.id,
+        date: t.createdAt ?? new Date().toISOString(),
+        type,
+        amountDkk: t.amount,
+        mobilePayRef: t.mobilePayRef ?? undefined,
+        status,
+        description:
+            type === "Deposit"
+                ? "Deposit via MobilePay"
+                : t.boardId
+                    ? `Board purchase (${t.boardId})`
+                    : "Board purchase",
+    };
+}
+
+const userClient = new UserClient();
+const transactionClient = new TransactionClient();
 
 export const PlayerMyBalancePage: React.FC = () => {
-    const [transactions, setTransactions] =
-        useState<BalanceTransaction[]>(initialTransactions);
+    const [transactions, setTransactions] = useState<BalanceTransaction[]>([]);
+    const [playerName, setPlayerName] = useState<string>("");
 
     const [amountInput, setAmountInput] = useState("");
     const [mobilePayInput, setMobilePayInput] = useState("");
     const [formError, setFormError] = useState<string | null>(null);
     const [formSuccess, setFormSuccess] = useState<string | null>(null);
+    const [loading, setLoading] = useState(false);
+    const [loadError, setLoadError] = useState<string | null>(null);
+
+    const CURRENT_USER_ID = localStorage.getItem("userId") ?? "";
+
+    useEffect(() => {
+        if (!CURRENT_USER_ID) {
+            setLoadError("No user is logged in. Please log in again.");
+            return;
+        }
+
+        void (async () => {
+            try {
+                setLoading(true);
+                setLoadError(null);
+
+                // Load transactions
+                const backendTx: TransactionDtoResponse[] =
+                    await transactionClient.getByUser(CURRENT_USER_ID);
+                setTransactions(backendTx.map(mapTransaction));
+
+                // Load user profile
+                const users: UserResponse[] = await userClient.getUser();
+                const current = users.find((u) => u.id === CURRENT_USER_ID);
+                if (current) {
+                    setPlayerName(current.fullName);
+                }
+            } catch (err) {
+                console.error("Failed to load balance data", err);
+                setLoadError("Failed to load balance data.");
+            } finally {
+                setLoading(false);
+            }
+        })();
+    }, [CURRENT_USER_ID]);
 
     const approvedTransactions = useMemo(
         () => transactions.filter((t) => t.status === "Approved"),
@@ -76,20 +117,23 @@ export const PlayerMyBalancePage: React.FC = () => {
         [transactions]
     );
 
-    // Balance = sum(approved deposits) - sum(approved purchases), clamped at 0
     const balance = useMemo(() => {
-        const total = approvedTransactions.reduce((sum, t) => {
-            if (t.type === "Deposit") return sum + t.amountDkk;
-            return sum - t.amountDkk; // BoardPurchase
-        }, 0);
-
+        const total = approvedTransactions.reduce(
+            (sum, t) => sum + t.amountDkk,
+            0
+        );
         return Math.max(0, total);
     }, [approvedTransactions]);
 
-    function handleSubmitDeposit(e: React.FormEvent) {
+    async function handleSubmitDeposit(e: React.FormEvent) {
         e.preventDefault();
         setFormError(null);
         setFormSuccess(null);
+
+        if (!CURRENT_USER_ID) {
+            setFormError("No user id found. Please log in again.");
+            return;
+        }
 
         const amount = Number(amountInput.replace(",", "."));
         if (Number.isNaN(amount) || amount <= 0) {
@@ -102,51 +146,55 @@ export const PlayerMyBalancePage: React.FC = () => {
             return;
         }
 
-        const now = new Date();
-        const newTx: BalanceTransaction = {
-            id: Date.now(),
-            date: now.toISOString(),
-            type: "Deposit",
-            amountDkk: Math.round(amount),
-            mobilePayRef: mobilePayInput.trim(),
-            status: "Pending",
-            description: "Awaiting admin approval",
-        };
+        try {
+            const payload: CreateTransactionRequest = {
+                userId: CURRENT_USER_ID,
+                amount: Math.round(amount),
+                mobilePayRef: mobilePayInput.trim(),
+            };
 
-        setTransactions((prev) => [newTx, ...prev]);
-        setAmountInput("");
-        setMobilePayInput("");
-        setFormSuccess(
-            "Deposit registered as pending. An admin will review and approve it."
-        );
+            const created = await transactionClient.createDeposit(payload);
+
+            setTransactions((prev) => [mapTransaction(created), ...prev]);
+
+            setAmountInput("");
+            setMobilePayInput("");
+            setFormSuccess(
+                "Deposit registered as pending. An admin will approve it soon."
+            );
+        } catch (err) {
+            console.error("Failed to submit deposit", err);
+            setFormError("Failed to submit deposit. Please try again.");
+        }
     }
 
     return (
         <div className="balance-page">
-            <PlayerPageHeader userName="Mads Andersen" />
+            <PlayerPageHeader userName={playerName} />
 
             <div className="balance-inner">
                 <h1 className="balance-title">My balance</h1>
                 <p className="balance-subtitle">
-                    Overview of my transactions and current balance.
+                    Overview of your transactions and current balance.
                 </p>
 
+                {loadError && (
+                    <p className="balance-form-message balance-form-error">
+                        {loadError}
+                    </p>
+                )}
+
                 <div className="balance-layout">
-                    {/* Left side: current balance + deposit form */}
                     <div className="balance-left">
                         <section className="balance-card balance-summary-card">
                             <div className="balance-summary-label">Current balance</div>
                             <div className="balance-summary-amount">
-                                {balance} <span>DKK</span>
+                                {loading ? "…" : balance} <span>DKK</span>
                             </div>
                         </section>
 
                         <section className="balance-card balance-deposit-card">
                             <h2 className="balance-section-title">Deposit with MobilePay</h2>
-                            <p className="balance-section-subtitle">
-                                Submit your payment and attach the MobilePay transaction
-                                number. Your deposit will be pending until an admin approves it.
-                            </p>
 
                             <form
                                 className="balance-deposit-form"
@@ -208,16 +256,16 @@ export const PlayerMyBalancePage: React.FC = () => {
                                                 <div className="balance-pending-main">
                                                     {tx.amountDkk} DKK ·{" "}
                                                     <span className="balance-pending-ref">
-                            {tx.mobilePayRef}
-                          </span>
+                                                        {tx.mobilePayRef}
+                                                    </span>
                                                 </div>
                                                 <div className="balance-pending-meta">
                                                     {new Date(tx.date).toLocaleString()}
                                                 </div>
                                             </div>
                                             <span className="balance-status-badge balance-status-badge--pending">
-                        Pending
-                      </span>
+                                                Pending
+                                            </span>
                                         </li>
                                     ))}
                                 </ul>
@@ -225,14 +273,9 @@ export const PlayerMyBalancePage: React.FC = () => {
                         )}
                     </div>
 
-                    {/* Right side: transaction history */}
                     <div className="balance-right">
                         <section className="balance-card">
                             <h2 className="balance-section-title">Balance history</h2>
-                            <p className="balance-section-subtitle">
-                                Approved deposits increase your balance. Approved board
-                                purchases decrease it.
-                            </p>
 
                             <div className="balance-table-wrapper">
                                 <table className="balance-table">
@@ -247,26 +290,21 @@ export const PlayerMyBalancePage: React.FC = () => {
                                     </thead>
                                     <tbody>
                                     {transactions.map((tx) => {
-                                        const dateLabel = new Date(
-                                            tx.date
-                                        ).toLocaleDateString();
                                         const amountLabel =
-                                            (tx.type === "BoardPurchase" ? "-" : "+") +
+                                            (tx.amountDkk > 0 ? "+" : "") +
                                             tx.amountDkk +
                                             " DKK";
 
                                         return (
                                             <tr key={tx.id}>
-                                                <td>{dateLabel}</td>
                                                 <td>
-                                                    {tx.type === "Deposit"
-                                                        ? "Deposit"
-                                                        : "Board purchase"}
+                                                    {new Date(tx.date).toLocaleDateString()}
                                                 </td>
-                                                <td>{tx.description ?? "\u2014"}</td>
+                                                <td>{tx.type}</td>
+                                                <td>{tx.description ?? "—"}</td>
                                                 <td
                                                     className={
-                                                        tx.type === "BoardPurchase"
+                                                        tx.amountDkk < 0
                                                             ? "balance-amount-negative"
                                                             : "balance-amount-positive"
                                                     }
@@ -274,18 +312,18 @@ export const PlayerMyBalancePage: React.FC = () => {
                                                     {amountLabel}
                                                 </td>
                                                 <td>
-                            <span
-                                className={
-                                    "balance-status-badge " +
-                                    (tx.status === "Approved"
-                                        ? "balance-status-badge--approved"
-                                        : tx.status === "Pending"
-                                            ? "balance-status-badge--pending"
-                                            : "balance-status-badge--rejected")
-                                }
-                            >
-                              {tx.status}
-                            </span>
+                                                        <span
+                                                            className={
+                                                                "balance-status-badge " +
+                                                                (tx.status === "Approved"
+                                                                    ? "balance-status-badge--approved"
+                                                                    : tx.status === "Pending"
+                                                                        ? "balance-status-badge--pending"
+                                                                        : "balance-status-badge--rejected")
+                                                            }
+                                                        >
+                                                            {tx.status}
+                                                        </span>
                                                 </td>
                                             </tr>
                                         );

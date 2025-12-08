@@ -5,6 +5,7 @@ import { PlayerForm } from "../components/PlayerForm";
 import { PlayerList } from "../components/PlayerList";
 import { WinningNumbersCard } from "../components/WinningNumbersCard";
 import { DrawHistoryTable } from "../components/DrawHistoryTable";
+import {PendingTransactions} from "../components/PendingTransactions.tsx";
 
 export const AdminDashboard = () => {
     const navigate = useNavigate();
@@ -14,8 +15,15 @@ export const AdminDashboard = () => {
         const token = localStorage.getItem("token");
         const role = localStorage.getItem("role");
 
-        if (!token) return navigate("/login");
-        if (role !== "1") return navigate("/player");
+        if (!token) {
+            navigate("/login");
+            return;
+        }
+
+        if (role !== "1") {
+            navigate("/player");
+            return;
+        }
 
         setAuthorized(true);
     }, [navigate]);
@@ -29,6 +37,8 @@ export const AdminDashboard = () => {
             <PlayerList />
             <WinningNumbersCard />
             <DrawHistoryTable />
+            <PendingTransactions />
+            
         </>
     );
 };

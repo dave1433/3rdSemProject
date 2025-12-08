@@ -15,7 +15,7 @@ export function apiGet(path: string) {
     });
 }
 
-export function apiPost(path: string, body: any) {
+export function apiPost(path: string, body: unknown) {
     return fetch(`${API_BASE_URL}${path}`, {
         method: "POST",
         headers: authHeaders(),
