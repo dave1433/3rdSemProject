@@ -45,6 +45,7 @@ export const useWinningNumbers = (year: number, weekNumber: number) => {
             alert("Select exactly 3 numbers");
             return;
         }
+        
 
         setLoading(true);
 
