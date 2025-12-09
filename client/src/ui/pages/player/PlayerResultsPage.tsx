@@ -1,7 +1,12 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import "../../css/PlayerResultsPage.css";
+
 import { PlayerPageHeader } from "../../components/PlayerPageHeader";
 import { useNavigate } from "react-router";
+
+import { openapiAdapter } from "../../../api/connection";
+import { UserClient } from "../../../generated-ts-client";
+import type { UserResponse } from "../../../generated-ts-client.ts";
 
 interface ResultRow {
     id: number;
@@ -11,7 +16,7 @@ interface ResultRow {
     winningAmountDkk: number;
 }
 
-// fake data – myNumbers always at least 5 numbers, should be deleted later
+// Temporary fake data (until backend endpoint exists)
 const fakeResults: ResultRow[] = [
     {
         id: 1,
@@ -36,8 +41,33 @@ const fakeResults: ResultRow[] = [
     },
 ];
 
+const userClient = openapiAdapter(UserClient);
+
 export const PlayerResultsPage: React.FC = () => {
     const navigate = useNavigate();
+    const [playerName, setPlayerName] = useState<string>("Player");
+
+    const CURRENT_USER_ID = localStorage.getItem("userId") ?? "";
+
+    // -----------------------------
+    // LOAD PLAYER NAME
+    // -----------------------------
+    useEffect(() => {
+        if (!CURRENT_USER_ID) return;
+
+        void (async () => {
+            try {
+                const users: UserResponse[] = await userClient.getUser();
+                const current = users.find((u) => u.id === CURRENT_USER_ID);
+
+                if (current) {
+                    setPlayerName(current.fullName);
+                }
+            } catch (err) {
+                console.error("Failed to load user", err);
+            }
+        })();
+    }, [CURRENT_USER_ID]);
 
     function handleTryAgain() {
         navigate("/player/board");
@@ -45,7 +75,7 @@ export const PlayerResultsPage: React.FC = () => {
 
     return (
         <div className="results-page">
-            <PlayerPageHeader userName="Mads Andersen" />
+            <PlayerPageHeader userName={playerName} />
 
             <div className="results-inner">
                 <div className="results-header-row">
@@ -75,11 +105,13 @@ export const PlayerResultsPage: React.FC = () => {
                             <th>Winning amount</th>
                         </tr>
                         </thead>
+
                         <tbody>
                         {fakeResults.map((row) => (
                             <tr key={row.id}>
                                 <td>{row.week}</td>
 
+                                {/* Winning numbers */}
                                 <td>
                                     <div className="results-number-row">
                                         {row.winningNumbers.map((n) => (
@@ -87,12 +119,13 @@ export const PlayerResultsPage: React.FC = () => {
                                                 key={`win-${row.id}-${n}`}
                                                 className="results-number-pill"
                                             >
-                          {n}
-                        </span>
+                                                    {n}
+                                                </span>
                                         ))}
                                     </div>
                                 </td>
 
+                                {/* My numbers */}
                                 <td>
                                     <div className="results-number-row">
                                         {row.myNumbers.map((n) => (
@@ -100,21 +133,22 @@ export const PlayerResultsPage: React.FC = () => {
                                                 key={`my-${row.id}-${n}`}
                                                 className="results-number-pill"
                                             >
-                          {n}
-                        </span>
+                                                    {n}
+                                                </span>
                                         ))}
                                     </div>
                                 </td>
 
+                                {/* Winning amount */}
                                 <td>
                                     {row.winningAmountDkk > 0 ? (
                                         <span className="results-amount-badge results-amount-badge--win">
-                        {row.winningAmountDkk} DKK
-                      </span>
+                                                {row.winningAmountDkk} DKK
+                                            </span>
                                     ) : (
                                         <span className="results-amount-badge results-amount-badge--zero">
-                        0 DKK
-                      </span>
+                                                0 DKK
+                                            </span>
                                     )}
                                 </td>
                             </tr>

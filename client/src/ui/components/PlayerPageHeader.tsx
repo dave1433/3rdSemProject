@@ -12,7 +12,7 @@ const navItems = [
     { label: "Board", path: "/player/board" },
     { label: "History", path: "/player/history" },
     { label: "Results", path: "/player/results" },
-    { label: "My Transactions", path: "/player/balance" },
+    { label: "My Transactions", path: "/player/transactions" },
 ];
 
 export const PlayerPageHeader: React.FC<PlayerPageHeaderProps> = ({

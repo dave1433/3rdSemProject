@@ -134,8 +134,6 @@ var app = builder.Build();
 // =======================
 app.UseRouting();
 app.UseCors("AllowFrontend");
-app.UseAuthentication();
-app.UseAuthorization();
 if (!app.Environment.IsProduction())
 {
     app.UseOpenApi();
@@ -146,7 +144,8 @@ if (!app.Environment.IsProduction())
 app.GenerateApiClientsFromOpenApi("/../../client/src/generated-ts-client.ts")
    .GetAwaiter()
    .GetResult();
-
+app.UseAuthentication();
+app.UseAuthorization();
 app.MapControllers();
 
 app.Run();

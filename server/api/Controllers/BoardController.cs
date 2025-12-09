@@ -8,7 +8,7 @@ namespace api.Controllers;
 
 [ApiController]
 [Route("api/board")]
-[Authorize] // all endpoints in this controller require JWT
+[Authorize] // require JWT for all endpoints
 public class BoardController : ControllerBase
 {
     private readonly IBoardService _boardService;
@@ -25,8 +25,10 @@ public class BoardController : ControllerBase
         _logger       = logger;
     }
 
-    // ===================== GET HISTORY =====================
+    // ======================================================
     // GET /api/board/user/{userId}
+    // Returns all boards purchased by a user
+    // ======================================================
     [HttpGet("user/{userId}")]
     public async Task<ActionResult<List<BoardDtoResponse>>> GetByUser(string userId)
     {
@@ -34,18 +36,19 @@ public class BoardController : ControllerBase
         {
             var authUser = await _authService.GetUserInfoAsync(User);
             if (authUser is null)
-                return Unauthorized();
+                return Unauthorized("User not found in token");
 
-            // Role 2 = player – only see own boards
+            // Players can ONLY see their own boards
             if (authUser.Role == 2 && authUser.Id != userId)
-                return Forbid("Players can only see their own boards.");
+                return Forbid("Players may view only their own boards.");
 
             var boards = await _boardService.GetByUserAsync(userId);
             return Ok(boards);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "ERROR GetByUser");
+            _logger.LogError(ex, "ERROR: GetByUser failed");
+
             return StatusCode(500, new
             {
                 message = "Failed to load boards",
@@ -54,14 +57,16 @@ public class BoardController : ControllerBase
         }
     }
 
-    // ===================== PURCHASE =====================
+    // ======================================================
     // POST /api/board/user/purchase
+    // Player buys 1..N boards
+    // ======================================================
     [HttpPost("user/purchase")]
     public async Task<ActionResult<List<BoardDtoResponse>>> Purchase(
         [FromBody] List<CreateBoardRequest> dtos)
     {
         if (dtos == null || dtos.Count == 0)
-            return BadRequest("No boards to purchase.");
+            return BadRequest("At least one board must be submitted.");
 
         try
         {
@@ -69,21 +74,22 @@ public class BoardController : ControllerBase
             if (authUser is null)
                 return Unauthorized("User not found from token");
 
-            // only players can purchase
+            // Only players can purchase boards
             if (authUser.Role != 2)
-                return Forbid("Only players can purchase boards.");
+                return Forbid("Only players can purchase boards");
 
-            // Always use authenticated ID – ignore any userId from body
-            var boards = await _boardService.CreateBetsAsync(authUser.Id, dtos);
+            // 🟢 IMPORTANT — use authenticated ID, ignore any userId in request
+            var results = await _boardService.CreateBetsAsync(authUser.Id, dtos);
 
-            return Ok(boards);
+            return Ok(results);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "ERROR Purchase");
+            _logger.LogError(ex, "ERROR: Purchase failed");
+
             return StatusCode(500, new
             {
-                message = "Failed to purchase",
+                message = "Failed to purchase boards",
                 detail  = ex.Message
             });
         }

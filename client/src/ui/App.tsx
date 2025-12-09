@@ -8,7 +8,7 @@ import {
 import { PlayerBoardPage } from "./pages/player/PlayerBoardPage";
 import { PlayerHistoryPage } from "./pages/player/PlayerHistoryPage";
 import { PlayerResultsPage } from "./pages/player/PlayerResultsPage";
-import { PlayerMyBalancePage } from "./pages/player/PlayerMyBalancePage";
+import { PlayerMyTransactionPage } from "./pages/player/PlayerMyTransactionPage.tsx";
 import { Login } from "./pages/Login";
 import { AdminDashboard } from "./pages/AdminDashboard";
 
@@ -35,7 +35,7 @@ const router = createBrowserRouter([
             { index: true, element: <Navigate to="board" replace /> },
             { path: "board", element: <PlayerBoardPage /> },
             { path: "history", element: <PlayerHistoryPage /> },
-            { path: "balance", element: <PlayerMyBalancePage /> },
+            { path: "transactions", element: <PlayerMyTransactionPage /> },
             { path: "results", element: <PlayerResultsPage /> },
         ],
     },
