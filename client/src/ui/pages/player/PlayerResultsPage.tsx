@@ -4,9 +4,8 @@ import "../../css/PlayerResultsPage.css";
 import { PlayerPageHeader } from "../../components/PlayerPageHeader";
 import { useNavigate } from "react-router";
 
-import { openapiAdapter } from "../../../api/connection";
-import { UserClient } from "../../../generated-ts-client";
-import type { UserResponse } from "../../../generated-ts-client.ts";
+import type { UserResponse } from "../../../generated-ts-client";
+import { apiGet } from "../../../api/connection";
 
 interface ResultRow {
     id: number;
@@ -16,7 +15,7 @@ interface ResultRow {
     winningAmountDkk: number;
 }
 
-// Temporary fake data (until backend endpoint exists)
+// Temporary fake data
 const fakeResults: ResultRow[] = [
     {
         id: 1,
@@ -41,8 +40,6 @@ const fakeResults: ResultRow[] = [
     },
 ];
 
-const userClient = openapiAdapter(UserClient);
-
 export const PlayerResultsPage: React.FC = () => {
     const navigate = useNavigate();
     const [playerName, setPlayerName] = useState<string>("Player");
@@ -57,12 +54,12 @@ export const PlayerResultsPage: React.FC = () => {
 
         void (async () => {
             try {
-                const users: UserResponse[] = await userClient.getUser();
-                const current = users.find((u) => u.id === CURRENT_USER_ID);
+                const res = await apiGet("/api/user");
+                const users: UserResponse[] = await res.json();
 
-                if (current) {
-                    setPlayerName(current.fullName);
-                }
+                const current = users.find(u => u.id === CURRENT_USER_ID);
+                if (current) setPlayerName(current.fullName);
+
             } catch (err) {
                 console.error("Failed to load user", err);
             }
@@ -107,48 +104,39 @@ export const PlayerResultsPage: React.FC = () => {
                         </thead>
 
                         <tbody>
-                        {fakeResults.map((row) => (
+                        {fakeResults.map(row => (
                             <tr key={row.id}>
                                 <td>{row.week}</td>
 
-                                {/* Winning numbers */}
                                 <td>
                                     <div className="results-number-row">
-                                        {row.winningNumbers.map((n) => (
-                                            <span
-                                                key={`win-${row.id}-${n}`}
-                                                className="results-number-pill"
-                                            >
-                                                    {n}
-                                                </span>
+                                        {row.winningNumbers.map(n => (
+                                            <span key={`win-${row.id}-${n}`} className="results-number-pill">
+                                                {n}
+                                            </span>
                                         ))}
                                     </div>
                                 </td>
 
-                                {/* My numbers */}
                                 <td>
                                     <div className="results-number-row">
-                                        {row.myNumbers.map((n) => (
-                                            <span
-                                                key={`my-${row.id}-${n}`}
-                                                className="results-number-pill"
-                                            >
-                                                    {n}
-                                                </span>
+                                        {row.myNumbers.map(n => (
+                                            <span key={`my-${row.id}-${n}`} className="results-number-pill">
+                                                {n}
+                                            </span>
                                         ))}
                                     </div>
                                 </td>
 
-                                {/* Winning amount */}
                                 <td>
                                     {row.winningAmountDkk > 0 ? (
                                         <span className="results-amount-badge results-amount-badge--win">
-                                                {row.winningAmountDkk} DKK
-                                            </span>
+                                            {row.winningAmountDkk} DKK
+                                        </span>
                                     ) : (
                                         <span className="results-amount-badge results-amount-badge--zero">
-                                                0 DKK
-                                            </span>
+                                            0 DKK
+                                        </span>
                                     )}
                                 </td>
                             </tr>
