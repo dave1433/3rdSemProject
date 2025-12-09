@@ -1,0 +1,115 @@
+﻿.admin-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 80px 0 80px;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background-color: #2E4658;
+}
+
+/* Logo */
+.admin-header_logo {
+    padding-bottom: 20px;
+}
+
+/* NAVIGATION */
+.admin-header_nav {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    font-weight: bold;
+}
+
+.admin-header_nav-list {
+    list-style: none;
+    display: flex;
+    gap: 30px;
+    margin: 0;
+    padding: 0;
+}
+
+.admin-header_nav-item {}
+
+.admin-header_nav-link {
+    background: none;
+    border: none;
+    text-decoration: none;
+    font-size: 1.2rem;
+    letter-spacing: 0.08em;
+    color: white;
+    cursor: pointer;
+    padding-bottom: 4px;
+    border-bottom: 2px solid transparent;
+    transition:
+            color 0.15s ease,
+            border-bottom-color 0.15s ease,
+            transform 0.15s ease;
+}
+
+.admin-header_nav-link:hover {
+    color: lightgray;
+    border-bottom-color: #D9D9D9;
+    transform: scale(1.05);
+}
+
+.admin-header_nav-link--active {
+    color: white;
+    border-bottom-color: #c80000;
+    transform: scale(1.05);
+}
+
+/* USER CARD */
+.admin-header_user-card {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 999px;
+    padding: 0.35rem 0.8rem;
+
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.admin-header_user-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #e3e7f1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.admin-header_user-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    color: white;
+    padding-right: 0.25rem;
+}
+
+.admin-header_user-name {
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+/* Logout Button */
+.admin-header_logout-btn {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    padding: 0.9rem;
+    border-radius: 999px;
+    color: #F2F2F2;
+}
+
+.admin-header_logout-btn:hover {
+    background: lightgray;
+    color: #C80000;
+}

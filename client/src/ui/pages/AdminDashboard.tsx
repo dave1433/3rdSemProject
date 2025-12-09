@@ -1,4 +1,3 @@
-// src/ui/pages/AdminDashboard.tsx
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 
@@ -8,56 +7,80 @@ import { PlayerList } from "../components/PlayerList";
 import { WinningNumbersCard } from "../components/WinningNumbersCard";
 import { DrawHistoryTable } from "../components/DrawHistoryTable";
 import { PendingTransactions } from "../components/PendingTransactions";
+import { AdminBoardsView } from "../components/AdminBoardsView";
 
 import { useAdminBoards } from "../../core/hooks/useAdminBoards";
-import { AdminBoardsView } from "../components/AdminBoardsView";
 
 export const AdminDashboard = () => {
     const navigate = useNavigate();
 
     const [authorized, setAuthorized] = useState<boolean | null>(null);
+    const [activeTab, setActiveTab] = useState("players");
     const [showBoards, setShowBoards] = useState(false);
 
     const { boards, loading, error, reload } = useAdminBoards();
 
     useEffect(() => {
-        const token = localStorage.getItem("token");
-        const role = localStorage.getItem("role");
+        const verify = () => {
+            const token = localStorage.getItem("token");
+            const role = localStorage.getItem("role");
 
-        if (!token) {
-            navigate("/login");
-            return;
-        }
+            if (!token) {
+                navigate("/login");
+                return;
+            }
 
-        if (role !== "1") {
-            navigate("/player");
-            return;
-        }
+            if (role !== "1") {
+                navigate("/player");
+                return;
+            }
 
-        setAuthorized(true);
+            setAuthorized(true);
+        };
+
+        verify();
     }, [navigate]);
 
     if (authorized === null) return null;
 
     return (
         <>
-            <AdminHeader />
+            {/* HEADER WITH PLAYER-STYLE TABS */}
+            <AdminHeader activeTab={activeTab} onChangeTab={setActiveTab} />
 
-            <PlayerForm />
-            <PlayerList />
-            <WinningNumbersCard />
-            <DrawHistoryTable />
-            <PendingTransactions />
+            {/* CONTENT BELOW TABS */}
+            <div className="p-6">
 
-            {/* ✅ PURCHASED BOARDS SECTION */}
-            <AdminBoardsView
-                boards={boards}
-                loading={loading}
-                error={error}
-                reload={reload}
-                visible={showBoards}
-                onToggle={() => setShowBoards((s) => !s)}
-            />
+                {activeTab === "players" && (
+                    <>
+                        <PlayerForm />
+                        <PlayerList />
+                    </>
+                )}
+
+                {activeTab === "game" && (
+                    <>
+                        <WinningNumbersCard />
+                        <DrawHistoryTable />
+                    </>
+                )}
+
+                {activeTab === "transactions" && (
+                    <PendingTransactions />
+                )}
+
+                {activeTab === "history" && (
+                    <AdminBoardsView
+                        boards={boards}
+                        loading={loading}
+                        error={error}
+                        reload={reload}
+                        visible={showBoards}
+                        onToggle={() => setShowBoards((s) => !s)}
+                    />
+                )}
+
+            </div>
         </>
     );
 };
