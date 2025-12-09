@@ -10,7 +10,7 @@ export const useWinningNumbers = (year: number, weekNumber: number) => {
     useEffect(() => {
         const loadStatus = async () => {
             try {
-                const res = await apiGet(`/admin/games/draw/status?year=${year}&weekNumber=${weekNumber}`);
+                const res = await apiGet(`/api/admin/games/draw/status?year=${year}&weekNumber=${weekNumber}`);
                 if (!res.ok) {
                     setLocked(false);
                     return;
@@ -49,7 +49,7 @@ export const useWinningNumbers = (year: number, weekNumber: number) => {
         setLoading(true);
 
         try {
-            const res = await apiPost("/admin/games/draw", {
+            const res = await apiPost("/api/admin/games/draw", {
                 year,
                 weekNumber,
                 winningNumbers: selected,

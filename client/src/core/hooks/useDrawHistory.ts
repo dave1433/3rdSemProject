@@ -19,7 +19,7 @@ export const useDrawHistory = () => {
             setLoading(true);
             setError(null);
 
-            const res = await apiGet("/admin/games/draw/history");
+            const res = await apiGet("/api/admin/games/draw/history");
             if (!res.ok) {
                 throw new Error("Failed to load draw history");
             }
