@@ -45,6 +45,15 @@ export function apiDelete(path: string) {
     });
 }
 
+// ✅ NEW: PATCH helper
+export function apiPatch(path: string, body?: unknown) {
+    return fetch(`${API_BASE_URL}${path}`, {
+        method: "PATCH",
+        headers: authHeaders(),
+        ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+    });
+}
+
 
 // --------------------------------------------------
 // OPENAPI CLIENT ADAPTER

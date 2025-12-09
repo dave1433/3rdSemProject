@@ -1,14 +1,12 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using efscaffold;
 using efscaffold.Entities;
+using api.security;
+using Infrastructure.Postgres.Scaffolding;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Collections.Generic;
-using api.security;  
-using Infrastructure.Postgres.Scaffolding; 
-
 
 namespace api.dtos
 {
@@ -23,10 +21,9 @@ namespace api.dtos
             _db = db;
         }
 
-        // -----------------------------
-        // POST /api/player
-        // -----------------------------
-
+        // ------------------------------------------------------------
+        // CREATE USER (POST /api/user)
+        // ------------------------------------------------------------
         [HttpPost]
         public async Task<ActionResult<UserResponse>> CreateUser(CreateUserRequest request)
         {
@@ -38,7 +35,8 @@ namespace api.dtos
                 Role = request.Role,
                 Fullname = request.FullName,
                 Phone = request.Phone,
-                Active = true,
+
+                Active = false,      // 🔥 Default: INACTIVE
                 Balance = 0,
                 Createdat = DateTime.UtcNow
             };
@@ -56,11 +54,11 @@ namespace api.dtos
             });
         }
 
-        // -----------------------------
-        // GET /api/player
-        // -----------------------------
+        // ------------------------------------------------------------
+        // GET ALL USERS (GET /api/user)
+        // ------------------------------------------------------------
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<UserResponse>>> GetUser()
+        public async Task<ActionResult<IEnumerable<UserResponse>>> GetUsers()
         {
             var users = await _db.Users
                 .Select(u => new UserResponse
@@ -76,5 +74,36 @@ namespace api.dtos
             return Ok(users);
         }
 
+        // ------------------------------------------------------------
+        // ACTIVATE USER (PATCH /api/user/{id}/activate)
+        // ------------------------------------------------------------
+        [HttpPatch("{id}/activate")]
+        public async Task<ActionResult> ActivateUser(string id)
+        {
+            var user = await _db.Users.FindAsync(id);
+            if (user == null)
+                return NotFound("User not found.");
+
+            user.Active = true;
+            await _db.SaveChangesAsync();
+
+            return Ok(new { message = "User activated" });
+        }
+
+        // ------------------------------------------------------------
+        // DEACTIVATE USER (PATCH /api/user/{id}/deactivate)
+        // ------------------------------------------------------------
+        [HttpPatch("{id}/deactivate")]
+        public async Task<ActionResult> DeactivateUser(string id)
+        {
+            var user = await _db.Users.FindAsync(id);
+            if (user == null)
+                return NotFound("User not found.");
+
+            user.Active = false;
+            await _db.SaveChangesAsync();
+
+            return Ok(new { message = "User deactivated" });
+        }
     }
 }
