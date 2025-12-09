@@ -1,0 +1,41 @@
+import { useEffect, useState } from "react";
+import { apiGet } from "../../api/connection";
+
+export interface Player {
+    id: string;
+    fullName: string;
+    phone: string;
+    active: boolean;
+    balance: number;
+}
+
+export const usePlayerList = () => {
+    const [players, setPlayers] = useState<Player[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    async function loadPlayers() {
+        try {
+            setLoading(true);
+
+            const res = await apiGet("/user");
+            if (!res.ok) {
+                console.error("Failed to load players");
+                return;
+            }
+
+            const data = await res.json();
+            setPlayers(data);
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    useEffect(() => {
+        void loadPlayers();
+
+        window.addEventListener("player-updated", loadPlayers);
+        return () => window.removeEventListener("player-updated", loadPlayers);
+    }, []);
+
+    return { players, loading, reload: loadPlayers };
+};
