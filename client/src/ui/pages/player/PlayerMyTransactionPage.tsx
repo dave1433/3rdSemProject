@@ -70,7 +70,7 @@ function mapTransaction(t: TransactionDtoResponse): BalanceTransaction {
 //               COMPONENT START
 // =======================================================
 
-export const PlayerMyBalancePage: React.FC = () => {
+export const PlayerMyTransactionPage: React.FC = () => {
     const [transactions, setTransactions] = useState<BalanceTransaction[]>([]);
     const [playerName, setPlayerName] = useState("");
 
