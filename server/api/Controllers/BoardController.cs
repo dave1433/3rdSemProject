@@ -56,6 +56,33 @@ public class BoardController : ControllerBase
             });
         }
     }
+    
+// ======================================================
+// GET /api/board/admin/all
+// Admin: all purchased boards
+// ======================================================
+    [HttpGet("admin/all")]
+    [Authorize(Roles = "1")]
+    public async Task<ActionResult<List<AdminBoardDtoResponse>>> GetAllBoardsForAdmin()
+    {
+        try
+        {
+            var boards = await _boardService.GetAllBoardsForAdminAsync();
+            return Ok(boards);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "ERROR: Admin board fetch failed");
+
+            return StatusCode(500, new
+            {
+                message = "Failed to fetch admin boards",
+                detail = ex.Message
+            });
+        }
+    }
+
+
 
     // ======================================================
     // POST /api/board/user/purchase
