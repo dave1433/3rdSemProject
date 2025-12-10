@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import "../../css/PlayerMyBalancePage.css";
+import "../../css/PlayerMyTransactionPage.css";
 import { PlayerPageHeader } from "../../components/PlayerPageHeader";
 
 import { openapiAdapter } from "../../../api/connection";
@@ -186,7 +186,7 @@ export const PlayerMyTransactionPage: React.FC = () => {
 
     return (
         <div className="balance-page">
-            <PlayerPageHeader userName={playerName} />
+            <PlayerPageHeader userName={playerName} balance={balance}/>
 
             <div className="balance-inner">
                 <h1 className="balance-title">My balance</h1>

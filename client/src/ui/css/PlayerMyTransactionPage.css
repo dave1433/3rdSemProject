@@ -6,9 +6,11 @@
 }
 
 .balance-inner {
-    padding: 24px 80px 40px;
     font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     sans-serif;
+    max-width: 1200px;
+    padding: 32px 80px 40px;
+    margin: 0 auto;
 }
 
 .balance-title {
