@@ -30,14 +30,38 @@ public class BoardService : IBoardService
     {
         var boards = await _db.Boards
             .Include(b => b.Player)
+            .Include(b => b.Game)
             .OrderByDescending(b => b.Createdat)
             .ToListAsync();
 
         return boards
-            .Where(b => b.Player != null)
-            .Select(b => new AdminBoardDtoResponse(b, b.Player))
+            .Where(b => b.Player != null && b.Game != null)
+            .Select(b => new AdminBoardDtoResponse(b, b.Player!))
             .ToList();
     }
+    
+    public async Task<List<WeeklyBoardSummaryDto>> GetWeeklyWinningSummaryAsync()
+    {
+        return await _db.Boards
+            .Where(b => b.Iswinner == true && b.Game != null)
+            .GroupBy(b => new
+            {
+                b.Game!.Weeknumber,
+                b.Game.Year
+            })
+            .Select(g => new WeeklyBoardSummaryDto
+            {
+                Week = g.Key.Weeknumber,
+                Year = g.Key.Year,
+                TotalWinningBoards = g.Count()
+            })
+            .OrderByDescending(x => x.Year)
+            .ThenByDescending(x => x.Week)
+            .ToListAsync();
+    }
+
+
+
 
 
     public async Task<List<BoardDtoResponse>> CreateBetsAsync(

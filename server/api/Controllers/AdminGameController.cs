@@ -1,10 +1,12 @@
 ﻿using api.dtos.Requests;
 using api.dtos.Responses;
-using efscaffold;
+using api.Services;
 using efscaffold.Entities;
+using Infrastructure.Postgres.Scaffolding;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Infrastructure.Postgres.Scaffolding; 
+
 namespace api.controllers;
 
 [ApiController]
@@ -12,10 +14,14 @@ namespace api.controllers;
 public class AdminGameController : ControllerBase
 {
     private readonly MyDbContext _db;
+    private readonly IBoardService _boardService;
 
-    public AdminGameController(MyDbContext db)
+    public AdminGameController(
+        MyDbContext db,
+        IBoardService boardService)
     {
         _db = db;
+        _boardService = boardService;
     }
 
     /// <summary>
@@ -65,15 +71,26 @@ public class AdminGameController : ControllerBase
 
         _db.Games.Add(game);
 
-        try
+        // ✅ FIRST SAVE — game must exist in DB
+        await _db.SaveChangesAsync();
+
+        // =====================================================
+        // ✅ EVALUATE WINNING BOARDS
+        // =====================================================
+        var boards = await _db.Boards
+            .Where(b => b.Gameid == game.Id)
+            .ToListAsync();
+
+        var winningSet = game.Winningnumbers!.ToHashSet();
+
+        foreach (var board in boards)
         {
-            await _db.SaveChangesAsync();
+            // A board wins if it contains ALL winning numbers
+            board.Iswinner = winningSet.All(n => board.Numbers.Contains(n));
         }
-        catch (DbUpdateConcurrencyException)
-        {
-            // Safety net if two admins click at the same time
-            return Conflict("Winning numbers were already entered by another admin");
-        }
+
+        // ✅ SAVE WIN RESULTS
+        await _db.SaveChangesAsync();
 
         // -----------------------------
         // Response
@@ -103,8 +120,21 @@ public class AdminGameController : ControllerBase
 
         return Ok(locked);
     }
-    
-    
+
+    /// <summary>
+    /// Weekly total of winning boards (admin only)
+    /// </summary>
+    [HttpGet("winners/summary")]
+    [Authorize(Roles = "1")]
+    public async Task<ActionResult<List<WeeklyBoardSummaryDto>>> GetWeeklyWinningSummary()
+    {
+        var result = await _boardService.GetWeeklyWinningSummaryAsync();
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Draw history for admin UI
+    /// </summary>
     [HttpGet("draw/history")]
     public async Task<ActionResult<List<GameHistoryResponse>>> GetDrawHistory()
     {
@@ -125,5 +155,4 @@ public class AdminGameController : ControllerBase
 
         return Ok(history);
     }
-
 }

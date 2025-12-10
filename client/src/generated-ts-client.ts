@@ -657,6 +657,39 @@ export class AdminGameClient {
         return Promise.resolve<boolean>(null as any);
     }
 
+    getWeeklyWinningSummary(): Promise<WeeklyBoardSummaryDto[]> {
+        let url_ = this.baseUrl + "/api/admin/games/winners/summary";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetWeeklyWinningSummary(_response);
+        });
+    }
+
+    protected processGetWeeklyWinningSummary(response: Response): Promise<WeeklyBoardSummaryDto[]> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as WeeklyBoardSummaryDto[];
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<WeeklyBoardSummaryDto[]>(null as any);
+    }
+
     getDrawHistory(): Promise<GameHistoryResponse[]> {
         let url_ = this.baseUrl + "/api/admin/games/draw/history";
         url_ = url_.replace(/[?&]$/, "");
@@ -736,6 +769,7 @@ export interface AdminBoardDtoResponse {
     year: number;
     week: number;
     createdAt: string | undefined;
+    isWinner: boolean;
 }
 
 export interface CreateBoardRequest {
@@ -801,6 +835,12 @@ export interface CreateGameDrawRequest {
     year: number;
     weekNumber: number;
     winningNumbers: number[];
+}
+
+export interface WeeklyBoardSummaryDto {
+    week: number;
+    year: number;
+    totalWinningBoards: number;
 }
 
 export interface GameHistoryResponse {

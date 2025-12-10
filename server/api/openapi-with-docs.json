@@ -498,6 +498,29 @@
         }
       }
     },
+    "/api/admin/games/winners/summary": {
+      "get": {
+        "tags": [
+          "AdminGame"
+        ],
+        "operationId": "AdminGame_GetWeeklyWinningSummary",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WeeklyBoardSummaryDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/admin/games/draw/history": {
       "get": {
         "tags": [
@@ -678,6 +701,9 @@
             "type": "string",
             "format": "date-time",
             "nullable": true
+          },
+          "isWinner": {
+            "type": "boolean"
           }
         }
       },
@@ -900,6 +926,24 @@
               "type": "integer",
               "format": "int32"
             }
+          }
+        }
+      },
+      "WeeklyBoardSummaryDto": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "week": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "year": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalWinningBoards": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },

@@ -9,6 +9,7 @@ export interface AdminBoard {
     numbers: number[];
     times: number;
     createdAt: string;
+    isWinner: boolean;
 }
 
 export function useAdminBoards() {
