@@ -1,4 +1,5 @@
 ﻿using efscaffold.Entities;
+using System.Globalization;
 
 namespace api.dtos.Responses;
 
@@ -16,11 +17,16 @@ public class AdminBoardDtoResponse
         CreatedAt = board.Createdat;
         Year      = board.Createdat?.Year ?? 0;
         Week      = board.Createdat.HasValue
-            ? System.Globalization.ISOWeek.GetWeekOfYear(board.Createdat.Value)
+            ? ISOWeek.GetWeekOfYear(board.Createdat.Value)
             : 0;
 
-        // ✅ New: map Iswinner (nullable) to a non-nullable bool
-        IsWinner = board.Iswinner == true;
+        IsWinner = board.Iswinner ?? false;
+
+        // ✅ CORRECT: use THIS BOARD'S GAME'S WINNING NUMBERS
+        if (board.Game?.Winningnumbers != null)
+            WinningNumbers = board.Game.Winningnumbers.ToList();
+        else
+            WinningNumbers = new List<int>();
     }
 
     public string BoardId { get; set; }
@@ -34,6 +40,7 @@ public class AdminBoardDtoResponse
     public int Week { get; set; }
     public DateTime? CreatedAt { get; set; }
 
-    // ✅ New property
     public bool IsWinner { get; set; }
+
+    public List<int> WinningNumbers { get; set; }
 }

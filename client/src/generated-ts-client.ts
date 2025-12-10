@@ -770,6 +770,7 @@ export interface AdminBoardDtoResponse {
     week: number;
     createdAt: string | undefined;
     isWinner: boolean;
+    winningNumbers: number[];
 }
 
 export interface CreateBoardRequest {

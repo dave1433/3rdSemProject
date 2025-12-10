@@ -10,6 +10,9 @@ export interface AdminBoard {
     times: number;
     createdAt: string;
     isWinner: boolean;
+
+    // ⭐ REQUIRED FOR GREEN NUMBER HIGHLIGHT
+    winningNumbers: number[];
 }
 
 export function useAdminBoards() {
@@ -27,7 +30,7 @@ export function useAdminBoards() {
                 throw new Error("Failed to load purchased boards");
             }
 
-            const data = (await res.json()) as AdminBoard[];
+            const data = await res.json();
             setBoards(data);
         } catch (e: any) {
             setError(e.message ?? "Unknown error");
