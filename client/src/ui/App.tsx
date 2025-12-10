@@ -1,16 +1,17 @@
-//import { useEffect } from "react";
 import {
     createBrowserRouter,
     Navigate,
     RouterProvider,
     Outlet
 } from "react-router";
+
 import { PlayerBoardPage } from "./pages/player/PlayerBoardPage";
 import { PlayerHistoryPage } from "./pages/player/PlayerHistoryPage";
 import { PlayerResultsPage } from "./pages/player/PlayerResultsPage";
-import { PlayerMyTransactionPage } from "./pages/player/PlayerMyTransactionPage.tsx";
+import { PlayerMyTransactionPage } from "./pages/player/PlayerMyTransactionPage";
 import { Login } from "./pages/Login";
 import { AdminDashboard } from "./pages/AdminDashboard";
+import { AdminLayout } from "./layout/AdminLayout";
 
 function PlayerRootLayout() {
     return <Outlet />;
@@ -20,14 +21,19 @@ const router = createBrowserRouter([
     // Redirect root → login
     { path: "/", element: <Navigate to="/login" replace /> },
 
-    // Login page
+    // Login
     { path: "/login", element: <Login /> },
 
     // ADMIN
-    { path: "/admin", element: <AdminDashboard /> },
+    {
+        path: "/admin",
+        element: <AdminLayout />,
+        children: [
+            { index: true, element: <AdminDashboard /> }
+        ]
+    },
 
     // PLAYER
-    { path: "/", element: <Navigate to="/player" replace /> },
     {
         path: "/player",
         element: <PlayerRootLayout />,

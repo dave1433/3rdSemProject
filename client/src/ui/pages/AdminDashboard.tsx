@@ -1,6 +1,4 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router";
-
+import { useState } from "react";
 import { AdminHeader } from "../components/AdminHeader";
 import { PlayerForm } from "../components/PlayerForm";
 import { PlayerList } from "../components/PlayerList";
@@ -8,54 +6,28 @@ import { WinningNumbersCard } from "../components/WinningNumbersCard";
 import { DrawHistoryTable } from "../components/DrawHistoryTable";
 import { PendingTransactions } from "../components/PendingTransactions";
 import { AdminBoardsView } from "../components/AdminBoardsView";
-
 import { useAdminBoards } from "../../core/hooks/useAdminBoards";
 
 export const AdminDashboard = () => {
-    const navigate = useNavigate();
-
-    const [authorized, setAuthorized] = useState<boolean | null>(null);
     const [activeTab, setActiveTab] = useState("players");
     const [showBoards, setShowBoards] = useState(false);
 
     const { boards, loading, error, reload } = useAdminBoards();
 
-    useEffect(() => {
-        const verify = () => {
-            const token = localStorage.getItem("token");
-            const role = localStorage.getItem("role");
-
-            if (!token) {
-                navigate("/login");
-                return;
-            }
-
-            if (role !== "1") {
-                navigate("/player");
-                return;
-            }
-
-            setAuthorized(true);
-        };
-
-        verify();
-    }, [navigate]);
-
-    if (authorized === null) return null;
-
     return (
         <>
-            {/* HEADER WITH PLAYER-STYLE TABS */}
             <AdminHeader activeTab={activeTab} onChangeTab={setActiveTab} />
 
-            {/* CONTENT BELOW TABS */}
             <div className="p-6">
-
                 {activeTab === "players" && (
-                    <>
-                        <PlayerForm />
-                        <PlayerList />
-                    </>
+                    <div className="flex flex-col lg:flex-row gap-6">
+                        <div className="w-full lg:w-1/2">
+                            <PlayerForm />
+                        </div>
+                        <div className="w-full lg:w-1/2">
+                            <PlayerList />
+                        </div>
+                    </div>
                 )}
 
                 {activeTab === "game" && (
@@ -65,9 +37,7 @@ export const AdminDashboard = () => {
                     </>
                 )}
 
-                {activeTab === "transactions" && (
-                    <PendingTransactions />
-                )}
+                {activeTab === "transactions" && <PendingTransactions />}
 
                 {activeTab === "history" && (
                     <AdminBoardsView
@@ -76,10 +46,9 @@ export const AdminDashboard = () => {
                         error={error}
                         reload={reload}
                         visible={showBoards}
-                        onToggle={() => setShowBoards((s) => !s)}
+                        onToggle={() => setShowBoards(s => !s)}
                     />
                 )}
-
             </div>
         </>
     );
