@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
-
 import { AdminHeader } from "../components/AdminHeader";
 import { PlayerForm } from "../components/PlayerForm";
 import { PlayerList } from "../components/PlayerList";
@@ -8,7 +7,6 @@ import { WinningNumbersCard } from "../components/WinningNumbersCard";
 import { DrawHistoryTable } from "../components/DrawHistoryTable";
 import { PendingTransactions } from "../components/PendingTransactions";
 import { AdminBoardsView } from "../components/AdminBoardsView";
-
 import { useAdminBoards } from "../../core/hooks/useAdminBoards";
 
 export const AdminDashboard = () => {
@@ -18,7 +16,6 @@ export const AdminDashboard = () => {
     const [activeTab, setActiveTab] = useState("players");
     const [showBoards, setShowBoards] = useState(false);
 
-    // ❌ DON'T LOAD BOARDS BEFORE AUTH
     const { boards, loading, error, reload } = useAdminBoards();
 
     useEffect(() => {
@@ -51,7 +48,7 @@ export const AdminDashboard = () => {
     }
 
     // If authorization failed, redirect already happened
-    if (authorized === false) return null;
+    if (!authorized) return null;
 
     // ✅ SAFE: everything below only renders if admin is authenticated
     return (
@@ -77,10 +74,7 @@ export const AdminDashboard = () => {
                     </div>
                 )}
 
-
-                {activeTab === "transactions" && (
-                    <PendingTransactions />
-                )}
+                {activeTab === "transactions" && <PendingTransactions />}
 
                 {activeTab === "history" && (
                     <AdminBoardsView
@@ -89,7 +83,7 @@ export const AdminDashboard = () => {
                         error={error}
                         reload={reload}
                         visible={showBoards}
-                        onToggle={() => setShowBoards((s) => !s)}
+                        onToggle={() => setShowBoards(s => !s)}
                     />
                 )}
             </div>

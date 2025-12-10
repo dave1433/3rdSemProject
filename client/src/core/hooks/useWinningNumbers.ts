@@ -1,4 +1,3 @@
-// File: useWinningNumbers.ts
 import { useEffect, useState } from "react";
 import { apiGet, apiPost } from "../../api/connection";
 

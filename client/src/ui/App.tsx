@@ -11,16 +11,28 @@ import { PlayerResultsPage } from "./pages/player/PlayerResultsPage";
 import { PlayerMyTransactionPage } from "./pages/player/PlayerMyTransactionPage";
 import { Login } from "./pages/Login";
 import { AdminDashboard } from "./pages/AdminDashboard";
+import { AdminLayout } from "./layout/AdminLayout";
 
 const router = createBrowserRouter([
+    // Redirect root → login
     { path: "/", element: <Navigate to="/login" replace /> },
+
+    // Login
     { path: "/login", element: <Login /> },
 
-    { path: "/admin", element: <AdminDashboard /> },
+    // ADMIN
+    {
+        path: "/admin",
+        element: <AdminLayout />,
+        children: [
+            { index: true, element: <AdminDashboard /> }
+        ]
+    },
 
+    // PLAYER
     {
         path: "/player",
-        element: <PlayerRootLayout />,   //  REAL layout
+        element: <PlayerRootLayout />,
         children: [
             { index: true, element: <Navigate to="board" replace /> },
             { path: "board", element: <PlayerBoardPage /> },
@@ -30,9 +42,12 @@ const router = createBrowserRouter([
         ],
     },
 
+    // fallback
     { path: "*", element: <Navigate to="/login" replace /> },
 ]);
 
-export default function App() {
+function App() {
     return <RouterProvider router={router} />;
 }
+
+export default App;
