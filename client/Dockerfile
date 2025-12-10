@@ -5,7 +5,7 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 
-# IMPORTANT: copy env file for Vite
+# Copy env for Vite
 COPY .env.production .env.production
 
 COPY . .
@@ -15,8 +15,10 @@ RUN npm run build
 # ---------- PRODUCTION STAGE ----------
 FROM nginx:alpine
 
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# ✅ Use main nginx.conf (NOT conf.d)
+COPY nginx.conf /etc/nginx/nginx.conf
 
+# ✅ Static build output
 COPY --from=build /app/dist /usr/share/nginx/html
 
 EXPOSE 80
