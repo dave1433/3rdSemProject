@@ -1,5 +1,4 @@
-﻿// src/core/hooks/useAdminBoards.ts
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { apiGet } from "../../api/connection";
 
 export interface AdminBoard {
