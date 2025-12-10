@@ -45,30 +45,43 @@ export const AdminDashboard = () => {
 
     return (
         <>
-            {/* HEADER WITH PLAYER-STYLE TABS */}
+            {/* Top Navbar / Tabs */}
             <AdminHeader activeTab={activeTab} onChangeTab={setActiveTab} />
 
-            {/* CONTENT BELOW TABS */}
+            {/* Page Content */}
             <div className="p-6">
 
+                {/* --- PLAYERS TAB --- */}
                 {activeTab === "players" && (
-                    <>
-                        <PlayerForm />
-                        <PlayerList />
-                    </>
+                    <div className="flex flex-col lg:flex-row gap-6">
+
+                        {/* LEFT SIDE — CREATE USER FORM */}
+                        <div className="w-full lg:w-1/2">
+                            <PlayerForm />
+                        </div>
+
+                        {/* RIGHT SIDE — PLAYER LIST */}
+                        <div className="w-full lg:w-1/2">
+                            <PlayerList />
+                        </div>
+
+                    </div>
                 )}
 
+                {/* --- GAME CONTROL TAB --- */}
                 {activeTab === "game" && (
-                    <>
+                    <div className="flex flex-col gap-6">
                         <WinningNumbersCard />
                         <DrawHistoryTable />
-                    </>
+                    </div>
                 )}
 
+                {/* --- TRANSACTIONS TAB --- */}
                 {activeTab === "transactions" && (
                     <PendingTransactions />
                 )}
 
+                {/* --- HISTORY TAB --- */}
                 {activeTab === "history" && (
                     <AdminBoardsView
                         boards={boards}
