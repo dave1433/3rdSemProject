@@ -25,6 +25,20 @@ public class BoardService : IBoardService
 
         return boards.Select(b => new BoardDtoResponse(b)).ToList();
     }
+    
+    public async Task<List<AdminBoardDtoResponse>> GetAllBoardsForAdminAsync()
+    {
+        var boards = await _db.Boards
+            .Include(b => b.Player)
+            .OrderByDescending(b => b.Createdat)
+            .ToListAsync();
+
+        return boards
+            .Where(b => b.Player != null)
+            .Select(b => new AdminBoardDtoResponse(b, b.Player))
+            .ToList();
+    }
+
 
     public async Task<List<BoardDtoResponse>> CreateBetsAsync(
         string userId,

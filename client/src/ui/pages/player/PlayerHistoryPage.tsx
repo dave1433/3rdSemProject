@@ -4,10 +4,9 @@ import "../../css/PlayerHistoryPage.css";
 import { PlayerPageHeader } from "../../components/PlayerPageHeader";
 import { PlayerMyRepeatsPage } from "./PlayerMyRepeatsPage";
 
-import { openapiAdapter } from "../../../api/connection";
+import { openapiAdapter, apiGet } from "../../../api/connection";
 
 import {
-    UserClient,
     BoardClient
 } from "../../../generated-ts-client";
 
@@ -29,7 +28,6 @@ interface PlayerRecord {
     totalAmountDkk: number;
 }
 
-const userClient = openapiAdapter(UserClient);
 const boardClient = openapiAdapter(BoardClient);
 
 export const PlayerHistoryPage: React.FC = () => {
@@ -58,9 +56,14 @@ export const PlayerHistoryPage: React.FC = () => {
         })();
     }, [CURRENT_PLAYER_ID]);
 
+    // ------------------------------------------------
+    // LOAD PLAYER NAME (FIXED: no userClient)
+    // ------------------------------------------------
     async function loadPlayerName() {
         try {
-            const users: UserResponse[] = await userClient.getUser();
+            const res = await apiGet("/api/user");
+            const users: UserResponse[] = await res.json();
+
             const me = users.find(u => u.id === CURRENT_PLAYER_ID);
             if (me) setPlayerName(me.fullName);
         } catch (err) {
@@ -68,6 +71,9 @@ export const PlayerHistoryPage: React.FC = () => {
         }
     }
 
+    // ------------------------------------------------
+    // LOAD PLAYER HISTORY
+    // ------------------------------------------------
     async function loadRecords(userId: string) {
         try {
             setLoading(true);
@@ -109,6 +115,9 @@ export const PlayerHistoryPage: React.FC = () => {
         setActiveTab("myRepeats");
     }
 
+    // ------------------------------------------------
+    // RENDER: ALL HISTORY TAB
+    // ------------------------------------------------
     function renderAllTab() {
         if (loading) return <p className="history-status">Loading…</p>;
         if (error) return <p className="history-status history-status-error">{error}</p>;
@@ -139,16 +148,16 @@ export const PlayerHistoryPage: React.FC = () => {
                             <td>{r.times}</td>
                             <td>{r.totalAmountDkk} DKK</td>
                             <td>
-                                    <span
-                                        className={
-                                            "history-status-badge " +
-                                            (r.status === "Complete"
-                                                ? "history-status-badge--complete"
-                                                : "history-status-badge--pending")
-                                        }
-                                    >
-                                        {r.status}
-                                    </span>
+                                <span
+                                    className={
+                                        "history-status-badge " +
+                                        (r.status === "Complete"
+                                            ? "history-status-badge--complete"
+                                            : "history-status-badge--pending")
+                                    }
+                                >
+                                    {r.status}
+                                </span>
                             </td>
                             <td>
                                 <button
@@ -166,6 +175,9 @@ export const PlayerHistoryPage: React.FC = () => {
         );
     }
 
+    // ------------------------------------------------
+    // RENDER: REPEAT TAB
+    // ------------------------------------------------
     function renderRepeatTab() {
         return (
             <PlayerMyRepeatsPage
@@ -174,6 +186,9 @@ export const PlayerHistoryPage: React.FC = () => {
         );
     }
 
+    // ------------------------------------------------
+    // MAIN RENDER
+    // ------------------------------------------------
     return (
         <div className="history-page">
             <PlayerPageHeader userName={playerName} />
@@ -184,18 +199,14 @@ export const PlayerHistoryPage: React.FC = () => {
 
                 <div className="history-tabs">
                     <button
-                        className={`history-tab-btn ${
-                            activeTab === "all" ? "history-tab-btn-active" : ""
-                        }`}
+                        className={`history-tab-btn ${activeTab === "all" ? "history-tab-btn-active" : ""}`}
                         onClick={() => setActiveTab("all")}
                     >
                         All
                     </button>
 
                     <button
-                        className={`history-tab-btn ${
-                            activeTab === "myRepeats" ? "history-tab-btn-active" : ""
-                        }`}
+                        className={`history-tab-btn ${activeTab === "myRepeats" ? "history-tab-btn-active" : ""}`}
                         onClick={() => setActiveTab("myRepeats")}
                     >
                         My repeats

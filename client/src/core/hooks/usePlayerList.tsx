@@ -13,7 +13,7 @@ export const usePlayerList = () => {
     const [players, setPlayers] = useState<Player[]>([]);
     const [loading, setLoading] = useState(true);
 
-    async function loadPlayers() {
+    const loadPlayers = async () => {
         try {
             setLoading(true);
 
@@ -28,14 +28,24 @@ export const usePlayerList = () => {
         } finally {
             setLoading(false);
         }
-    }
+    };
 
     useEffect(() => {
+        // initial load
         void loadPlayers();
 
-        window.addEventListener("player-updated", loadPlayers);
-        return () => window.removeEventListener("player-updated", loadPlayers);
+        // 🔥 listen for player updates (activate/deactivate)
+        const handler = () => loadPlayers();
+        window.addEventListener("player-updated", handler);
+
+        return () => {
+            window.removeEventListener("player-updated", handler);
+        };
     }, []);
 
-    return { players, loading, reload: loadPlayers };
+    return {
+        players,
+        loading,
+        reload: loadPlayers, // exposed for manual refresh if needed
+    };
 };
