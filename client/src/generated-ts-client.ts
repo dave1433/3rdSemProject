@@ -872,6 +872,7 @@ export interface BoardDtoResponse {
     times: number;
     repeatId: string | undefined;
     createdAt: string | undefined;
+    isWinner: boolean | undefined;
     transactions: BoardTransactionDto[];
 }
 

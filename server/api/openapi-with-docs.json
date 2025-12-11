@@ -724,6 +724,10 @@
             "format": "date-time",
             "nullable": true
           },
+          "isWinner": {
+            "type": "boolean",
+            "nullable": true
+          },
           "transactions": {
             "type": "array",
             "items": {
