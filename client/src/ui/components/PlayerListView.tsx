@@ -31,8 +31,13 @@ export const PlayerListView = ({ players, loading }: Props) => {
         }
     };
 
-    // 🔍 Filter players by search
-    const filteredPlayers = players.filter(p => {
+    // ✅ Sort alphabetically
+    const sortedPlayers = [...players].sort((a, b) =>
+        a.fullName.localeCompare(b.fullName)
+    );
+
+    // 🔍 Apply filtering after sorting
+    const filteredPlayers = sortedPlayers.filter(p => {
         const q = search.toLowerCase();
 
         return (
@@ -53,7 +58,7 @@ export const PlayerListView = ({ players, loading }: Props) => {
             {/* 🔍 SEARCH BAR */}
             <input
                 type="text"
-                placeholder="Search by name, phone, email"
+                placeholder="Search by name, phone, email..."
                 className="w-full mb-4 px-4 py-2 border rounded-lg border-gray-300 focus:ring focus:ring-blue-200"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
