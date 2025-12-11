@@ -449,6 +449,26 @@
         }
       }
     },
+    "/api/User/me": {
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "operationId": "User_GetCurrentUser",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/User/{id}/activate": {
       "patch": {
         "tags": [

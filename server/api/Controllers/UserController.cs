@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using efscaffold.Entities;
 using api.security;
@@ -6,6 +7,7 @@ using Infrastructure.Postgres.Scaffolding;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace api.Controllers
@@ -36,7 +38,7 @@ namespace api.Controllers
                 Fullname = request.FullName,
                 Phone = request.Phone,
 
-                Active = false,      // 🔥 Default: INACTIVE
+                Active = false,
                 Balance = 0,
                 Createdat = DateTime.UtcNow
             };
@@ -52,7 +54,7 @@ namespace api.Controllers
                 Email = user.Email,
                 Active = user.Active,
                 Balance = user.Balance,
-                Role = user.Role,
+                Role = user.Role
             });
         }
 
@@ -71,13 +73,44 @@ namespace api.Controllers
                     Email = u.Email,
                     Active = u.Active,
                     Balance = u.Balance,
-                    Role = u.Role,                
+                    Role = u.Role
                 })
                 .ToListAsync();
 
             return Ok(users);
         }
 
+        // ------------------------------------------------------------
+        // GET CURRENT LOGGED-IN USER (GET /api/user/me)
+        // ------------------------------------------------------------
+        [HttpGet("me")]
+        [Authorize]
+        public async Task<ActionResult<UserResponse>> GetCurrentUser()
+        {
+            // Retrieve ID from JWT token
+            var userId =
+                User.FindFirst(ClaimTypes.NameIdentifier)?.Value ??
+                User.FindFirst("id")?.Value;
+
+            if (userId == null)
+                return Unauthorized("User ID missing in token");
+
+            var user = await _db.Users.FirstOrDefaultAsync(x => x.Id == userId);
+
+            if (user == null)
+                return NotFound("User not found");
+
+            return Ok(new UserResponse
+            {
+                Id = user.Id,
+                FullName = user.Fullname ?? "",
+                Phone = user.Phone ?? "",
+                Email = user.Email,
+                Active = user.Active,
+                Balance = user.Balance,
+                Role = user.Role
+            });
+        }
 
         // ------------------------------------------------------------
         // ACTIVATE USER (PATCH /api/user/{id}/activate)
