@@ -4,6 +4,7 @@ using api.dtos.Responses;
 using efscaffold.Entities;
 using Infrastructure.Postgres.Scaffolding;
 using Microsoft.EntityFrameworkCore;
+using System.Globalization;
 
 namespace api.Services;
 
@@ -26,14 +27,40 @@ public class BoardService : IBoardService
 
         return boards.Select(b => new BoardDtoResponse(b)).ToList();
     }
-
-    public async Task<List<BoardDtoResponse>> CreateBetsAsync(
-        string userId,
-        IEnumerable<CreateBoardRequest> dtos)
+    
+    public async Task<List<AdminBoardDtoResponse>> GetAllBoardsForAdminAsync()
     {
-        var list = dtos.ToList();
-        if (list.Count == 0)
-            return new List<BoardDtoResponse>();
+        var boards = await _db.Boards
+            .Include(b => b.Player)
+            .Include(b => b.Game)
+            .OrderByDescending(b => b.Createdat)
+            .ToListAsync();
+
+        return boards
+            .Where(b => b.Player != null && b.Game != null)
+            .Select(b => new AdminBoardDtoResponse(b, b.Player!))
+            .ToList();
+    }
+    
+    public async Task<List<WeeklyBoardSummaryDto>> GetWeeklyWinningSummaryAsync()
+    {
+        return await _db.Boards
+            .Where(b => b.Iswinner == true && b.Game != null)
+            .GroupBy(b => new
+            {
+                b.Game!.Weeknumber,
+                b.Game.Year
+            })
+            .Select(g => new WeeklyBoardSummaryDto
+            {
+                Week = g.Key.Weeknumber,
+                Year = g.Key.Year,
+                TotalWinningBoards = g.Count()
+            })
+            .OrderByDescending(x => x.Year)
+            .ThenByDescending(x => x.Week)
+            .ToListAsync();
+    }
 
         // current time in UTC
         var nowUtc = DateTime.UtcNow;
@@ -71,20 +98,51 @@ public class BoardService : IBoardService
         if (player == null)
             throw new Exception("User not found");
 
-        var boardsToAdd = new List<Board>();
-        var totalCost = 0;
+   public async Task<List<BoardDtoResponse>> CreateBetsAsync(
+    string userId,
+    IEnumerable<CreateBoardRequest> dtos)
+    {
+    var list = dtos.ToList();
+    if (list.Count == 0)
+        return new List<BoardDtoResponse>();
 
-        foreach (var dto in list)
+    var now = DateTime.UtcNow;
+
+    // ------------------------------------------------------------
+    // 1️⃣ Determine current ISO week + year
+    // ------------------------------------------------------------
+    var currentWeek = ISOWeek.GetWeekOfYear(now);
+    var currentYear = now.Year;
+
+    // ------------------------------------------------------------
+    // 2️⃣ Fetch or create the Game for this week
+    // ------------------------------------------------------------
+    var game = await _db.Games
+        .FirstOrDefaultAsync(g => g.Year == currentYear && g.Weeknumber == currentWeek);
+
+    if (game == null)
+    {
+        game = new Game
         {
-            var fields = dto.Numbers.Count;
+            Id = Guid.NewGuid().ToString(),
+            Year = currentYear,
+            Weeknumber = currentWeek,
+            Winningnumbers = null,
+            Createdat = now
+        };
 
-            var basePrice = await _db.Boardprices
-                .Where(x => x.Fieldscount == fields)
-                .Select(x => (int?)x.Price)
-                .SingleOrDefaultAsync();
+        _db.Games.Add(game);
+        await _db.SaveChangesAsync();
+    }
 
-            if (basePrice == null)
-                throw new Exception($"No price found for {fields} fields.");
+    var gameId = game.Id;
+
+    // ------------------------------------------------------------
+    // 3️⃣ Load the authenticated user
+    // ------------------------------------------------------------
+    var player = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId);
+    if (player == null)
+        throw new Exception("User not found");
 
             var boardPrice = basePrice.Value * dto.Times;
 
@@ -96,51 +154,93 @@ public class BoardService : IBoardService
                     $"Need {futureTotal} DKK, have {player.Balance} DKK.");
             }
 
-            totalCost = futureTotal;
+    foreach (var dto in list)
+    {
+        var fields = dto.Numbers.Count;
 
-            var board = new Board
-            {
-                Id        = Guid.NewGuid().ToString(),
-                Playerid  = userId,
-                Gameid    = gameId,
-                Numbers   = dto.Numbers,
-                Times     = dto.Times,
-                Price     = boardPrice,
-                Createdat = nowUtc
-            };
+        // Fetch correct price based on amount of fields
+        var basePrice = await _db.Boardprices
+            .Where(x => x.Fieldscount == fields)
+            .Select(x => (int?)x.Price)
+            .SingleOrDefaultAsync();
 
-            boardsToAdd.Add(board);
-        }
+        if (basePrice == null)
+            throw new Exception($"No price found for {fields} fields.");
 
-        // validate balance once more
-        if (player.Balance < totalCost)
-            throw new Exception(
-                $"Insufficient balance: need {totalCost}, have {player.Balance}");
+        var boardPrice = basePrice.Value * dto.Times;
 
-        // deduct balance
-        player.Balance -= totalCost;
-
-        // add purchase transactions
-        foreach (var board in boardsToAdd)
+        var futureTotal = boardPrice + totalCost;
+        if (player.Balance - futureTotal < 0)
         {
-            _db.Transactions.Add(new Transaction
-            {
-                Id        = Guid.NewGuid().ToString(),
-                Playerid  = userId,
-                Type      = "purchase",
-                Amount    = -board.Price,
-                Status    = "approved",
-                Boardid   = board.Id,
-                Createdat = nowUtc
-            });
+            throw new Exception(
+                $"Insufficient balance for this bet. Need {futureTotal} DKK, have {player.Balance} DKK.");
         }
 
-        await _db.Boards.AddRangeAsync(boardsToAdd);
-        await _db.SaveChangesAsync();
+        totalCost = futureTotal;
 
-        return boardsToAdd.Select(b => new BoardDtoResponse(b)).ToList();
+        // ------------------------------------------------------------
+        // 4️⃣ Create the board
+        // ------------------------------------------------------------
+        var board = new Board
+        {
+            Id = Guid.NewGuid().ToString(),
+            Playerid = userId,
+            Gameid = gameId,
+            Numbers = dto.Numbers,
+            Times = dto.Times,
+            Price = boardPrice,
+            Createdat = now
+        };
+
+        // ------------------------------------------------------------
+        // 5️⃣ Evaluate winner immediately IF game already has winning numbers
+        // ------------------------------------------------------------
+        if (game.Winningnumbers != null)
+        {
+            var winningSet = game.Winningnumbers.ToHashSet();
+            board.Iswinner = winningSet.All(n => dto.Numbers.Contains(n));
+        }
+        else
+        {
+            board.Iswinner = false;
+        }
+
+        boardsToAdd.Add(board);
     }
 
-    
+    // ------------------------------------------------------------
+    // 6️⃣ Validate balance again before saving
+    // ------------------------------------------------------------
+    if (player.Balance < totalCost)
+        throw new Exception($"Insufficient balance: need {totalCost}, have {player.Balance}");
 
+    // Deduct balance
+    player.Balance -= totalCost;
+
+    // ------------------------------------------------------------
+    // 7️⃣ Save purchase transactions
+    // ------------------------------------------------------------
+    foreach (var board in boardsToAdd)
+    {
+        _db.Transactions.Add(new Transaction
+        {
+            Id = Guid.NewGuid().ToString(),
+            Playerid = userId,
+            Type = "purchase",
+            Amount = -board.Price,
+            Status = "approved",
+            Boardid = board.Id,
+            Createdat = now
+        });
+    }
+
+    // Save boards + transactions
+    await _db.Boards.AddRangeAsync(boardsToAdd);
+    await _db.SaveChangesAsync();
+
+    return boardsToAdd.Select(b => new BoardDtoResponse(b)).ToList();
 }
+}
+   
+   
+

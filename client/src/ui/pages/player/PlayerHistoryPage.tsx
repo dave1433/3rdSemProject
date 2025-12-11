@@ -5,13 +5,10 @@ import { PlayerPageHeader } from "../../components/PlayerPageHeader";
 import { CreateRepeatForm } from "./CreateRepeatForm";
 import { PlayerMyRepeatsPage } from "./PlayerMyRepeatsPage";
 
-import { openapiAdapter } from "../../../api/connection";
+import { openapiAdapter, apiGet } from "../../../api/connection";
 
 import {
-    UserClient,
-    BoardClient,
-    RepeatClient,
-    BoardPriceClient,
+    BoardClient
 } from "../../../generated-ts-client";
 
 import type {
@@ -41,7 +38,6 @@ interface RepeatRecord {
     createdAt: string;
 }
 
-const userClient = openapiAdapter(UserClient);
 const boardClient = openapiAdapter(BoardClient);
 const repeatClient = openapiAdapter(RepeatClient);
 const boardPriceClient = openapiAdapter(BoardPriceClient);
@@ -96,22 +92,24 @@ export const PlayerHistoryPage: React.FC = () => {
                 boardClient.getByUser(userId),
             ]);
 
-            const me = (users ?? []).find(
-                (u: UserResponse) => u.id === userId
-            );
+    // ------------------------------------------------
+    // LOAD PLAYER NAME (FIXED: no userClient)
+    // ------------------------------------------------
+    async function loadPlayerName() {
+        try {
+            const res = await apiGet("/api/user");
+            const users: UserResponse[] = await res.json();
+
+            const me = users.find(u => u.id === CURRENT_PLAYER_ID);
             if (me) setPlayerName(me.fullName);
 
-            const mappedBoards: PlayerRecord[] = (boards ?? []).map(
-                (b: BoardDtoResponse) => ({
-                    id: b.id,
-                    weekLabel: getIsoWeekLabel(b.createdAt),
-                    numbers: b.numbers ?? [],
-                    times: b.times ?? 1,
-                    totalAmountDkk: b.price ?? 0,
-                    isRepeat: !!b.repeatId,
-                })
-            );
-            setRecords(mappedBoards);
+    // ------------------------------------------------
+    // LOAD PLAYER HISTORY
+    // ------------------------------------------------
+    async function loadRecords(userId: string) {
+        try {
+            setLoading(true);
+            setError(null);
 
             // 2) Repeats = optional (don’t break page if fails)
             try {
@@ -195,27 +193,9 @@ export const PlayerHistoryPage: React.FC = () => {
         }
     }
 
-    async function handleStopAutoRenew(repeatId: string) {
-        try {
-            // adjust to your actual RepeatClient method name
-            await repeatClient.stop(repeatId);
-
-            setRepeats((prev) =>
-                prev.map((r) =>
-                    r.id === repeatId
-                        ? { ...r, optOut: true, remainingWeeks: 0 }
-                        : r
-                )
-            );
-        } catch (e) {
-            console.error("Failed to stop auto-renew", e);
-        }
-    }
-
-    // ---------------------------------------------------------
-    // render helpers
-    // ---------------------------------------------------------
-
+    // ------------------------------------------------
+    // RENDER: ALL HISTORY TAB
+    // ------------------------------------------------
     function renderAllTab() {
         if (loading) return <p className="history-status">Loading…</p>;
         if (loadError)
@@ -228,32 +208,44 @@ export const PlayerHistoryPage: React.FC = () => {
             return <p className="history-status">No history yet.</p>;
 
         return (
-            <div className="history-cards">
-                {records.map((r) => (
-                    <div key={r.id} className="history-card">
-                        {/* header: ACTIVE + week + (if repeat) label */}
-                        <div className="history-card-header">
-                            <span className="history-status-pill history-status-pill--active">
-                                ACTIVE
-                            </span>
+            <div className="history-table-wrapper">
+                <table className="history-table">
+                    <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Numbers</th>
+                        <th>Fields</th>
+                        <th>Times</th>
+                        <th>Total</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                    </thead>
 
-                            <span className="history-card-date">
-                                {r.weekLabel}
-                            </span>
-
-                            {/*{r.isRepeat && (
-                                <span className="history-card-remaining">
-                                    From repeat
-                                </span>
-                            )}*/}
-                        </div>
-
-                        {/* numbers row */}
-                        <div className="history-card-numbers">
-                            {r.numbers.map((n) => (
+                    <tbody>
+                    {records.map(r => (
+                        <tr key={r.id}>
+                            <td>{new Date(r.createdAt).toLocaleDateString()}</td>
+                            <td>{r.numbers.join(", ")}</td>
+                            <td>{r.numbers.length}</td>
+                            <td>{r.times}</td>
+                            <td>{r.totalAmountDkk} DKK</td>
+                            <td>
                                 <span
-                                    key={n}
-                                    className="history-number-square"
+                                    className={
+                                        "history-status-badge " +
+                                        (r.status === "Complete"
+                                            ? "history-status-badge--complete"
+                                            : "history-status-badge--pending")
+                                    }
+                                >
+                                    {r.status}
+                                </span>
+                            </td>
+                            <td>
+                                <button
+                                    className="history-action-btn"
+                                    onClick={() => handleReorder(r)}
                                 >
                                     {n}
                                 </span>
@@ -282,6 +274,9 @@ export const PlayerHistoryPage: React.FC = () => {
         );
     }
 
+    // ------------------------------------------------
+    // RENDER: REPEAT TAB
+    // ------------------------------------------------
     function renderRepeatTab() {
         return (
             <PlayerMyRepeatsPage
@@ -292,9 +287,9 @@ export const PlayerHistoryPage: React.FC = () => {
         );
     }
 
-    // ---------------------------------------------------------
-    // main render
-    // ---------------------------------------------------------
+    // ------------------------------------------------
+    // MAIN RENDER
+    // ------------------------------------------------
     return (
         <div className="history-page">
             <PlayerPageHeader userName={playerName} />
@@ -308,25 +303,13 @@ export const PlayerHistoryPage: React.FC = () => {
                 {/* tabs */}
                 <div className="history-tabs">
                     <button
-                        type="button"
-                        className={
-                            "history-tab-btn" +
-                            (activeTab === "all"
-                                ? " history-tab-btn-active"
-                                : "")
-                        }
+                        className={`history-tab-btn ${activeTab === "all" ? "history-tab-btn-active" : ""}`}
                         onClick={() => setActiveTab("all")}
                     >
                         ALL
                     </button>
                     <button
-                        type="button"
-                        className={
-                            "history-tab-btn" +
-                            (activeTab === "myRepeats"
-                                ? " history-tab-btn-active"
-                                : "")
-                        }
+                        className={`history-tab-btn ${activeTab === "myRepeats" ? "history-tab-btn-active" : ""}`}
                         onClick={() => setActiveTab("myRepeats")}
                     >
                         MY REPEATS

@@ -15,11 +15,11 @@ public static class GeneratetypescriptClient
 
         // Step 2: Serialize the document to JSON to verify it contains documentation
         var openApiJson = document.ToJson();
-        
+
         // Optional: Save the OpenAPI JSON to verify it has documentation
         var openApiPath = Path.Combine(Directory.GetCurrentDirectory(), "openapi-with-docs.json");
         await File.WriteAllTextAsync(openApiPath, openApiJson);
-        
+
         // Step 3: Parse the document back from JSON to ensure we're only using what's in the OpenAPI spec
         var documentFromJson = await OpenApiDocument.FromJsonAsync(openApiJson);
 
@@ -27,7 +27,6 @@ public static class GeneratetypescriptClient
         var settings = new TypeScriptClientGeneratorSettings
         {
             Template = TypeScriptTemplate.Fetch,
-             // = true,  // Enable JSDoc generation
             TypeScriptGeneratorSettings =
             {
                 TypeStyle = TypeScriptTypeStyle.Interface,
@@ -41,7 +40,6 @@ public static class GeneratetypescriptClient
             }
         };
 
-        // Step 5: Generate TypeScript client from the parsed OpenAPI document
         var generator = new TypeScriptClientGenerator(documentFromJson, settings);
         var code = generator.GenerateFile();
 
@@ -49,11 +47,11 @@ public static class GeneratetypescriptClient
         Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
 
         await File.WriteAllTextAsync(outputPath, code);
-        
-            
-        var logger = app.Services.GetRequiredService<ILogger<Program>>();
+
+// FIX: static types cannot be used as type arguments → use ILogger<object>
+        var logger = app.Services.GetRequiredService<ILogger<object>>();
+
         logger.LogInformation("OpenAPI JSON with documentation saved at: " + openApiPath);
         logger.LogInformation("TypeScript client generated at: " + outputPath);
     }
-    
 }

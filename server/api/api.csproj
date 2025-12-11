@@ -13,14 +13,17 @@
   <ItemGroup>
     <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.1" />
     <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.15.0" />
+
     <PackageReference Include="NSwag.AspNetCore" Version="14.6.2" />
     <PackageReference Include="NSwag.CodeGeneration.TypeScript" Version="14.6.3" />
 
-    <!-- ✅ JWT COMPATIBIL NET9 -->
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.0-preview.7.24405.7" />
+    <!-- ✅ MATCHES AVAILABLE NET9 PREVIEW -->
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer"
+                      Version="9.0.0-preview.7.24406.2" />
 
-    <!-- ✅ Argon2 -->
-    <PackageReference Include="Isopoh.Cryptography.Argon2" Version="1.2.0" />
+    <!-- ✅ ACTUAL PUBLISHED VERSION -->
+    <PackageReference Include="Isopoh.Cryptography.Argon2"
+                      Version="2.0.0" />
   </ItemGroup>
 
 </Project>
