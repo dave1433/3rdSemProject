@@ -9,6 +9,7 @@ interface Props {
 
 export const PlayerListView = ({ players, loading }: Props) => {
     const [updatingId, setUpdatingId] = useState<string | null>(null);
+    const [search, setSearch] = useState<string>("");
 
     const toggleUserStatus = async (player: Player) => {
         if (updatingId) return;
@@ -30,19 +31,41 @@ export const PlayerListView = ({ players, loading }: Props) => {
         }
     };
 
+    // 🔍 Filter players by search
+    const filteredPlayers = players.filter(p => {
+        const q = search.toLowerCase();
+
+        return (
+            p.fullName.toLowerCase().includes(q) ||
+            p.phone.toLowerCase().includes(q) ||
+            p.email.toLowerCase().includes(q) ||
+            (p.role === 1 && "admin".includes(q)) ||
+            (p.role === 2 && "player".includes(q))
+        );
+    });
+
     return (
         <div className="bg-white rounded-2xl shadow-md p-6 w-full h-[600px] overflow-y-auto">
             <h2 className="text-jerneNavy text-lg font-semibold mb-4">
                 Users
             </h2>
 
+            {/* 🔍 SEARCH BAR */}
+            <input
+                type="text"
+                placeholder="Search by name, phone, email"
+                className="w-full mb-4 px-4 py-2 border rounded-lg border-gray-300 focus:ring focus:ring-blue-200"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+            />
+
             {loading ? (
                 <p>Loading players…</p>
-            ) : players.length === 0 ? (
-                <p>No players found.</p>
+            ) : filteredPlayers.length === 0 ? (
+                <p>No users match your search.</p>
             ) : (
                 <div className="flex flex-col gap-4">
-                    {players.map(player => {
+                    {filteredPlayers.map(player => {
                         const disabled = updatingId === player.id;
 
                         return (
@@ -53,19 +76,12 @@ export const PlayerListView = ({ players, loading }: Props) => {
                                 {/* USER INFO */}
                                 <div>
                                     <p className="font-medium">{player.fullName}</p>
-
-                                    {/* PHONE */}
                                     <p className="text-sm text-gray-600">{player.phone}</p>
-
-                                    {/* EMAIL BELOW PHONE */}
                                     <p className="text-sm text-gray-600">{player.email}</p>
-                                    
                                 </div>
 
                                 {/* ACTIONS */}
                                 <div className="flex items-center gap-6">
-
-                                    {/* ROLE OR BALANCE */}
                                     {player.role === 1 ? (
                                         <span className="px-2 py-1 text-xs rounded bg-red-600 text-white">
                                             Admin
@@ -76,7 +92,7 @@ export const PlayerListView = ({ players, loading }: Props) => {
                                         </span>
                                     )}
 
-                                    {/* TOGGLE — ADMINS CAN BE DEACTIVATED NOW */}
+                                    {/* TOGGLE */}
                                     <label className="relative inline-flex items-center cursor-pointer">
                                         <input
                                             type="checkbox"
