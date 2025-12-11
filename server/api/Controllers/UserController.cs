@@ -49,8 +49,10 @@ namespace api.Controllers
                 Id = user.Id,
                 FullName = user.Fullname ?? "",
                 Phone = user.Phone ?? "",
+                Email = user.Email,
                 Active = user.Active,
-                Balance = user.Balance
+                Balance = user.Balance,
+                Role = user.Role,
             });
         }
 
@@ -66,13 +68,16 @@ namespace api.Controllers
                     Id = u.Id,
                     FullName = u.Fullname ?? "",
                     Phone = u.Phone ?? "",
+                    Email = u.Email,
                     Active = u.Active,
-                    Balance = u.Balance
+                    Balance = u.Balance,
+                    Role = u.Role,                
                 })
                 .ToListAsync();
 
             return Ok(users);
         }
+
 
         // ------------------------------------------------------------
         // ACTIVATE USER (PATCH /api/user/{id}/activate)

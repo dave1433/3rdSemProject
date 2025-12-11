@@ -33,7 +33,7 @@ export const PlayerListView = ({ players, loading }: Props) => {
     return (
         <div className="bg-white rounded-2xl shadow-md p-6 w-full h-[600px] overflow-y-auto">
             <h2 className="text-jerneNavy text-lg font-semibold mb-4">
-                Players
+                Users
             </h2>
 
             {loading ? (
@@ -52,21 +52,31 @@ export const PlayerListView = ({ players, loading }: Props) => {
                             >
                                 {/* USER INFO */}
                                 <div>
-                                    <p className="font-medium">
-                                        {player.fullName}
-                                    </p>
-                                    <p className="text-sm text-gray-600">
-                                        {player.phone}
-                                    </p>
+                                    <p className="font-medium">{player.fullName}</p>
+
+                                    {/* PHONE */}
+                                    <p className="text-sm text-gray-600">{player.phone}</p>
+
+                                    {/* EMAIL BELOW PHONE */}
+                                    <p className="text-sm text-gray-600">{player.email}</p>
+                                    
                                 </div>
 
                                 {/* ACTIONS */}
                                 <div className="flex items-center gap-6">
-                                    <span className="text-sm font-semibold">
-                                        {player.balance} DKK
-                                    </span>
 
-                                    {/* TOGGLE */}
+                                    {/* ROLE OR BALANCE */}
+                                    {player.role === 1 ? (
+                                        <span className="px-2 py-1 text-xs rounded bg-red-600 text-white">
+                                            Admin
+                                        </span>
+                                    ) : (
+                                        <span className="text-sm font-semibold">
+                                            {player.balance} DKK
+                                        </span>
+                                    )}
+
+                                    {/* TOGGLE — ADMINS CAN BE DEACTIVATED NOW */}
                                     <label className="relative inline-flex items-center cursor-pointer">
                                         <input
                                             type="checkbox"
@@ -80,8 +90,7 @@ export const PlayerListView = ({ players, loading }: Props) => {
                                             className={`
                                                 w-11 h-6 rounded-full transition
                                                 ${player.active ? "bg-green-500" : "bg-gray-300"}
-                                                peer-focus:ring-2 peer-focus:ring-green-400
-                                                ${disabled ? "opacity-50" : ""}
+                                                ${disabled ? "opacity-50 cursor-not-allowed" : ""}
                                             `}
                                         />
 

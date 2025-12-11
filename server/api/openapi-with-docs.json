@@ -1018,12 +1018,23 @@
           "phone": {
             "type": "string"
           },
+          "email": {
+            "type": "string"
+          },
           "active": {
             "type": "boolean"
           },
           "balance": {
             "type": "integer",
             "format": "int32"
+          },
+          "role": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       },

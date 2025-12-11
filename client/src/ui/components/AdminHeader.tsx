@@ -18,7 +18,7 @@ export const AdminHeader = ({ activeTab, onChangeTab }: AdminHeaderProps) => {
     };
 
     const tabs = [
-        { id: "players", label: "Players" },
+        { id: "players", label: "Users" },
         { id: "game", label: "Game Control" },
         { id: "transactions", label: "Transactions" },
         { id: "history", label: "History" }

@@ -955,8 +955,11 @@ export interface UserResponse {
     id: string;
     fullName: string;
     phone: string;
+    email: string;
     active: boolean;
     balance: number;
+    role: number;
+    createdAt: string;
 }
 
 export interface CreateUserRequest {
