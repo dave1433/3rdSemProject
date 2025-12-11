@@ -98,6 +98,7 @@ builder.Services.AddScoped<IBoardPriceService, BoardPriceService>();
 builder.Services.AddScoped<ITokenService, JwtService>();
 builder.Services.AddScoped<ITransactionService, TransactionService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IRepeatService, RepeatService>();
 
 // =======================
 // CORS

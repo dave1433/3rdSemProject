@@ -177,6 +177,93 @@
         }
       }
     },
+    "/api/Repeat/me": {
+      "get": {
+        "tags": [
+          "Repeat"
+        ],
+        "operationId": "Repeat_GetMine",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RepeatDtoResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Repeat": {
+      "post": {
+        "tags": [
+          "Repeat"
+        ],
+        "operationId": "Repeat_Create",
+        "requestBody": {
+          "x-name": "request",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRepeatRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepeatDtoResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Repeat/{id}/stop": {
+      "post": {
+        "tags": [
+          "Repeat"
+        ],
+        "operationId": "Repeat_Stop",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Transaction/user/{userId}": {
       "get": {
         "tags": [
@@ -628,6 +715,10 @@
             "type": "integer",
             "format": "int32"
           },
+          "repeatId": {
+            "type": "string",
+            "nullable": true
+          },
           "createdAt": {
             "type": "string",
             "format": "date-time",
@@ -752,6 +843,73 @@
             "format": "int32"
           },
           "price": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "RepeatDtoResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "playerId": {
+            "type": "string"
+          },
+          "numbers": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          "price": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "remainingWeeks": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "optOut": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "totalWeeks": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "playedWeeks": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "status": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateRepeatRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "numbers": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          "times": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "weeks": {
             "type": "integer",
             "format": "int32"
           }

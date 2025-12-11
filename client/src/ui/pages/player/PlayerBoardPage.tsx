@@ -138,13 +138,12 @@ export const PlayerBoardPage: React.FC = () => {
             <PlayerPageHeader userName={playerName} balance={balance} />
 
             <main className="player-board-main">
+                <h1 className="player-board-week">Week 47, 2025</h1>
 
+                <div className="player-board-layout">
                 {/* LEFT SIDE */}
                 <section className="player-board-left">
-                    <div className="player-board-week">Week 47, 2025</div>
-
                     <div className="player-board-card">
-
                         {/* NUMBER GRID */}
                         <div className="player-board-grid">
                             {numbers.map((n) => {
@@ -187,7 +186,9 @@ export const PlayerBoardPage: React.FC = () => {
                                         setSelectedNumbers((prev) => prev.slice(0, f));
                                     }}
                                 >
-                                    {f} numbers
+                                    <span className="player-board-fields-text">
+                                        {f} numbers
+                                    </span>
                                 </button>
                             ))}
                         </div>
@@ -219,6 +220,7 @@ export const PlayerBoardPage: React.FC = () => {
                                 <div className="player-board-value-box">{price} DKK</div>
                             </div>
                         </div>
+
 
                         {/* ACTION BUTTONS */}
                         <div className="player-board-actions">
@@ -303,6 +305,7 @@ export const PlayerBoardPage: React.FC = () => {
                         </div>
                     </div>
                 </section>
+                </div>
             </main>
         </div>
     );

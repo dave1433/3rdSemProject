@@ -1,3 +1,4 @@
+using System.Globalization;
 using api.dtos.Requests;
 using api.dtos.Responses;
 using efscaffold.Entities;
@@ -61,9 +62,41 @@ public class BoardService : IBoardService
             .ToListAsync();
     }
 
+        // current time in UTC
+        var nowUtc = DateTime.UtcNow;
 
+        // ----------------------------------------------------
+        // Find the latest *open* game: below are the conditions
+        //  - has winning numbers &&
+        //  - has join deadline
+        // ----------------------------------------------------
+        var currentGameQuery = _db.Games
+            .Where(g =>
+                g.Winningnumbers != null &&
+                g.Winningnumbers.Count > 0 &&
+                g.Joindeadline.HasValue &&           
+                g.Joindeadline.Value > nowUtc);
 
+        var currentGame = await currentGameQuery
+            .OrderByDescending(g => g.Year)
+            .ThenByDescending(g => g.Weeknumber)
+            .FirstOrDefaultAsync();
 
+        if (currentGame == null)
+        {
+            // no open game that matches the rule above
+            throw new Exception("This week’s game is closed for new boards.");
+        }
+
+        var gameId = currentGame.Id;
+
+        // ----------------------------------------------------
+        // Normal purchase logic (unchanged except for nowUtc)
+        // ----------------------------------------------------
+
+        var player = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId);
+        if (player == null)
+            throw new Exception("User not found");
 
    public async Task<List<BoardDtoResponse>> CreateBetsAsync(
     string userId,
@@ -111,8 +144,15 @@ public class BoardService : IBoardService
     if (player == null)
         throw new Exception("User not found");
 
-    var boardsToAdd = new List<Board>();
-    var totalCost = 0;
+            var boardPrice = basePrice.Value * dto.Times;
+
+            var futureTotal = boardPrice + totalCost;
+            if (player.Balance - futureTotal < 0)
+            {
+                throw new Exception(
+                    $"Insufficient balance for this bet. " +
+                    $"Need {futureTotal} DKK, have {player.Balance} DKK.");
+            }
 
     foreach (var dto in list)
     {
