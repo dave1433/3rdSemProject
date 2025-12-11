@@ -1,3 +1,4 @@
+using System.Globalization;
 using api.dtos.Requests;
 using api.dtos.Responses;
 using efscaffold.Entities;
@@ -34,16 +35,38 @@ public class BoardService : IBoardService
         if (list.Count == 0)
             return new List<BoardDtoResponse>();
 
-        var now = DateTime.UtcNow;
+        // current time in UTC
+        var nowUtc = DateTime.UtcNow;
 
-        // Latest game (can be null if no game yet)
-        var game = await _db.Games
-            .OrderByDescending(g => g.Createdat)
+        // ----------------------------------------------------
+        // Find the latest *open* game: below are the conditions
+        //  - has winning numbers &&
+        //  - has join deadline
+        // ----------------------------------------------------
+        var currentGameQuery = _db.Games
+            .Where(g =>
+                g.Winningnumbers != null &&
+                g.Winningnumbers.Count > 0 &&
+                g.Joindeadline.HasValue &&           
+                g.Joindeadline.Value > nowUtc);
+
+        var currentGame = await currentGameQuery
+            .OrderByDescending(g => g.Year)
+            .ThenByDescending(g => g.Weeknumber)
             .FirstOrDefaultAsync();
 
-        var gameId = game?.Id;
+        if (currentGame == null)
+        {
+            // no open game that matches the rule above
+            throw new Exception("This week’s game is closed for new boards.");
+        }
 
-        // Use authenticated playerId, not data from the body
+        var gameId = currentGame.Id;
+
+        // ----------------------------------------------------
+        // Normal purchase logic (unchanged except for nowUtc)
+        // ----------------------------------------------------
+
         var player = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId);
         if (player == null)
             throw new Exception("User not found");
@@ -64,7 +87,7 @@ public class BoardService : IBoardService
                 throw new Exception($"No price found for {fields} fields.");
 
             var boardPrice = basePrice.Value * dto.Times;
-            
+
             var futureTotal = boardPrice + totalCost;
             if (player.Balance - futureTotal < 0)
             {
@@ -78,37 +101,37 @@ public class BoardService : IBoardService
             var board = new Board
             {
                 Id        = Guid.NewGuid().ToString(),
-                Playerid = userId,        // ✅ authenticated user
+                Playerid  = userId,
                 Gameid    = gameId,
                 Numbers   = dto.Numbers,
                 Times     = dto.Times,
                 Price     = boardPrice,
-                Createdat = now
-                
+                Createdat = nowUtc
             };
 
             boardsToAdd.Add(board);
         }
 
-        // Validate balance
+        // validate balance once more
         if (player.Balance < totalCost)
-            throw new Exception($"Insufficient balance: need {totalCost}, have {player.Balance}");
+            throw new Exception(
+                $"Insufficient balance: need {totalCost}, have {player.Balance}");
 
-        // Deduct user's balance
+        // deduct balance
         player.Balance -= totalCost;
 
-        // Add purchase transactions
+        // add purchase transactions
         foreach (var board in boardsToAdd)
         {
             _db.Transactions.Add(new Transaction
             {
-                Id         = Guid.NewGuid().ToString(),
-                Playerid   = userId,
-                Type       = "purchase",
-                Amount     = -board.Price,
-                Status     = "approved",
-                Boardid    = board.Id,
-                Createdat  = now
+                Id        = Guid.NewGuid().ToString(),
+                Playerid  = userId,
+                Type      = "purchase",
+                Amount    = -board.Price,
+                Status    = "approved",
+                Boardid   = board.Id,
+                Createdat = nowUtc
             });
         }
 
@@ -117,4 +140,7 @@ public class BoardService : IBoardService
 
         return boardsToAdd.Select(b => new BoardDtoResponse(b)).ToList();
     }
+
+    
+
 }

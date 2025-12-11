@@ -1,3 +1,6 @@
+/* ROOT LAYOUT
+   -------------------------------------------------- */
+
 .history-page {
     min-height: 100vh;
     background: #D9D9D9;
@@ -6,171 +9,274 @@
 }
 
 .history-inner {
-    padding: 24px 80px 40px;
+    max-width: 1200px;
+    padding: 32px 80px 40px;
+    margin: 0 auto;
     font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     sans-serif;
 }
 
+/* TITLES
+   -------------------------------------------------- */
+
 .history-title {
     font-size: 1.6rem;
     margin: 0 0 4px 0;
+    color: #222222;
 }
 
 .history-subtitle {
-    margin: 0 0 16px 0;
-    font-size: 0.9rem;
-    color: #555;
+    font-size: 15px;
+    color: #5f5b55;
+    margin: 0 0 24px 0;
 }
 
-/* tabs */
+/* TABS
+   -------------------------------------------------- */
+
 .history-tabs {
     display: inline-flex;
+    background-color: #f3eee7;
     border-radius: 999px;
-    background: #e9e5de;        /* same as .player-board-fields-tabs */
     padding: 4px;
-    gap: 4px;
-    margin-bottom: 16px;
+    margin-bottom: 24px;
 }
 
 .history-tab-btn {
     border: none;
     background: transparent;
-    padding: 4px 12px;
+    padding: 8px 20px;
     border-radius: 999px;
-    font-size: 0.8rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
+    font-size: 14px;
+    font-weight: 500;
+    color: #6b645c;
     cursor: pointer;
-    color: #555;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.history-tab-btn:hover {
+    background-color: rgba(0, 0, 0, 0.03);
 }
 
 .history-tab-btn-active {
-    background: #ffffff;
-    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.07);
+    background-color: #ffffff;
+    color: #222222;
 }
 
-/* status pill under "Status" column */
-.history-status-badge {
-    display: inline-block;
-    padding: 2px 10px;
-    border-radius: 999px;
-    font-size: 0.75rem;
-    font-weight: 500;
-}
+/* STATUS TEXT
+   -------------------------------------------------- */
 
-/* Pending = soft gray */
-.history-status-badge--pending {
-    background: #e0ded9;
-    color: #444;
-}
-
-/* Complete = green */
-.history-status-badge--complete {
-    background: #00a86b1a; /* light green background */
-    color: #007046;
-}
-
-/* status */
 .history-status {
-    margin-top: 12px;
-    font-size: 0.95rem;
+    font-size: 14px;
+    color: #5f5b55;
+    padding: 12px 0;
 }
 
 .history-status-error {
-    color: #c80000;
+    color: #b3261e;
 }
 
-/* table */
-.history-table-wrapper {
-    margin-top: 10px;
-    border-radius: 8px;
-    overflow: hidden;
-    border: 1px solid #ddd;
-    background: #f9f6f2;
+/* CARDS LAYOUT
+   -------------------------------------------------- */
+
+.history-content {
+    margin-top: 8px;
 }
 
-.history-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.9rem;
+.history-cards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
 }
 
-.history-table th,
-.history-table td {
-    padding: 10px 12px;
-    border-bottom: 1px solid #e0ddd8;
+/* Two cards per row on desktop */
+.history-card {
+    flex: 0 0 calc(50% - 8px);
+    max-width: calc(50% - 8px);
+    background-color: #f9f6f2;
+    border-radius: 16px;
+    padding: 16px 18px 14px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
-.history-table th {
-    text-align: left;
-    background: #ebe6de;
+/* One card per row on small screens */
+@media (max-width: 768px) {
+    .history-card {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+
+    .history-inner {
+        padding: 24px 16px 32px;
+    }
+}
+
+/* CARD HEADER (status + week label + optional "From repeat")
+   -------------------------------------------------- */
+
+.history-card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+}
+
+.history-status-pill {
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 11px;
     font-weight: 600;
+    letter-spacing: 0.04em;
 }
 
-.history-table tr:nth-child(even) td {
-    background: #f5f1eb;
+.history-status-pill--active {
+    background-color: #e1f3e3;
+    color: #1b5e20;
 }
 
-/* actions */
-.history-action-header {
-    text-align: left;
-    padding-left: 16px; /* not glued to edge */
+.history-status-pill--inactive {
+    background-color: #f3e0e0;
+    color: #7b1f1f;
 }
 
-.history-actions-cell {
-    text-align: left;
-    white-space: nowrap;
-    padding-left: 16px;
+.history-card-date {
+    color: #6b645c;
 }
 
-.history-action-btn {
+.history-card-remaining {
+    margin-left: auto;
+    font-size: 12px;
+    color: #8c867f;
+}
+
+/* NUMBERS ROW
+   -------------------------------------------------- */
+
+.history-card-numbers {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.history-number-square {
+    min-width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background-color: #ffffff;
+    border: 1px solid #ddd0c0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 500;
+    color: #3b3630;
+}
+
+/* META ROW (fields/times/total + Repeat button)
+   -------------------------------------------------- */
+
+.history-card-meta-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 4px;
+}
+
+.history-card-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    font-size: 13px;
+    color: #6b645c;
+}
+
+.history-card-meta span::before {
+    content: "";
+    width: 4px;
+    height: 4px;
+    border-radius: 999px;
+    background-color: #c1b8ac;
+    display: inline-block;
+    margin: 0 6px 2px 0;
+}
+
+.history-card-meta span:first-child::before {
+    display: none;
+}
+
+/* Repeat button aligned to the right of meta */
+.history-repeat-btn {
     border: none;
     border-radius: 999px;
-    padding: 4px 14px;
-    font-size: 0.8rem;
+    padding: 6px 16px;
+    font-size: 13px;
+    font-weight: 600;
     cursor: pointer;
-    background: #c80000;   /* same red as board tiles */
-    color: #fff;
-    transition: background 0.12s, transform 0.08s, box-shadow 0.08s;
+    background-color: #00a86b;
+    color: #ffffff;
+    white-space: nowrap;
+    transition: background-color 0.15s ease, transform 0.05s ease,
+    box-shadow 0.05s ease;
 }
 
-.history-action-btn:hover {
-    background: #b00000;
+.history-repeat-btn:hover {
+    background-color: #008a58;
     transform: translateY(-1px);
-    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.18);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16);
 }
 
-/* My repeats tab */
-.history-myrepeats {
-    margin-top: 16px;
+/* On mobile, stack meta + button */
+@media (max-width: 600px) {
+    .history-card-meta-row {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .history-repeat-btn {
+        align-self: flex-start;
+    }
 }
 
-.history-myrepeats-subheading {
-    font-size: 1rem;
-    margin: 20px 0 8px 0;
-}
+/* MODAL FOR CREATE REPEAT FORM
+   -------------------------------------------------- */
 
-.history-myrepeats-list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-}
-
-.history-myrepeats-item {
+.repeat-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    padding: 10px 12px;
-    border-radius: 8px;
-    background: #f3eee8;
-    margin-bottom: 8px;
+    justify-content: center;
+    z-index: 50;
 }
 
-.history-myrepeats-numbers {
-    font-weight: 500;
+.repeat-modal-dialog {
+    background: #f9f6f2;
+    border-radius: 16px;
+    border: 1px solid #d4cec7;
+    padding: 20px 24px;
+    max-width: 480px;
+    width: 100%;
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.25);
 }
 
-.history-myrepeats-meta {
-    font-size: 0.85rem;
-    color: #666;
+/* Optional: small fade-in animation */
+.repeat-modal-dialog {
+    animation: repeatModalIn 0.15s ease-out;
+}
+
+@keyframes repeatModalIn {
+    from {
+        opacity: 0;
+        transform: translateY(4px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
 }
