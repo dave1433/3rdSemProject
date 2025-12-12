@@ -62,7 +62,7 @@ public class BoardController : ControllerBase
 // Admin: all purchased boards
 // ======================================================
     [HttpGet("admin/all")]
-    [Authorize(Roles = "1")]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<ActionResult<List<AdminBoardDtoResponse>>> GetAllBoardsForAdmin()
     {
         try

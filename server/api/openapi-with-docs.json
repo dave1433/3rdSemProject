@@ -7,6 +7,121 @@
     "version": "1.0.0"
   },
   "paths": {
+    "/api/admin/games/draw": {
+      "post": {
+        "tags": [
+          "AdminGame"
+        ],
+        "operationId": "AdminGame_Draw",
+        "requestBody": {
+          "x-name": "req",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateGameDrawRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/games/draw/status": {
+      "get": {
+        "tags": [
+          "AdminGame"
+        ],
+        "operationId": "AdminGame_Status",
+        "parameters": [
+          {
+            "name": "year",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "x-position": 1
+          },
+          {
+            "name": "weekNumber",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "x-position": 2
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/games/winners/summary": {
+      "get": {
+        "tags": [
+          "AdminGame"
+        ],
+        "operationId": "AdminGame_Summary",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/games/draw/history": {
+      "get": {
+        "tags": [
+          "AdminGame"
+        ],
+        "operationId": "AdminGame_History",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/auth/login": {
       "post": {
         "tags": [
@@ -396,14 +511,14 @@
         }
       }
     },
-    "/api/User": {
+    "/api/user": {
       "post": {
         "tags": [
           "User"
         ],
         "operationId": "User_CreateUser",
         "requestBody": {
-          "x-name": "request",
+          "x-name": "req",
           "content": {
             "application/json": {
               "schema": {
@@ -449,12 +564,12 @@
         }
       }
     },
-    "/api/User/me": {
+    "/api/user/me": {
       "get": {
         "tags": [
           "User"
         ],
-        "operationId": "User_GetCurrentUser",
+        "operationId": "User_Me",
         "responses": {
           "200": {
             "description": "",
@@ -469,12 +584,12 @@
         }
       }
     },
-    "/api/User/{id}/activate": {
+    "/api/user/{id}/activate": {
       "patch": {
         "tags": [
           "User"
         ],
-        "operationId": "User_ActivateUser",
+        "operationId": "User_Activate",
         "parameters": [
           {
             "name": "id",
@@ -501,12 +616,12 @@
         }
       }
     },
-    "/api/User/{id}/deactivate": {
+    "/api/user/{id}/deactivate": {
       "patch": {
         "tags": [
           "User"
         ],
-        "operationId": "User_DeactivateUser",
+        "operationId": "User_Deactivate",
         "parameters": [
           {
             "name": "id",
@@ -526,124 +641,6 @@
                 "schema": {
                   "type": "string",
                   "format": "binary"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/admin/games/draw": {
-      "post": {
-        "tags": [
-          "AdminGame"
-        ],
-        "operationId": "AdminGame_EnterWinningNumbers",
-        "requestBody": {
-          "x-name": "request",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateGameDrawRequest"
-              }
-            }
-          },
-          "required": true,
-          "x-position": 1
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/GameResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/admin/games/draw/status": {
-      "get": {
-        "tags": [
-          "AdminGame"
-        ],
-        "operationId": "AdminGame_IsWeekLocked",
-        "parameters": [
-          {
-            "name": "year",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            },
-            "x-position": 1
-          },
-          {
-            "name": "weekNumber",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            },
-            "x-position": 2
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "boolean"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/admin/games/winners/summary": {
-      "get": {
-        "tags": [
-          "AdminGame"
-        ],
-        "operationId": "AdminGame_GetWeeklyWinningSummary",
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/WeeklyBoardSummaryDto"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/admin/games/draw/history": {
-      "get": {
-        "tags": [
-          "AdminGame"
-        ],
-        "operationId": "AdminGame_GetDrawHistory",
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/GameHistoryResponse"
-                  }
                 }
               }
             }
@@ -654,6 +651,27 @@
   },
   "components": {
     "schemas": {
+      "CreateGameDrawRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "year": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "weekNumber": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "winningNumbers": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        }
+      },
       "JwtResponse": {
         "type": "object",
         "additionalProperties": false,
@@ -1077,101 +1095,6 @@
           "role": {
             "type": "integer",
             "format": "int32"
-          }
-        }
-      },
-      "GameResponse": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "year": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "weekNumber": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "winningNumbers": {
-            "type": "array",
-            "items": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
-          }
-        }
-      },
-      "CreateGameDrawRequest": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "year": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "weekNumber": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "winningNumbers": {
-            "type": "array",
-            "items": {
-              "type": "integer",
-              "format": "int32"
-            }
-          }
-        }
-      },
-      "WeeklyBoardSummaryDto": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "week": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "year": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "totalWinningBoards": {
-            "type": "integer",
-            "format": "int32"
-          }
-        }
-      },
-      "GameHistoryResponse": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "year": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "weekNumber": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "winningNumbers": {
-            "type": "array",
-            "items": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
           }
         }
       }
