@@ -14,8 +14,8 @@ public class BoardDtoResponse
         Times = entity.Times;
         RepeatId = entity.Repeatid;
         CreatedAt = entity.Createdat;
-
-        IsWinner = entity.Iswinner;   // ✅ ADDED
+        AutoRepeat = entity.AutoRepeat;
+        IsWinner = entity.Iswinner;   
 
         Transactions = entity.Transactions?
                            .Select(t => new BoardTransactionDto(t))
@@ -31,8 +31,8 @@ public class BoardDtoResponse
     public int Times { get; set; }
     public string? RepeatId { get; set; }
     public DateTime? CreatedAt { get; set; }
-
-    public bool? IsWinner { get; set; }   // ✅ ADDED
+    public bool AutoRepeat { get; set; }
+    public bool? IsWinner { get; set; }   
 
     public List<BoardTransactionDto> Transactions { get; set; } = new();
 }

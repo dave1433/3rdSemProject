@@ -37,6 +37,9 @@ public partial class MyDbContext : DbContext
             entity.HasIndex(e => e.Playerid, "board_player_idx");
 
             entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.AutoRepeat)
+                .HasDefaultValue(false)
+                .HasColumnName("autoRepeat");
             entity.Property(e => e.Createdat)
                 .HasDefaultValueSql("now()")
                 .HasColumnName("createdat");
@@ -110,9 +113,13 @@ public partial class MyDbContext : DbContext
             entity.Property(e => e.Optout)
                 .HasDefaultValue(false)
                 .HasColumnName("optout");
+            entity.Property(e => e.Optoutat).HasColumnName("optoutat");
             entity.Property(e => e.Playerid).HasColumnName("playerid");
             entity.Property(e => e.Price).HasColumnName("price");
             entity.Property(e => e.Remainingweeks).HasColumnName("remainingweeks");
+            entity.Property(e => e.Times)
+                .HasDefaultValue(1)
+                .HasColumnName("times");
 
             entity.HasOne(d => d.Player).WithMany(p => p.Repeats)
                 .HasForeignKey(d => d.Playerid)

@@ -1,52 +1,46 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import "../../css/PlayerHistoryPage.css";
 
 import { PlayerPageHeader } from "../../components/PlayerPageHeader";
-import { CreateRepeatForm } from "./CreateRepeatForm";
-import { PlayerMyRepeatsPage } from "./PlayerMyRepeatsPage";
-
-import { openapiAdapter, apiGet } from "../../../api/connection";
+import { openapiAdapter } from "../../../api/connection";
 
 import {
+    AuthClient,
     BoardClient,
     RepeatClient,
-    BoardPriceClient,
+    UserClient,
 } from "../../../generated-ts-client";
 
 import type {
-    UserResponse,
     BoardDtoResponse,
+    AuthUserInfo,
     RepeatDtoResponse,
-    BoardPriceDtoResponse,
+    UserResponse,
 } from "../../../generated-ts-client";
-
-type HistoryTab = "all" | "myRepeats";
 
 interface PlayerRecord {
     id: string;
-    createdAt: string;
+
+    //  add createdAt so we can detect which row is the "starter" board
+    createdAt?: string | null;
+
     weekLabel: string;
     numbers: number[];
     times: number;
     totalAmountDkk: number;
+
+    autoRepeat: boolean;
+    repeatId?: string;
+
+    repeatOptOut: boolean;
 }
 
-interface RepeatRecord {
-    id: string;
-    numbers: number[];
-    pricePerWeek: number;
-    remainingWeeks: number;
-    optOut: boolean;
-    createdAt: string;
-}
-
+const authClient = openapiAdapter(AuthClient);
 const boardClient = openapiAdapter(BoardClient);
 const repeatClient = openapiAdapter(RepeatClient);
-const boardPriceClient = openapiAdapter(BoardPriceClient);
+const userClient = openapiAdapter(UserClient);
 
-// -----------------------------------------------------------
-// ISO WEEK LABEL HELPER
-// -----------------------------------------------------------
+// ISO week label
 function getIsoWeekLabel(dateString?: string | null): string {
     if (!dateString) return "";
     const d = new Date(dateString);
@@ -55,269 +49,229 @@ function getIsoWeekLabel(dateString?: string | null): string {
     const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
     const day = date.getUTCDay() || 7;
     date.setUTCDate(date.getUTCDate() + 4 - day);
-
     const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
     const weekNo = Math.ceil(
         ((date.getTime() - yearStart.getTime()) / 86400000 + 1) / 7
     );
-
-    return `Week ${weekNo}, ${date.getUTCFullYear()}`;
+    const year = date.getUTCFullYear();
+    return `Week ${weekNo}, ${year}`;
 }
 
-// -----------------------------------------------------------
-// MAIN COMPONENT
-// -----------------------------------------------------------
 export const PlayerHistoryPage: React.FC = () => {
-    const [activeTab, setActiveTab] = useState<HistoryTab>("all");
-
     const [records, setRecords] = useState<PlayerRecord[]>([]);
-    const [repeats, setRepeats] = useState<RepeatRecord[]>([]);
-    const [priceMap, setPriceMap] = useState<Record<number, number>>({});
-
     const [loading, setLoading] = useState(false);
     const [loadError, setLoadError] = useState<string | null>(null);
 
     const [playerName, setPlayerName] = useState("");
-
-    // modal state
-    const [showRepeatForm, setShowRepeatForm] = useState(false);
-    const [repeatNumbers, setRepeatNumbers] = useState<number[] | null>(null);
+    const [balance, setBalance] = useState<number | null>(null);
 
     const CURRENT_PLAYER_ID = localStorage.getItem("userId") ?? "";
 
-    // -----------------------------------------------------------
-    // LOAD PLAYER NAME (no userClient)
-    // -----------------------------------------------------------
-    async function loadPlayerName() {
-        try {
-            const res = await apiGet("/api/user");
-            const users: UserResponse[] = await res.json();
-
-            const me = users.find((u) => u.id === CURRENT_PLAYER_ID);
-            if (me) setPlayerName(me.fullName);
-        } catch (err) {
-            console.error("Failed to load username", err);
-        }
-    }
-
-    // -----------------------------------------------------------
-    // LOAD HISTORY + REPEATS + PRICES
-    // -----------------------------------------------------------
-    async function loadAllForUser(userId: string) {
+    async function loadHistory(userId: string) {
         try {
             setLoading(true);
             setLoadError(null);
 
-            // 1) Boards (required)
-            const boards = (await boardClient.getByUser(userId)) ?? [];
-            const mappedRecords: PlayerRecord[] = boards.map(
-                (b: BoardDtoResponse) => ({
-                    id: b.id!,
-                    createdAt: b.createdAt ?? new Date().toISOString(),
+            // Load header info (name + balance) in parallel
+            const [info, me, boards, repeats] = await Promise.all([
+                authClient.userInfo().catch((): AuthUserInfo | null => null),
+                userClient.getCurrentUser().catch((): UserResponse | null => null),
+                boardClient.getByUser(userId),
+                repeatClient.getMine(),
+            ]);
+
+            if (info?.fullName) setPlayerName(info.fullName);
+            if (me?.fullName) setPlayerName(me.fullName);
+            setBalance(me?.balance ?? null);
+
+            const repMap = new Map<string, RepeatDtoResponse>();
+            (repeats ?? []).forEach((r: RepeatDtoResponse) => repMap.set(r.id, r));
+
+            const mapped: PlayerRecord[] = (boards ?? []).map((b: BoardDtoResponse) => {
+                const rid = b.repeatId ?? undefined;
+                const rep = rid ? repMap.get(rid) : undefined;
+
+                return {
+                    id: b.id,
+                    createdAt: b.createdAt ?? null,
+
+                    weekLabel: getIsoWeekLabel(b.createdAt),
                     numbers: b.numbers ?? [],
                     times: b.times ?? 1,
                     totalAmountDkk: b.price ?? 0,
-                    weekLabel: getIsoWeekLabel(b.createdAt),
-                })
-            );
-            setRecords(mappedRecords);
+                    autoRepeat: !!b.autoRepeat,
+                    repeatId: rid,
+                    repeatOptOut: rep ? !!rep.optOut : false,
+                };
+            });
 
-            // 2) Repeats (optional)
-            try {
-                const repeatDtos = await repeatClient.getMine();
-                const mappedRepeats: RepeatRecord[] = (repeatDtos ?? []).map(
-                    (r: RepeatDtoResponse) => ({
-                        id: r.id,
-                        numbers: r.numbers ?? [],
-                        pricePerWeek: r.price ?? 0,
-                        remainingWeeks: r.remainingWeeks ?? 0,
-                        optOut: r.optOut ?? false,
-                        createdAt: r.createdAt ?? new Date().toISOString(),
-                    })
-                );
-                setRepeats(mappedRepeats);
-            } catch (err) {
-                console.warn("Failed to load repeats, continuing with boards only", err);
-                setRepeats([]);
-            }
-
-            // 3) Board prices (optional)
-            try {
-                const prices = await boardPriceClient.getAll();
-                const priceMapLocal: Record<number, number> = {};
-                (prices ?? []).forEach((p: BoardPriceDtoResponse) => {
-                    priceMapLocal[p.fieldsCount] = p.price;
-                });
-                setPriceMap(priceMapLocal);
-            } catch (err) {
-                console.warn("Failed to load board prices", err);
-                setPriceMap({});
-            }
+            setRecords(mapped);
         } catch (e) {
-            console.error("Failed to load history", e);
-            setLoadError("Failed to load history.");
+            console.error("Failed to load history:", e);
+            setLoadError("Failed to load history. Check browser console.");
         } finally {
             setLoading(false);
         }
     }
 
-    // -----------------------------------------------------------
-    // INITIAL LOAD
-    // -----------------------------------------------------------
     useEffect(() => {
         if (!CURRENT_PLAYER_ID) {
             setLoadError("No player logged in.");
             return;
         }
-
-        void loadPlayerName();
-        void loadAllForUser(CURRENT_PLAYER_ID);
+        void loadHistory(CURRENT_PLAYER_ID);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [CURRENT_PLAYER_ID]);
 
-    // -----------------------------------------------------------
-    // INTERACTIONS
-    // -----------------------------------------------------------
-    function openRepeatModal(record: PlayerRecord) {
-        setRepeatNumbers(record.numbers);
-        setShowRepeatForm(true);
-    }
+    //  Find, for each repeatId, which board row is the ORIGINAL (earliest createdAt).
+    const starterByRepeatId = useMemo(() => {
+        const earliest = new Map<string, { boardId: string; createdAtMs: number }>();
 
-    function closeRepeatModal() {
-        setShowRepeatForm(false);
-        setRepeatNumbers(null);
-    }
+        for (const r of records) {
+            if (!r.repeatId || !r.createdAt) continue;
 
-    async function handleRepeatCreated() {
-        if (!CURRENT_PLAYER_ID) return;
-        await loadAllForUser(CURRENT_PLAYER_ID);
-    }
+            const t = new Date(r.createdAt).getTime();
+            const existing = earliest.get(r.repeatId);
 
-    function handleStopAutoRenew(id: string) {
-        console.log("Stop auto-renew for repeat:", id);
-        // TODO: call API when you have endpoint
-    }
+            if (!existing || t < existing.createdAtMs) {
+                earliest.set(r.repeatId, { boardId: r.id, createdAtMs: t });
+            }
+        }
 
-    // -----------------------------------------------------------
-    // RENDER: ALL HISTORY TAB (cards like repeat cards)
-    // -----------------------------------------------------------
-    function renderAllTab() {
-        if (loading) return <p className="history-status">Loading…</p>;
-        if (loadError)
-            return (
-                <p className="history-status history-status-error">{loadError}</p>
+        const map = new Map<string, string>();
+        earliest.forEach((v, k) => map.set(k, v.boardId));
+        return map;
+    }, [records]);
+
+    async function handleRepeatClick(
+        boardId: string,
+        currentAutoRepeat: boolean,
+        repeatOptOut: boolean
+    ) {
+        if (repeatOptOut) return;
+
+        const nextValue = !currentAutoRepeat;
+
+        const ok = nextValue
+            ? window.confirm(
+                "Start repeat for this ticket?\n\nWhen the next draw starts, the system will automatically buy this ticket again and deduct money from your balance."
+            )
+            : window.confirm(
+                "Stop repeat for this ticket?\n\nThis will quit repeat permanently. You cannot restart it (you must buy a new ticket to repeat again)."
             );
-        if (records.length === 0)
-            return <p className="history-status">No history yet.</p>;
 
-        return (
-            <div className="repeat-card-list">
-                {records.map((r) => (
-                    <div key={r.id} className="repeat-card">
-                        {/* HEADER ROW */}
-                        <div className="repeat-card-header">
-                            {/* Badge – always PLAYED (per Q3: no winner logic) */}
-                            <span className="repeat-badge">PLAYED</span>
+        if (!ok) return;
 
-                            <span className="repeat-week-label">{r.weekLabel}</span>
-
-                            <span className="repeat-type">History game</span>
-                        </div>
-
-                        {/* NUMBERS AS PILLS */}
-                        <div className="repeat-card-numbers">
-                            {r.numbers.map((n, i) => (
-                                <span key={i} className="repeat-number-pill">
-                  {n}
-                </span>
-                            ))}
-                        </div>
-
-                        {/* META ROW */}
-                        <div className="repeat-card-meta">
-                            <span>Fields: {r.numbers.length}</span>
-                            <span>Times: {r.times}</span>
-                            <span>Total: {r.totalAmountDkk} DKK</span>
-                        </div>
-
-                        {/* ACTION ROW */}
-                        <div className="repeat-card-action-row">
-                            <button
-                                type="button"
-                                className="repeat-stop-btn"
-                                onClick={() => openRepeatModal(r)}
-                            >
-                                Repeat
-                            </button>
-                        </div>
-                    </div>
-                ))}
-            </div>
-        );
+        try {
+            await boardClient.setAutoRepeat(boardId, { autoRepeat: nextValue });
+            await loadHistory(CURRENT_PLAYER_ID);
+        } catch (err) {
+            console.error("Failed to toggle auto-repeat", err);
+            alert("Could not update repeat setting. Please try again.");
+        }
     }
 
-    // -----------------------------------------------------------
-    // RENDER: REPEAT TAB
-    // -----------------------------------------------------------
-    function renderRepeatTab() {
-        return (
-            <PlayerMyRepeatsPage
-                repeats={repeats}
-                priceMap={priceMap}
-                onStopAutoRenew={handleStopAutoRenew}
-            />
-        );
-    }
-
-    // -----------------------------------------------------------
-    // MAIN RENDER
-    // -----------------------------------------------------------
     return (
         <div className="history-page">
-            <PlayerPageHeader userName={playerName} />
+            <PlayerPageHeader userName={playerName} balance={balance} />
 
             <div className="history-inner">
                 <h1 className="history-title">History</h1>
-                <p className="history-subtitle">
-                    Your previous boards and repeats.
-                </p>
+                <p className="history-subtitle">Active & Recent Boards</p>
 
-                {/* tabs */}
-                <div className="history-tabs">
-                    <button
-                        className={`history-tab-btn ${
-                            activeTab === "all" ? "history-tab-btn-active" : ""
-                        }`}
-                        onClick={() => setActiveTab("all")}
-                    >
-                        ALL
-                    </button>
-                    <button
-                        className={`history-tab-btn ${
-                            activeTab === "myRepeats" ? "history-tab-btn-active" : ""
-                        }`}
-                        onClick={() => setActiveTab("myRepeats")}
-                    >
-                        MY REPEATS
-                    </button>
-                </div>
+                {loading && <p className="history-status">Loading…</p>}
+                {loadError && (
+                    <p className="history-status history-status-error">{loadError}</p>
+                )}
 
-                <div className="history-content">
-                    {activeTab === "all" ? renderAllTab() : renderRepeatTab()}
-                </div>
-            </div>
+                {!loading && !loadError && records.length === 0 && (
+                    <p className="history-status">No history yet.</p>
+                )}
 
-            {/* Repeat modal */}
-            {showRepeatForm && repeatNumbers && (
-                <div className="repeat-modal-backdrop">
-                    <div className="repeat-modal-dialog">
-                        <CreateRepeatForm
-                            numbers={repeatNumbers}
-                            onClose={closeRepeatModal}
-                            onCreated={handleRepeatCreated}
-                        />
+                {!loading && !loadError && records.length > 0 && (
+                    <div className="history-table-wrapper">
+                        <table className="history-table">
+                            <thead>
+                            <tr>
+                                <th>Week</th>
+                                <th>Numbers</th>
+                                <th>Fields</th>
+                                <th>Times</th>
+                                <th>Total</th>
+                                <th className="history-col-repeat">Repeat</th>
+                            </tr>
+                            </thead>
+
+                            <tbody>
+                            {records.map((r) => {
+                                const starterId = r.repeatId
+                                    ? starterByRepeatId.get(r.repeatId)
+                                    : undefined;
+
+                                //  repeat instance row = same repeatId, but NOT the starter board
+                                const isRepeatInstance = !!(
+                                    r.repeatId &&
+                                    starterId &&
+                                    starterId !== r.id
+                                );
+
+                                return (
+                                    <tr key={r.id}>
+                                        <td>{r.weekLabel}</td>
+
+                                        <td>
+                                            <div className="history-numbers-inline">
+                                                {r.numbers.map((n) => (
+                                                    <span key={n} className="history-number-chip">
+                              {n}
+                            </span>
+                                                ))}
+                                            </div>
+                                        </td>
+
+                                        <td>{r.numbers.length}</td>
+                                        <td>{r.times}</td>
+                                        <td>{r.totalAmountDkk} DKK</td>
+
+                                        <td className="history-col-repeat">
+                                            {isRepeatInstance ? (
+                                                // Always keep "Repeat" badge for auto-generated rows
+                                                <span className="history-repeat-badge">Repeat</span>
+                                            ) : r.repeatOptOut ? (
+                                                // Only show "Stopped" on the starter row
+                                                <span className="history-stop-badge">Stopped</span>
+                                            ) : (
+                                                // Only starter row gets the toggle
+                                                <button
+                                                    type="button"
+                                                    className={
+                                                        r.autoRepeat
+                                                            ? "history-toggle history-toggle--on"
+                                                            : "history-toggle"
+                                                    }
+                                                    onClick={() =>
+                                                        handleRepeatClick(r.id, r.autoRepeat, r.repeatOptOut)
+                                                    }
+                                                    aria-pressed={r.autoRepeat}
+                                                    aria-label={
+                                                        r.autoRepeat
+                                                            ? "Auto repeat on"
+                                                            : "Auto repeat off"
+                                                    }
+                                                >
+                                                    <span className="history-toggle-knob" />
+                                                </button>
+                                            )}
+                                        </td>
+                                    </tr>
+                                );
+
+                            })}
+                            </tbody>
+                        </table>
                     </div>
-                </div>
-            )}
+                )}
+            </div>
         </div>
     );
 };

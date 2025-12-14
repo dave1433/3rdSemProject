@@ -1,7 +1,7 @@
-import React from "react";
-import { NavLink, useNavigate } from "react-router";
+import React, { useEffect, useState } from "react";
+import { NavLink, useNavigate, useLocation } from "react-router";
 import "../css/PlayerPageHeader.css";
-import { User, LogOut } from 'lucide-react';
+import { User, LogOut, Menu, X } from "lucide-react";
 
 interface PlayerPageHeaderProps {
     userName: string;
@@ -16,31 +16,50 @@ const navItems = [
 ];
 
 export const PlayerPageHeader: React.FC<PlayerPageHeaderProps> = ({
-                                                                      userName, balance,
+                                                                      userName,
+                                                                      balance,
                                                                   }) => {
     const navigate = useNavigate();
+    const location = useLocation();
+    const [menuOpen, setMenuOpen] = useState(false);
 
     function handleLogout() {
-        // clear whatever you store on login
         localStorage.removeItem("token");
         localStorage.removeItem("role");
         localStorage.removeItem("userId");
-
         navigate("/");
     }
+
+    // close menu when route changes
+    useEffect(() => {
+        setMenuOpen(false);
+    }, [location.pathname]);
 
     const balanceLabel =
         balance == null ? "Balance: 0 DKK" : `Balance: ${balance} DKK`;
 
     return (
         <header className="player-header">
-            {/* Logo */}
-            <div className="player-header_logo">
-                <img src="../../../src/assets/logo1.png" alt="Jerne IF" />
+            {/* LEFT: logo + burger */}
+            <div className="player-header_left">
+                <div className="player-header_logo">
+                    <img src="../../../src/assets/logo1.png" alt="Jerne IF" />
+                </div>
+
+                {/* Burger button (mobile only via CSS) */}
+                <button
+                    type="button"
+                    className="player-header_burger"
+                    aria-label="Toggle menu"
+                    aria-expanded={menuOpen}
+                    onClick={() => setMenuOpen((v) => !v)}
+                >
+                    {menuOpen ? <X size={22} /> : <Menu size={22} />}
+                </button>
             </div>
 
-            {/* Navigation */}
-            <nav className="player-header_nav">
+            {/* DESKTOP NAV */}
+            <nav className="player-header_nav player-header_nav--desktop">
                 <ul className="player-header_nav-list">
                     {navItems.map((item) => (
                         <li key={item.path} className="player-header_nav-item">
@@ -58,7 +77,7 @@ export const PlayerPageHeader: React.FC<PlayerPageHeaderProps> = ({
                 </ul>
             </nav>
 
-            {/* Right-side user/balance card */}
+            {/* USER CARD */}
             <div className="player-header_user-card">
                 <div className="player-header_user-avatar">
                     <User size={20} />
@@ -68,6 +87,7 @@ export const PlayerPageHeader: React.FC<PlayerPageHeaderProps> = ({
                     <div className="player-header_user-balance">{balanceLabel}</div>
                 </div>
             </div>
+
             <button
                 type="button"
                 className="player-header_logout-btn"
@@ -76,6 +96,32 @@ export const PlayerPageHeader: React.FC<PlayerPageHeaderProps> = ({
             >
                 <LogOut size={20} />
             </button>
+
+            {/* MOBILE MENU */}
+            <div
+                className={
+                    "player-header_mobile-menu" +
+                    (menuOpen ? " player-header_mobile-menu--open" : "")
+                }
+            >
+                {navItems.map((item) => (
+                    <NavLink
+                        key={item.path}
+                        to={item.path}
+                        className="player-header_mobile-link"
+                    >
+                        {item.label}
+                    </NavLink>
+                ))}
+            </div>
+
+            {/* BACKDROP */}
+            {menuOpen && (
+                <div
+                    className="player-header_backdrop"
+                    onClick={() => setMenuOpen(false)}
+                />
+            )}
         </header>
     );
 };

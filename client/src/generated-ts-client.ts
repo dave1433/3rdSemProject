@@ -373,6 +373,79 @@ export class BoardClient {
         }
         return Promise.resolve<BoardDtoResponse[]>(null as any);
     }
+
+    setAutoRepeat(boardId: string, request: UpdateAutoRepeatRequest): Promise<AutoRepeatResponse> {
+        let url_ = this.baseUrl + "/api/board/{boardId}/auto-repeat";
+        if (boardId === undefined || boardId === null)
+            throw new globalThis.Error("The parameter 'boardId' must be defined.");
+        url_ = url_.replace("{boardId}", encodeURIComponent("" + boardId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(request);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processSetAutoRepeat(_response);
+        });
+    }
+
+    protected processSetAutoRepeat(response: Response): Promise<AutoRepeatResponse> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as AutoRepeatResponse;
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<AutoRepeatResponse>(null as any);
+    }
+
+    getIsBoardLockedStatus(): Promise<IsBoardLockedResponse> {
+        let url_ = this.baseUrl + "/api/board/purchase/status";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetIsBoardLockedStatus(_response);
+        });
+    }
+
+    protected processGetIsBoardLockedStatus(response: Response): Promise<IsBoardLockedResponse> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as IsBoardLockedResponse;
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<IsBoardLockedResponse>(null as any);
+    }
 }
 
 export class BoardPriceClient {
@@ -416,6 +489,50 @@ export class BoardPriceClient {
             });
         }
         return Promise.resolve<BoardPriceDtoResponse[]>(null as any);
+    }
+}
+
+export class GameResultClient {
+    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
+        this.http = http ? http : window as any;
+        this.baseUrl = baseUrl ?? "";
+    }
+
+    getDrawHistoryForPlayers(): Promise<GameHistoryResponse[]> {
+        let url_ = this.baseUrl + "/api/games/draw/history";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetDrawHistoryForPlayers(_response);
+        });
+    }
+
+    protected processGetDrawHistoryForPlayers(response: Response): Promise<GameHistoryResponse[]> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as GameHistoryResponse[];
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<GameHistoryResponse[]>(null as any);
     }
 }
 
@@ -926,6 +1043,7 @@ export interface BoardDtoResponse {
     times: number;
     repeatId: string | undefined;
     createdAt: string | undefined;
+    autoRepeat: boolean;
     isWinner: boolean | undefined;
     transactions: BoardTransactionDto[];
 }
@@ -957,9 +1075,35 @@ export interface CreateBoardRequest {
     times: number;
 }
 
+export interface AutoRepeatResponse {
+    boardId: string;
+    autoRepeat: boolean;
+    repeatId: string | undefined;
+    isStopped: boolean;
+}
+
+export interface UpdateAutoRepeatRequest {
+    autoRepeat: boolean;
+}
+
+export interface IsBoardLockedResponse {
+    isOpen: boolean;
+    message: string | undefined;
+    year: number;
+    weekNumber: number;
+}
+
 export interface BoardPriceDtoResponse {
     fieldsCount: number;
     price: number;
+}
+
+export interface GameHistoryResponse {
+    id: string;
+    year: number;
+    weekNumber: number;
+    winningNumbers: number[];
+    createdAt: string;
 }
 
 export interface RepeatDtoResponse {
@@ -1022,6 +1166,26 @@ export interface CreateUserRequest {
     email: string;
     password: string;
     role: number;
+}
+
+export interface GameResponse {
+    id: string;
+    year: number;
+    weekNumber: number;
+    winningNumbers: number[];
+    createdAt: string;
+}
+
+export interface CreateGameDrawRequest {
+    year: number;
+    weekNumber: number;
+    winningNumbers: number[];
+}
+
+export interface WeeklyBoardSummaryDto {
+    week: number;
+    year: number;
+    totalWinningBoards: number;
 }
 
 export interface FileResponse {
