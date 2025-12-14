@@ -3,7 +3,6 @@
     background: #D9D9D9;
     display: flex;
     flex-direction: column;
-
 }
 
 .player-board-main {
@@ -11,8 +10,10 @@
     sans-serif;
     max-width: 1200px;
     gap: 40px;
-    padding: 32px 80px 40px;
     margin: 0 auto;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 32px clamp(16px, 5vw, 80px) 40px;
 }
 
 .player-board-layout {
@@ -368,5 +369,24 @@
 /* Firefox: hide arrows on number input */
 .player-board-times-control input[type="number"] {
     -moz-appearance: textfield;
+}
+
+.player-board-warning {
+    margin: 8px 0 0;
+    color: #c80000;          /* red */
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.player-board-status--success {
+    color: #0a7a43;
+    font-weight: 600;
+}
+
+@media (max-width: 900px) {
+    .player-board-layout {
+        flex-direction: column;
+        gap: 16px;
+    }
 }
 

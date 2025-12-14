@@ -218,7 +218,7 @@ export const PlayerMyTransactionPage: React.FC = () => {
                                     />
                                 </div>
 
-                                {formError && <p className="balance-form-error">{formError}</p>}
+                                {formError && <p className="balance-form-error">{loadError}</p>}
                                 {formSuccess && <p className="balance-form-success">{formSuccess}</p>}
 
                                 <button type="submit" className="balance-submit-btn">

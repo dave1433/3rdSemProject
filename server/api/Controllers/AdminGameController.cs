@@ -12,6 +12,7 @@ namespace api.controllers;
 
 [ApiController]
 [Route("api/admin/games")]
+[Authorize(Roles = "1")]
 public class AdminGameController : ControllerBase
 {
     private readonly MyDbContext _db;
@@ -27,26 +28,31 @@ public class AdminGameController : ControllerBase
     // ENTER WINNING NUMBERS FOR WEEK (LOCKED PER YEAR+WEEK)
     // ---------------------------------------------------------------------
     [HttpPost("draw")]
-    public async Task<ActionResult<GameResponse>> EnterWinningNumbers(CreateGameDrawRequest request)
+    public async Task<ActionResult<GameResponse>> EnterWinningNumbers([FromBody] CreateGameDrawRequest request)
     {
         // -----------------------------
         // Validation
         // -----------------------------
-        if (request.WinningNumbers.Count != 3)
+        if (request.WinningNumbers == null || request.WinningNumbers.Count != 3)
             return BadRequest("Exactly 3 winning numbers are required.");
 
         if (request.WinningNumbers.Any(n => n < 1 || n > 16))
             return BadRequest("Winning numbers must be between 1 and 16.");
 
+        if (request.WinningNumbers.Distinct().Count() != 3)
+            return BadRequest("Winning numbers must be unique.");
+
         // -----------------------------
         // LOCK: Prevent re-draw for same week
+        // (winningnumbers not null AND length > 0)
         // -----------------------------
         var alreadyDrawn = await _db.Games
             .AsNoTracking()
             .AnyAsync(g =>
                 g.Year == request.Year &&
                 g.Weeknumber == request.WeekNumber &&
-                g.Winningnumbers != null);
+                g.Winningnumbers != null &&
+                g.Winningnumbers.Count > 0);
 
         if (alreadyDrawn)
         {
@@ -62,7 +68,7 @@ public class AdminGameController : ControllerBase
         // Monday 00:00 local time for this ISO week
         var weekStartLocal = FirstDayOfIsoWeekLocal(request.Year, request.WeekNumber);
 
-        // Deadline: Saturday 16:59:59 local
+        // Deadline: Saturday 16:59:59 local (you can change to 17:00:00 if you want)
         var joinDeadlineLocal = weekStartLocal
             .AddDays(5) // Monday + 5 days = Saturday
             .AddHours(16)
@@ -81,7 +87,7 @@ public class AdminGameController : ControllerBase
             Weeknumber = request.WeekNumber,
             Winningnumbers = request.WinningNumbers,
             Createdat = createdAtUtc,
-            Joindeadline = joinDeadlineUtc       // ✅ MISSING IN YOUR VERSION — ADDED
+            Joindeadline = joinDeadlineUtc
         };
 
         _db.Games.Add(game);
@@ -90,7 +96,14 @@ public class AdminGameController : ControllerBase
         await _db.SaveChangesAsync();
 
         // -----------------------------
-        // Evaluate winning boards
+        // Generate repeat boards for this game/week
+        // ✅ IMPORTANT: this will calculate board price from BoardPrice
+        // and create transactions with correct negative amount
+        // -----------------------------
+        await _boardService.ProcessRepeatOrdersForGameAsync(game.Id);
+
+        // -----------------------------
+        // Evaluate winning boards (including repeat-generated ones)
         // -----------------------------
         var boards = await _db.Boards
             .Where(b => b.Gameid == game.Id)
@@ -104,11 +117,6 @@ public class AdminGameController : ControllerBase
         }
 
         await _db.SaveChangesAsync();
-
-        // -----------------------------
-        // Generate repeat boards for this week
-        // -----------------------------
-        await GenerateBoardsForRepeatsAsync(game);
 
         // -----------------------------
         // Response
@@ -134,7 +142,8 @@ public class AdminGameController : ControllerBase
             .AnyAsync(g =>
                 g.Year == year &&
                 g.Weeknumber == weekNumber &&
-                g.Winningnumbers != null);
+                g.Winningnumbers != null &&
+                g.Winningnumbers.Count > 0);
 
         return Ok(locked);
     }
@@ -143,7 +152,6 @@ public class AdminGameController : ControllerBase
     // WEEKLY WIN SUMMARY FOR ADMIN DASHBOARD
     // ---------------------------------------------------------------------
     [HttpGet("winners/summary")]
-    [Authorize(Roles = "1")]
     public async Task<ActionResult<List<WeeklyBoardSummaryDto>>> GetWeeklyWinningSummary()
     {
         return Ok(await _boardService.GetWeeklyWinningSummaryAsync());
@@ -157,7 +165,7 @@ public class AdminGameController : ControllerBase
     {
         var history = await _db.Games
             .AsNoTracking()
-            .Where(g => g.Winningnumbers != null)
+            .Where(g => g.Winningnumbers != null && g.Winningnumbers.Count > 0)
             .OrderByDescending(g => g.Year)
             .ThenByDescending(g => g.Weeknumber)
             .Select(g => new GameHistoryResponse
@@ -171,74 +179,6 @@ public class AdminGameController : ControllerBase
             .ToListAsync();
 
         return Ok(history);
-    }
-
-    // ---------------------------------------------------------------------
-    // REPEAT SYSTEM — AUTO-GENERATE BOARDS FOR NEW WEEK
-    // ---------------------------------------------------------------------
-    private async Task GenerateBoardsForRepeatsAsync(Game game, CancellationToken ct = default)
-    {
-        var repeats = await _db.Repeats
-            .Where(r => !r.Optout && r.Remainingweeks > 0)
-            .ToListAsync(ct);
-
-        if (repeats.Count == 0)
-            return;
-
-        var priceList = await _db.Boardprices.ToListAsync(ct);
-        var priceMap = priceList.ToDictionary(p => p.Fieldscount, p => p.Price);
-
-        foreach (var repeat in repeats)
-        {
-            var numbers = repeat.Numbers ?? new List<int>();
-            if (numbers.Count == 0) continue;
-
-            if (!priceMap.TryGetValue(numbers.Count, out var basePrice))
-                continue;
-
-            // Price per week stored in repeat.Price
-            var times = repeat.Price / basePrice;
-            if (times <= 0) times = 1;     // safeguard
-
-            // Create auto-board
-            var board = new Board
-            {
-                Id = Guid.NewGuid().ToString(),
-                Playerid = repeat.Playerid,
-                Gameid = game.Id,
-                Numbers = numbers,
-                Price = repeat.Price,
-                Times = times,
-                Repeatid = repeat.Id,
-                Createdat = DateTime.UtcNow
-            };
-
-            _db.Boards.Add(board);
-
-            // Create auto transaction
-            var transaction = new Transaction
-            {
-                Id = Guid.NewGuid().ToString(),
-                Playerid = repeat.Playerid,
-                Type = "purchase",
-                Amount = -repeat.Price,
-                Status = "approved",
-                Boardid = board.Id,
-                Createdat = DateTime.UtcNow
-            };
-
-            _db.Transactions.Add(transaction);
-
-            // Decrease remaining weeks
-            repeat.Remainingweeks--;
-            if (repeat.Remainingweeks <= 0)
-            {
-                repeat.Remainingweeks = 0;
-                repeat.Optout = true;       // mark repeat as completed
-            }
-        }
-
-        await _db.SaveChangesAsync(ct);
     }
 
     // ---------------------------------------------------------------------
@@ -257,11 +197,14 @@ public class AdminGameController : ControllerBase
     /// </summary>
     private static DateTime FirstDayOfIsoWeekLocal(int year, int week)
     {
+        // ISO week 1 is the week with Jan 4th in it.
         var jan4 = new DateTime(year, 1, 4);
         int dayOfWeek = (int)jan4.DayOfWeek;
-        if (dayOfWeek == 0) dayOfWeek = 7;
+        if (dayOfWeek == 0) dayOfWeek = 7; // Sunday => 7
 
         var week1Monday = jan4.AddDays(1 - dayOfWeek);
+
+        // week start in UTC-like baseline (as your original code did)
         var utcMonday = week1Monday.AddDays((week - 1) * 7);
 
         var localMonday = TimeZoneInfo.ConvertTimeFromUtc(utcMonday, CphTz);

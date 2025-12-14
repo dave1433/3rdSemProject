@@ -1,6 +1,3 @@
-/* ROOT LAYOUT
-   -------------------------------------------------- */
-
 .history-page {
     min-height: 100vh;
     background: #D9D9D9;
@@ -9,274 +6,230 @@
 }
 
 .history-inner {
-    max-width: 1200px;
-    padding: 32px 80px 40px;
-    margin: 0 auto;
     font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     sans-serif;
+    max-width: 1200px;
+    padding: 32px clamp(16px, 5vw, 80px) 40px;
+    margin: 0 auto;
+    width: 100%;
+    box-sizing: border-box;
 }
-
-/* TITLES
-   -------------------------------------------------- */
 
 .history-title {
     font-size: 1.6rem;
     margin: 0 0 4px 0;
-    color: #222222;
 }
 
 .history-subtitle {
-    font-size: 15px;
-    color: #5f5b55;
-    margin: 0 0 24px 0;
+    margin: 0 0 16px 0;
+    font-size: 0.9rem;
+    color: #555;
 }
-
-/* TABS
-   -------------------------------------------------- */
-
-.history-tabs {
-    display: inline-flex;
-    background-color: #f3eee7;
-    border-radius: 999px;
-    padding: 4px;
-    margin-bottom: 24px;
-}
-
-.history-tab-btn {
-    border: none;
-    background: transparent;
-    padding: 8px 20px;
-    border-radius: 999px;
-    font-size: 14px;
-    font-weight: 500;
-    color: #6b645c;
-    cursor: pointer;
-    transition: background-color 0.15s ease, color 0.15s ease;
-}
-
-.history-tab-btn:hover {
-    background-color: rgba(0, 0, 0, 0.03);
-}
-
-.history-tab-btn-active {
-    background-color: #ffffff;
-    color: #222222;
-}
-
-/* STATUS TEXT
-   -------------------------------------------------- */
 
 .history-status {
-    font-size: 14px;
-    color: #5f5b55;
-    padding: 12px 0;
+    font-size: 0.9rem;
+    color: #555;
+    margin-top: 10px;
 }
 
 .history-status-error {
-    color: #b3261e;
+    color: #c80000;
 }
 
-/* CARDS LAYOUT
-   -------------------------------------------------- */
-
-.history-content {
+/* table wrapper */
+.history-table-wrapper {
     margin-top: 8px;
-}
-
-.history-cards {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 16px;
-}
-
-/* Two cards per row on desktop */
-.history-card {
-    flex: 0 0 calc(50% - 8px);
-    max-width: calc(50% - 8px);
-    background-color: #f9f6f2;
-    border-radius: 16px;
-    padding: 16px 18px 14px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-/* One card per row on small screens */
-@media (max-width: 768px) {
-    .history-card {
-        flex: 0 0 100%;
-        max-width: 100%;
-    }
-
-    .history-inner {
-        padding: 24px 16px 32px;
-    }
-}
-
-/* CARD HEADER (status + week label + optional "From repeat")
-   -------------------------------------------------- */
-
-.history-card-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 13px;
-}
-
-.history-status-pill {
-    padding: 4px 10px;
-    border-radius: 999px;
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-}
-
-.history-status-pill--active {
-    background-color: #e1f3e3;
-    color: #1b5e20;
-}
-
-.history-status-pill--inactive {
-    background-color: #f3e0e0;
-    color: #7b1f1f;
-}
-
-.history-card-date {
-    color: #6b645c;
-}
-
-.history-card-remaining {
-    margin-left: auto;
-    font-size: 12px;
-    color: #8c867f;
-}
-
-/* NUMBERS ROW
-   -------------------------------------------------- */
-
-.history-card-numbers {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 4px;
-}
-
-.history-number-square {
-    min-width: 32px;
-    height: 32px;
     border-radius: 8px;
-    background-color: #ffffff;
-    border: 1px solid #ddd0c0;
+    overflow: hidden;
+    border: 1px solid #ddd;
+    background: #f9f6f2;
+}
+
+.history-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.history-table th,
+.history-table td {
+    padding: 8px 10px;
+    border-bottom: 1px solid #e0ddd8;
+    vertical-align: middle;
+}
+
+.history-table th {
+    text-align: left;
+    background: #ebe6de;
+    font-weight: 600;
+}
+
+.history-table tr:nth-child(even) td {
+    background: #f5f1eb;
+}
+
+/* numbers */
+.history-numbers-inline {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.history-number-chip {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 14px;
-    font-weight: 500;
+    min-width: 28px;
+    height: 26px;
+    padding: 0 8px;
+    border-radius: 999px;
+    background: #fff;
+    border: 1px solid #ddd0c0;
+    font-size: 0.85rem;
     color: #3b3630;
 }
 
-/* META ROW (fields/times/total + Repeat button)
-   -------------------------------------------------- */
-
-.history-card-meta-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    margin-top: 4px;
-}
-
-.history-card-meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    font-size: 13px;
-    color: #6b645c;
-}
-
-.history-card-meta span::before {
-    content: "";
-    width: 4px;
-    height: 4px;
-    border-radius: 999px;
-    background-color: #c1b8ac;
-    display: inline-block;
-    margin: 0 6px 2px 0;
-}
-
-.history-card-meta span:first-child::before {
-    display: none;
-}
-
-/* Repeat button aligned to the right of meta */
+/* repeat button (simple, looks like your app buttons) */
 .history-repeat-btn {
     border: none;
-    border-radius: 999px;
-    padding: 6px 16px;
-    font-size: 13px;
-    font-weight: 600;
+    border-radius: 6px;
+    padding: 6px 14px;
+    font-size: 0.85rem;
     cursor: pointer;
-    background-color: #00a86b;
-    color: #ffffff;
-    white-space: nowrap;
-    transition: background-color 0.15s ease, transform 0.05s ease,
-    box-shadow 0.05s ease;
+    background: #e0ded9;
+    color: #333;
+    transition: background 0.12s, transform 0.08s, box-shadow 0.08s;
 }
 
 .history-repeat-btn:hover {
-    background-color: #008a58;
     transform: translateY(-1px);
-    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
 }
 
-/* On mobile, stack meta + button */
-@media (max-width: 600px) {
-    .history-card-meta-row {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .history-repeat-btn {
-        align-self: flex-start;
-    }
+/* ON state uses your green */
+.history-repeat-btn--on {
+    background: #00a86b;
+    color: #fff;
 }
 
-/* MODAL FOR CREATE REPEAT FORM
-   -------------------------------------------------- */
+.history-repeat-btn--on:hover {
+    background: #008a58;
+}
 
-.repeat-modal-backdrop {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.45);
+
+/* Toggle */
+.history-col-repeat {
+    text-align: center;
+    width: 80px;
+}
+
+.history-numbers-inline {
     display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.history-number-chip {
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    z-index: 50;
+    min-width: 28px;
+    height: 28px;
+    padding: 0 8px;
+    border-radius: 6px;
+    background: #c80000;
+    border: 1px solid #c80000;
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 12px;
 }
 
-.repeat-modal-dialog {
-    background: #f9f6f2;
-    border-radius: 16px;
+/* toggle switch */
+.history-toggle {
+    width: 46px;
+    height: 26px;
+    border-radius: 999px;
     border: 1px solid #d4cec7;
-    padding: 20px 24px;
-    max-width: 480px;
-    width: 100%;
-    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.25);
+    background: #e0ded9;
+    cursor: pointer;
+    position: relative;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    transition: background 0.15s ease, border-color 0.15s ease;
 }
 
-/* Optional: small fade-in animation */
-.repeat-modal-dialog {
-    animation: repeatModalIn 0.15s ease-out;
+.history-toggle:hover {
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
+    transform: translateY(-1px);
 }
 
-@keyframes repeatModalIn {
-    from {
-        opacity: 0;
-        transform: translateY(4px) scale(0.98);
+.history-toggle:active {
+    transform: translateY(0px);
+}
+
+.history-toggle-knob {
+    width: 22px;
+    height: 22px;
+    border-radius: 999px;
+    background: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    position: absolute;
+    left: 2px;
+    transition: left 0.15s ease;
+}
+
+.history-toggle--on {
+    background: #00a86b;
+    border-color: #00a86b;
+}
+
+.history-toggle--on .history-toggle-knob {
+    left: 22px;
+}
+
+/* repeat stopped badge (cannot restart) */
+.history-repeat-badge {
+    display: inline-block;
+    padding: 2px 10px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: #00a86b1a;
+    color: #007046;
+}
+
+.history-stop-badge {
+    display: inline-block;
+    padding: 2px 10px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: #f6d3d0;
+    color: #b02a1a;
+}
+
+.player-board-status {
+    margin: 8px 0 8px;
+    color: #c80000;          /* red */
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.history-repeat-badge.auto {
+    opacity: 0.8;
+}
+/* mobile */
+@media (max-width: 768px) {
+    .history-table-wrapper {
+        overflow-x: auto;
     }
-    to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
+
+    .history-table {
+        min-width: 720px;
     }
 }

@@ -67,7 +67,9 @@ create table deadpigeons.board (
                                    price      int not null,             -- from boardprice
                                    times      int not null default 1,
                                    repeatId   text,                      -- links to repeat table
-                                   createdAt  timestamptz default now()
+                                   createdAt  timestamptz default now(),
+                                   autoRepeat boolean not null default false,
+                                   iswinner  boolean not null default false
 );
 
 create index board_game_idx on deadpigeons.board(gameId);
@@ -82,10 +84,12 @@ create table deadpigeons.repeat (
                                     playerId       text references deadpigeons.user(id)
                                         on delete cascade,
                                     numbers        int[] not null,        -- 5–8 numbers
+                                    times          int not null default 1,
                                     price          int not null,
-                                    remainingWeeks int not null,
+                                    playedWeeks    int not null,
                                     optOut         boolean not null default false,
-                                    createdAt      timestamptz default now()
+                                    createdAt      timestamptz default now(),
+                                    optoutat       timestamptz                                
 );
 
 create index repeat_player_idx on deadpigeons.repeat(playerId);
