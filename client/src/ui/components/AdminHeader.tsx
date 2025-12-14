@@ -14,17 +14,28 @@ export const AdminHeader = ({ activeTab, onChangeTab }: AdminHeaderProps) => {
     const navigate = useNavigate();
     const [adminName, setAdminName] = useState<string>("Loading...");
 
-    // 🔥 Load admin name from the DB using /api/user/me
+    //  Load admin name from the DB using /api/user/me
     useEffect(() => {
         const fetchAdmin = async () => {
             try {
                 const res = await apiGet("/api/user/me");
-                if (!res.ok) throw new Error("Failed to fetch admin");
 
-                const data = await res.json();
-                setAdminName(data.fullName); // <- this must match your UserResponse field name
+                if (!res.ok) {
+                    setAdminName("Admin");
+                    return;
+                }
+
+                //  SAFE PARSING
+                const text = await res.text();
+                if (!text) {
+                    setAdminName("Admin");
+                    return;
+                }
+
+                const data = JSON.parse(text);
+                setAdminName(data.fullName ?? "Admin");
             } catch (err) {
-                console.error(err);
+                console.error("Failed to load admin info", err);
                 setAdminName("Admin");
             }
         };

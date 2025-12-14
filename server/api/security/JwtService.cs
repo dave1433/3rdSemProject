@@ -46,13 +46,13 @@ public class JwtService(IConfiguration config) : ITokenService
 
         return new TokenValidationParameters
         {
-            IssuerSigningKey       = key,
-            ValidAlgorithms        = new[] { SignatureAlgorithm },
+            IssuerSigningKey        = key,
+            ValidAlgorithms         = new[] { SignatureAlgorithm },
             ValidateIssuerSigningKey = true,
-            ValidateIssuer         = false,
-            ValidateAudience       = false,
-            ValidateLifetime       = true,
-            ClockSkew              = TimeSpan.Zero,
+            ValidateIssuer          = false,
+            ValidateAudience        = false,
+            ValidateLifetime        = true,
+            ClockSkew               = TimeSpan.Zero,
         };
     }
 }

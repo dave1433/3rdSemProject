@@ -15,31 +15,36 @@ function getWeekNumber(date: Date) {
     return Math.ceil(
         (((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
     }
-    
-    export const WinningNumbersCard = () => {
-        const now = new Date();
-        const year = now.getFullYear();
-        const weekNumber = getWeekNumber(now);
 
-        const {
-            selected,
-            locked,
-            loading,
-            toggleNumber,
-            clearSelection,
-            submitDraw,
-        } = useWinningNumbers(year, weekNumber);
+type Props = {
+    authorized: boolean;
+};
 
-        return (
-            <WinningNumbersCardView
-                year={year}
-                weekNumber={weekNumber}
-                selected={selected}
-                locked={locked}
-                loading={loading}
-                toggleNumber={toggleNumber}
-                clearSelection={clearSelection}
-                submitDraw={submitDraw}
-            />
-        );
-    };  
+export const WinningNumbersCard = ({ authorized }: Props) => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const weekNumber = getWeekNumber(now);
+
+    const {
+        selected,
+        locked,
+        loading,
+        toggleNumber,
+        clearSelection,
+        submitDraw,
+    } = useWinningNumbers(year, weekNumber, authorized);
+
+    return (
+        <WinningNumbersCardView
+            year={year}
+            weekNumber={weekNumber}
+            selected={selected}
+            locked={locked}
+            loading={loading}
+            toggleNumber={toggleNumber}
+            clearSelection={clearSelection}
+            submitDraw={submitDraw}
+        />
+    );
+};
+

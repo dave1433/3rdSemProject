@@ -1,8 +1,12 @@
 ﻿import { DrawHistoryView } from "./DrawHistoryView";
 import { useDrawHistory } from "../../core/hooks/useDrawHistory";
 
-export const DrawHistoryTable = () => {
-    const { history, loading, error, reload } = useDrawHistory();
+type Props = {
+    authorized: boolean;
+};
+
+export const DrawHistoryTable = ({ authorized }: Props) => {
+    const { history, loading, error, reload } = useDrawHistory(authorized);
 
     return (
         <DrawHistoryView

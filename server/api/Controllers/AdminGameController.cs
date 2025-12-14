@@ -1,32 +1,22 @@
-﻿using System.Globalization;
-using api.dtos.Requests;
-using api.dtos.Responses;
+﻿using api.dtos.Requests;
 using api.Services;
-using efscaffold.Entities;
-using Infrastructure.Postgres.Scaffolding;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
-namespace api.controllers;
+namespace api.Controllers;
 
 [ApiController]
 [Route("api/admin/games")]
-[Authorize(Roles = "1")]
+[Authorize(Policy = "AdminOnly")]
 public class AdminGameController : ControllerBase
 {
-    private readonly MyDbContext _db;
-    private readonly IBoardService _boardService;
+    private readonly IAdminGameService _admin;
 
-    public AdminGameController(MyDbContext db, IBoardService boardService)
+    public AdminGameController(IAdminGameService admin)
     {
-        _db = db;
-        _boardService = boardService;
+        _admin = admin;
     }
 
-    // ---------------------------------------------------------------------
-    // ENTER WINNING NUMBERS FOR WEEK (LOCKED PER YEAR+WEEK)
-    // ---------------------------------------------------------------------
     [HttpPost("draw")]
     public async Task<ActionResult<GameResponse>> EnterWinningNumbers([FromBody] CreateGameDrawRequest request)
     {
@@ -148,18 +138,12 @@ public class AdminGameController : ControllerBase
         return Ok(locked);
     }
 
-    // ---------------------------------------------------------------------
-    // WEEKLY WIN SUMMARY FOR ADMIN DASHBOARD
-    // ---------------------------------------------------------------------
     [HttpGet("winners/summary")]
     public async Task<ActionResult<List<WeeklyBoardSummaryDto>>> GetWeeklyWinningSummary()
     {
         return Ok(await _boardService.GetWeeklyWinningSummaryAsync());
     }
 
-    // ---------------------------------------------------------------------
-    // ADMIN — DRAW HISTORY
-    // ---------------------------------------------------------------------
     [HttpGet("draw/history")]
     public async Task<ActionResult<List<GameHistoryResponse>>> GetDrawHistory()
     {
@@ -207,13 +191,4 @@ public class AdminGameController : ControllerBase
         // week start in UTC-like baseline (as your original code did)
         var utcMonday = week1Monday.AddDays((week - 1) * 7);
 
-        var localMonday = TimeZoneInfo.ConvertTimeFromUtc(utcMonday, CphTz);
 
-        return new DateTime(
-            localMonday.Year,
-            localMonday.Month,
-            localMonday.Day,
-            0, 0, 0,
-            localMonday.Kind);
-    }
-}
