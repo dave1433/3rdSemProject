@@ -75,21 +75,35 @@ public class UserService : IUserService
     // GET CURRENT USER FROM JWT
     // -------------------------------
     public async Task<UserResponse?> GetCurrentAsync(ClaimsPrincipal user)
-    {
-        var userId = user.GetUserId();
+{
+    var userId = user.GetUserId();
 
-        return await _db.Users
-            .AsNoTracking()
-            .Where(u => u.Id == userId)
-            .Select(u => new UserResponse
-            {
-                Id = u.Id,
-                FullName = u.Fullname,
-                Email = u.Email,
-                Role = u.Role
-            })
-            .SingleOrDefaultAsync();
-    }
+    var entity = await _db.Users
+        .AsNoTracking()
+        .SingleOrDefaultAsync(u => u.Id == userId);
+
+    if (entity == null) return null;
+
+    // ✅ Balance = sum of APPROVED transactions for this player
+    var balance = await _db.Transactions
+        .AsNoTracking()
+        .Where(t => t.Playerid == userId && t.Status == "approved")
+        .Select(t => (int?)t.Amount)     // prevents crash on empty set
+        .SumAsync() ?? 0;
+
+    return new UserResponse
+    {
+        Id        = entity.Id,
+        FullName  = entity.Fullname ?? "",
+        Phone     = entity.Phone ?? "",
+        Email     = entity.Email,
+        Active    = entity.Active,
+        Balance   = balance,             //  /api/user/me returns balance
+        Role      = entity.Role,
+        CreatedAt = entity.Createdat
+    };
+}
+
 
     // -------------------------------
     // ACTIVATE

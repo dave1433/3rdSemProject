@@ -90,7 +90,7 @@ public class BoardController : ControllerBase
     // Player buys 1..N boards
     // ======================================================
     [HttpPost("user/purchase")]
-    [Authorize(Roles = "2")]
+    [Authorize(Policy = "PlayerOnly")]
     public async Task<ActionResult<List<BoardDtoResponse>>> Purchase(
         [FromBody] List<CreateBoardRequest> dtos)
     {
@@ -129,7 +129,7 @@ public class BoardController : ControllerBase
     // Player-only: toggle auto-repeat flag on a board
     // ======================================================
     [HttpPut("{boardId}/auto-repeat")]
-    [Authorize(Roles = "2")]
+    [Authorize(Policy = "PlayerOnly")]
     [Produces("application/json")]
     public async Task<ActionResult<AutoRepeatResponse>> SetAutoRepeat(
         string boardId,
@@ -156,7 +156,7 @@ public class BoardController : ControllerBase
     }
     
     [HttpGet("purchase/status")]
-    [Authorize(Roles = "2")]
+    [Authorize(Policy = "PlayerOnly")]
     public async Task<ActionResult<IsBoardLockedResponse>> GetIsBoardLockedStatus()
     {
         try

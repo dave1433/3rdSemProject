@@ -1,21 +1,18 @@
 import React, { useEffect, useMemo, useState } from "react";
 import "../../css/PlayerBoardPage.css";
-import { PlayerPageHeader } from "../../components/PlayerPageHeader";
 
 import { openapiAdapter } from "../../../api/connection";
 import {
-    AuthClient,
     BoardClient,
     BoardPriceClient,
-    UserClient,
 } from "../../../generated-ts-client";
 
 import type {
-    AuthUserInfo,
     BoardPriceDtoResponse,
     CreateBoardRequest,
-    UserResponse,
 } from "../../../generated-ts-client";
+
+import { useCurrentUser } from "../../../core/hooks/useCurrentUser";
 
 // ----------------------
 // TYPES
@@ -42,12 +39,12 @@ type SubmitStatus =
 // ----------------------
 // CLIENTS
 // ----------------------
-const authClient = openapiAdapter(AuthClient);
 const boardClient = openapiAdapter(BoardClient);
 const boardPriceClient = openapiAdapter(BoardPriceClient);
-const userClient = openapiAdapter(UserClient);
 
-// ISO week label
+// ----------------------
+// HELPERS
+// ----------------------
 function getIsoWeekLabel(dateString?: string | null): string {
     if (!dateString) return "";
     const d = new Date(dateString);
@@ -64,38 +61,37 @@ function getIsoWeekLabel(dateString?: string | null): string {
     return `Week ${weekNo}, ${year}`;
 }
 
-// Try extract a readable message from unknown errors
 function getErrorMessage(err: unknown): string {
     if (err instanceof Error && err.message) return err.message;
     return "Failed to submit. Please try again.";
 }
 
+// ----------------------
+// COMPONENT
+// ----------------------
 export const PlayerBoardPage: React.FC = () => {
+    const { user, updateBalance } = useCurrentUser();
+
+    const playerId = user?.id ?? "";
+    const balanceValue = user?.balance ?? 0;
+
     const [fieldsCount, setFieldsCount] = useState<FieldsCount>(5);
     const [selectedNumbers, setSelectedNumbers] = useState<number[]>([]);
     const [times, setTimes] = useState(1);
     const [bets, setBets] = useState<BetPlacement[]>([]);
 
-    const [playerName, setPlayerName] = useState("");
-    const [balance, setBalance] = useState<number | null>(null);
-
     const [priceByFields, setPriceByFields] = useState<PriceMap>({});
     const [loading, setLoading] = useState(false);
     const [loadError, setLoadError] = useState<string | null>(null);
 
-    // submit status (will be shown under Submit button)
     const [submitStatus, setSubmitStatus] = useState<SubmitStatus>({ type: "idle" });
-
-    // warning under the week title (only when server says draw not open)
     const [warningMsg, setWarningMsg] = useState<string | null>(null);
-
-    const playerId = localStorage.getItem("userId") ?? "";
-    const balanceValue = balance ?? 0;
 
     const numbers = useMemo(
         () => Array.from({ length: 16 }, (_, i) => i + 1),
         []
     );
+
     const fields = selectedNumbers.length;
 
     const unitPrice = useMemo(
@@ -113,10 +109,13 @@ export const PlayerBoardPage: React.FC = () => {
         [bets]
     );
 
-    const weekLabel = useMemo(() => getIsoWeekLabel(new Date().toISOString()), []);
+    const weekLabel = useMemo(
+        () => getIsoWeekLabel(new Date().toISOString()),
+        []
+    );
 
     // ----------------------
-    // BALANCE LOCK
+    // BALANCE LOCKS
     // ----------------------
     const canAddToCart = useMemo(() => {
         if (unitPrice <= 0) return false;
@@ -137,6 +136,7 @@ export const PlayerBoardPage: React.FC = () => {
 
         const nextAmount = unitPrice * times;
         const remaining = balanceValue - totalAmount;
+
         if (remaining >= nextAmount) return null;
 
         return `Insufficient balance. You have ${remaining} DKK left for this cart, but this ticket costs ${nextAmount} DKK.`;
@@ -149,64 +149,41 @@ export const PlayerBoardPage: React.FC = () => {
     }, [bets.length, totalAmount, balanceValue]);
 
     // ----------------------
-    // LOAD USER + PRICES
+    // LOAD PRICES
     // ----------------------
-    async function loadBoardPageData() {
-        try {
-            setLoading(true);
-            setLoadError(null);
-
-            // name (Auth)
-            try {
-                const info: AuthUserInfo = await authClient.userInfo();
-                setPlayerName(info.fullName);
-            } catch (err) {
-                console.warn("Failed to load auth user info", err);
-            }
-
-            // balance (User/me)
-            try {
-                const me: UserResponse = await userClient.getCurrentUser();
-                setBalance(me.balance ?? null);
-                if (me.fullName) setPlayerName(me.fullName);
-            } catch (err) {
-                console.warn("Failed to load current user balance", err);
-            }
-
-            // prices from DB
-            const rows: BoardPriceDtoResponse[] = (await boardPriceClient.getAll()) ?? [];
-            const map: PriceMap = {};
-            for (const r of rows) {
-                const f = r.fieldsCount;
-                const p = r.price;
-                if ((f === 5 || f === 6 || f === 7 || f === 8) && typeof p === "number") {
-                    map[f as FieldsCount] = p;
-                }
-            }
-            setPriceByFields(map);
-        } catch (e) {
-            console.error("Failed to load board page data:", e);
-            setLoadError("Failed to load board page. Check browser console.");
-        } finally {
-            setLoading(false);
-        }
-    }
-
     useEffect(() => {
-        if (!playerId) {
-            setLoadError("No player logged in.");
-            return;
-        }
-        void loadBoardPageData();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+        if (!playerId) return;
+
+        (async () => {
+            try {
+                setLoading(true);
+                setLoadError(null);
+
+                const rows: BoardPriceDtoResponse[] =
+                    (await boardPriceClient.getAll()) ?? [];
+
+                const map: PriceMap = {};
+                for (const r of rows) {
+                    if ([5, 6, 7, 8].includes(r.fieldsCount)) {
+                        map[r.fieldsCount as FieldsCount] = r.price;
+                    }
+                }
+                setPriceByFields(map);
+            } catch (e) {
+                console.error(e);
+                setLoadError("Failed to load board page.");
+            } finally {
+                setLoading(false);
+            }
+        })();
     }, [playerId]);
 
     // ----------------------
     // SELECT NUMBER
     // ----------------------
     function toggleNumber(n: number) {
-        setSelectedNumbers((prev) => {
-            if (prev.includes(n)) return prev.filter((x) => x !== n);
+        setSelectedNumbers(prev => {
+            if (prev.includes(n)) return prev.filter(x => x !== n);
             if (prev.length >= fieldsCount) return prev;
             return [...prev, n].sort((a, b) => a - b);
         });
@@ -218,12 +195,11 @@ export const PlayerBoardPage: React.FC = () => {
     function handleMakeBet() {
         if (!canAddToCart) return;
 
-        // clear old submit status when user changes cart again
         setSubmitStatus({ type: "idle" });
 
         const amount = unitPrice * times;
 
-        setBets((old) => [
+        setBets(old => [
             ...old,
             {
                 id: Date.now().toString(),
@@ -240,12 +216,12 @@ export const PlayerBoardPage: React.FC = () => {
     }
 
     // ----------------------
-    // SUBMIT PURCHASE
+    // SUBMIT
     // ----------------------
     async function handleSubmit() {
         if (!canSubmitCart) return;
 
-        const payload: CreateBoardRequest[] = bets.map((b) => ({
+        const payload: CreateBoardRequest[] = bets.map(b => ({
             userId: playerId,
             numbers: b.numbers,
             times: b.times,
@@ -257,46 +233,37 @@ export const PlayerBoardPage: React.FC = () => {
 
             await boardClient.purchase(payload);
 
+            // 🔥 UPDATE GLOBAL BALANCE
+            updateBalance(balanceValue - totalAmount);
+
             setBets([]);
             setSelectedNumbers([]);
             setTimes(1);
 
             setSubmitStatus({ type: "success", text: "Purchase succeeded ✅" });
-            await loadBoardPageData();
-
-            window.setTimeout(() => setSubmitStatus({ type: "idle" }), 3000);
-        } catch (err: unknown) {
-            console.error("Failed to submit purchase:", err);
-
+            setTimeout(() => setSubmitStatus({ type: "idle" }), 3000);
+        } catch (err) {
             const msg = getErrorMessage(err);
 
-            if (
-                msg.includes("This week's game has not been created yet") ||
-                msg.includes("winning numbers are set") ||
-                msg.includes("Please wait for the draw")
-            ) {
+            if (msg.includes("draw")) {
                 setWarningMsg(
                     "This week's game has not been created yet. Please wait for the draw to open."
                 );
-            } else {
-                setWarningMsg(null);
             }
 
             setSubmitStatus({ type: "error", text: msg });
-            window.setTimeout(() => setSubmitStatus({ type: "idle" }), 5000);
-
-            await loadBoardPageData();
+            setTimeout(() => setSubmitStatus({ type: "idle" }), 5000);
         }
     }
-
-    const submitBtnDisabled = !canSubmitCart || submitStatus.type === "loading";
+    
+    const submitBtnDisabled =
+        !canSubmitCart || submitStatus.type === "loading";
 
     // ----------------------
     // RENDER
     // ----------------------
     return (
         <div className="player-board-page">
-            <PlayerPageHeader userName={playerName} balance={balance} />
 
             <main className="player-board-main">
                 <h1 className="player-board-week">{weekLabel}</h1>

@@ -8,7 +8,7 @@ namespace api.Controllers;
 
 [ApiController]
 [Route("api/games")]
-[Authorize(Roles = "1,2")] // allow Admin + Player
+[Authorize] // allow Admin + Player
 public class GameResultController : ControllerBase
 {
     private readonly MyDbContext _db;

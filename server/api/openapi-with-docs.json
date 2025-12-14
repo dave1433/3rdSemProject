@@ -12,9 +12,9 @@
         "tags": [
           "AdminGame"
         ],
-        "operationId": "AdminGame_Draw",
+        "operationId": "AdminGame_EnterWinningNumbers",
         "requestBody": {
-          "x-name": "req",
+          "x-name": "request",
           "content": {
             "application/json": {
               "schema": {
@@ -29,10 +29,9 @@
           "200": {
             "description": "",
             "content": {
-              "application/octet-stream": {
+              "application/json": {
                 "schema": {
-                  "type": "string",
-                  "format": "binary"
+                  "$ref": "#/components/schemas/GameResponse"
                 }
               }
             }
@@ -45,7 +44,7 @@
         "tags": [
           "AdminGame"
         ],
-        "operationId": "AdminGame_Status",
+        "operationId": "AdminGame_IsWeekLocked",
         "parameters": [
           {
             "name": "year",
@@ -85,15 +84,17 @@
         "tags": [
           "AdminGame"
         ],
-        "operationId": "AdminGame_Summary",
+        "operationId": "AdminGame_GetWeeklyWinningSummary",
         "responses": {
           "200": {
             "description": "",
             "content": {
-              "application/octet-stream": {
+              "application/json": {
                 "schema": {
-                  "type": "string",
-                  "format": "binary"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WeeklyBoardSummaryDto"
+                  }
                 }
               }
             }
@@ -106,15 +107,17 @@
         "tags": [
           "AdminGame"
         ],
-        "operationId": "AdminGame_History",
+        "operationId": "AdminGame_GetDrawHistory",
         "responses": {
           "200": {
             "description": "",
             "content": {
-              "application/octet-stream": {
+              "application/json": {
                 "schema": {
-                  "type": "string",
-                  "format": "binary"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/GameHistoryResponse"
+                  }
                 }
               }
             }
@@ -737,6 +740,34 @@
   },
   "components": {
     "schemas": {
+      "GameResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "year": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "weekNumber": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "winningNumbers": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
       "CreateGameDrawRequest": {
         "type": "object",
         "additionalProperties": false,
@@ -755,6 +786,52 @@
               "type": "integer",
               "format": "int32"
             }
+          }
+        }
+      },
+      "WeeklyBoardSummaryDto": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "week": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "year": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalWinningBoards": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "GameHistoryResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "year": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "weekNumber": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "winningNumbers": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       },
@@ -1028,34 +1105,6 @@
           }
         }
       },
-      "GameHistoryResponse": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "year": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "weekNumber": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "winningNumbers": {
-            "type": "array",
-            "items": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
-          }
-        }
-      },
       "RepeatDtoResponse": {
         "type": "object",
         "additionalProperties": false,
@@ -1259,73 +1308,6 @@
             "type": "string"
           },
           "role": {
-            "type": "integer",
-            "format": "int32"
-          }
-        }
-      },
-      "GameResponse": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "year": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "weekNumber": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "winningNumbers": {
-            "type": "array",
-            "items": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
-          }
-        }
-      },
-      "CreateGameDrawRequest": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "year": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "weekNumber": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "winningNumbers": {
-            "type": "array",
-            "items": {
-              "type": "integer",
-              "format": "int32"
-            }
-          }
-        }
-      },
-      "WeeklyBoardSummaryDto": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "week": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "year": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "totalWinningBoards": {
             "type": "integer",
             "format": "int32"
           }

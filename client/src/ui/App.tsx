@@ -1,36 +1,26 @@
-//import { useEffect } from "react";
 import {
     createBrowserRouter,
     Navigate,
     RouterProvider,
-    Outlet
 } from "react-router";
+import PlayerRootLayout from "./components/PlayerRootLayout";
+
 import { PlayerBoardPage } from "./pages/player/PlayerBoardPage";
 import { PlayerHistoryPage } from "./pages/player/PlayerHistoryPage";
 import { PlayerResultsPage } from "./pages/player/PlayerResultsPage";
-import { PlayerMyTransactionPage } from "./pages/player/PlayerMyTransactionPage.tsx";
+import { PlayerMyTransactionPage } from "./pages/player/PlayerMyTransactionPage";
 import { Login } from "./pages/Login";
 import { AdminDashboard } from "./pages/AdminDashboard";
 
-function PlayerRootLayout() {
-    return <Outlet />;
-}
-
 const router = createBrowserRouter([
-    // Redirect root → login
     { path: "/", element: <Navigate to="/login" replace /> },
-
-    // Login page
     { path: "/login", element: <Login /> },
 
-    // ADMIN
     { path: "/admin", element: <AdminDashboard /> },
 
-    // PLAYER
-    { path: "/", element: <Navigate to="/player" replace /> },
     {
         path: "/player",
-        element: <PlayerRootLayout />,
+        element: <PlayerRootLayout />,   //  REAL layout
         children: [
             { index: true, element: <Navigate to="board" replace /> },
             { path: "board", element: <PlayerBoardPage /> },
@@ -40,12 +30,9 @@ const router = createBrowserRouter([
         ],
     },
 
-    // fallback
     { path: "*", element: <Navigate to="/login" replace /> },
 ]);
 
-function App() {
+export default function App() {
     return <RouterProvider router={router} />;
 }
-
-export default App;
