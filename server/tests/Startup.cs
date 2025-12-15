@@ -1,5 +1,6 @@
-using api;               // gives access to Program.ConfigureServices()
-using efscaffold;        // gives access to MyDbContext
+using api;
+using efscaffold;
+using Infrastructure.Postgres.Scaffolding;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Testcontainers.PostgreSql;
@@ -8,38 +9,35 @@ namespace tests;
 
 public class Startup
 {
-    private static PostgreSqlContainer? _container;
+    private readonly PostgreSqlContainer _container;
 
-    public static void ConfigureServices(IServiceCollection services)
+    public Startup()
     {
-        // Load normal API services
+        _container = new PostgreSqlBuilder()
+            .WithImage("postgres:16-alpine")
+            .WithDatabase("testdb")
+            .WithUsername("postgres")
+            .WithPassword("postgres")
+            .Build();
+
+        _container.StartAsync().GetAwaiter().GetResult();
+    }
+
+    public void ConfigureServices(IServiceCollection services)
+    {
+        // Load API services (same as production)
         Program.ConfigureServices(services);
 
-        // Remove existing DbContext registration
+        // Remove production DbContext
         services.RemoveAll(typeof(MyDbContext));
 
-        // Start PostgreSQL container once
-        if (_container == null)
-        {
-            _container = new PostgreSqlBuilder()
-                .WithImage("postgres:16")
-                .Build();
+        // Replace with Testcontainers DbContext
+        services.AddDbContext<MyDbContext>(options =>
+            options.UseNpgsql(_container.GetConnectionString()));
 
-            _container.StartAsync().GetAwaiter().GetResult();
-        }
-
-        // Replace DbContext with container database
-        services.AddScoped<MyDbContext>(_ =>
-        {
-            var connectionString = _container!.GetConnectionString();
-
-            var opts = new DbContextOptionsBuilder<MyDbContext>()
-                .UseNpgsql(connectionString)
-                .Options;
-
-            var db = new MyDbContext(opts);
-            db.Database.EnsureCreated();
-            return db;
-        });
+        // Ensure schema is applied
+        using var scope = services.BuildServiceProvider().CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<MyDbContext>();
+        db.Database.Migrate();
     }
 }
