@@ -84,7 +84,9 @@ export const PlayerHistoryPage: React.FC = () => {
             ]);
 
             const repMap = new Map<string, RepeatDtoResponse>();
-            (repeats ?? []).forEach(r => repMap.set(r.id, r));
+            (repeats ?? []).forEach((r: RepeatDtoResponse) => {
+                repMap.set(r.id, r);
+            });
 
             const mapped: PlayerRecord[] = (boards ?? []).map(
                 (b: BoardDtoResponse) => {
@@ -113,6 +115,7 @@ export const PlayerHistoryPage: React.FC = () => {
             setLoading(false);
         }
     }
+
 
     useEffect(() => {
         if (!CURRENT_PLAYER_ID) return;
@@ -234,7 +237,7 @@ export const PlayerHistoryPage: React.FC = () => {
                                         <td className="history-col-repeat">
                                             {isRepeatInstance ? (
                                                 <span className="history-repeat-badge">
-                                                        Repeat
+                                                        Repeated
                                                     </span>
                                             ) : r.repeatOptOut ? (
                                                 <span className="history-stop-badge">

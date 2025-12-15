@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using api.Errors;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -132,6 +133,10 @@ var app = builder.Build();
 // Middleware Pipeline
 // =======================
 app.UseRouting();
+
+//  GLOBAL ERROR HANDLING (ADD THIS)
+app.UseMiddleware<ApiExceptionMiddleware>();
+
 app.UseCors("AllowFrontend");
 
 if (!app.Environment.IsProduction())
@@ -152,7 +157,7 @@ app.UseAuthorization();
 // ============================
 //  AUTH DEBUG MIDDLEWARE
 // ============================
-/*app.Use(async (context, next) =>
+app.Use(async (context, next) =>
 {
     Console.WriteLine("=== AUTH DEBUG MIDDLEWARE ===");
 
@@ -172,7 +177,7 @@ app.UseAuthorization();
     Console.WriteLine("=== END AUTH DEBUG ===");
 
     await next();
-});*/
+});
 
 app.MapControllers();
 app.Run();

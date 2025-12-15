@@ -10,11 +10,16 @@ public class AdminGameService : IAdminGameService
 {
     private readonly MyDbContext _db;
     private readonly IBoardService _boards;
+    private readonly IRepeatService _repeatService;
 
-    public AdminGameService(MyDbContext db, IBoardService boards)
+    public AdminGameService(
+        MyDbContext db,
+        IBoardService boards,
+        IRepeatService repeatService)
     {
-        _db     = db;
+        _db = db;
         _boards = boards;
+        _repeatService = repeatService;
     }
 
     // --------------------------------------------------
@@ -26,6 +31,9 @@ public class AdminGameService : IAdminGameService
         await EnsureWeekNotLocked(request.Year, request.WeekNumber);
 
         var game = await CreateGameAsync(request);
+
+        //  THIS IS THE KEY LINE
+        await _repeatService.GenerateBoardsForGameAsync(game.Id);
 
         await EvaluateWinnersAsync(game);
 
@@ -98,12 +106,12 @@ public class AdminGameService : IAdminGameService
     {
         var game = new Game
         {
-            Id             = Guid.NewGuid().ToString(),
-            Year           = request.Year,
-            Weeknumber     = request.WeekNumber,
+            Id = Guid.NewGuid().ToString(),
+            Year = request.Year,
+            Weeknumber = request.WeekNumber,
             Winningnumbers = request.WinningNumbers,
-            Createdat      = DateTime.UtcNow,
-            Joindeadline   = CalculateJoinDeadline(request.Year, request.WeekNumber)
+            Createdat = DateTime.UtcNow,
+            Joindeadline = CalculateJoinDeadline(request.Year, request.WeekNumber)
         };
 
         _db.Games.Add(game);
@@ -141,7 +149,6 @@ public class AdminGameService : IAdminGameService
     // --------------------------------------------------
     private static DateTime CalculateJoinDeadline(int year, int week)
     {
-        // ISO week calculation (UTC)
         var jan4 = new DateTime(year, 1, 4, 0, 0, 0, DateTimeKind.Utc);
 
         int day = (int)jan4.DayOfWeek;
@@ -151,7 +158,6 @@ public class AdminGameService : IAdminGameService
             .AddDays(1 - day)
             .AddDays((week - 1) * 7);
 
-        // Saturday 16:59:59 UTC
         return monday
             .AddDays(5)
             .AddHours(16)
@@ -159,4 +165,3 @@ public class AdminGameService : IAdminGameService
             .AddSeconds(59);
     }
 }
-
