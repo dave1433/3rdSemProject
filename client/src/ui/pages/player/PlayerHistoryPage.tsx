@@ -1,219 +1,273 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import "../../css/PlayerHistoryPage.css";
 
-import { PlayerPageHeader } from "../../components/PlayerPageHeader";
-import { PlayerMyRepeatsPage } from "./PlayerMyRepeatsPage";
-
-import { openapiAdapter, apiGet } from "../../../api/connection";
+import { openapiAdapter } from "../../../api/connection";
+import { useCurrentUser } from "../../../core/hooks/useCurrentUser";
 
 import {
-    BoardClient
+    BoardClient,
+    RepeatClient,
 } from "../../../generated-ts-client";
 
 import type {
-    UserResponse,
-    BoardDtoResponse
+    BoardDtoResponse,
+    RepeatDtoResponse,
 } from "../../../generated-ts-client";
 
-
-type RecordStatus = "Pending" | "Complete";
-type HistoryTab = "all" | "myRepeats";
-
+// ----------------------------------
+// TYPES
+// ----------------------------------
 interface PlayerRecord {
     id: string;
-    createdAt: string;
+    createdAt?: string | null;
+
+    weekLabel: string;
     numbers: number[];
     times: number;
-    status: RecordStatus;
     totalAmountDkk: number;
+
+    autoRepeat: boolean;
+    repeatId?: string;
+    repeatOptOut: boolean;
 }
 
+// ----------------------------------
+// CLIENTS
+// ----------------------------------
 const boardClient = openapiAdapter(BoardClient);
+const repeatClient = openapiAdapter(RepeatClient);
 
+// ----------------------------------
+// HELPERS
+// ----------------------------------
+function getIsoWeekLabel(dateString?: string | null): string {
+    if (!dateString) return "";
+
+    const d = new Date(dateString);
+    if (Number.isNaN(d.getTime())) return "";
+
+    const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    const day = date.getUTCDay() || 7;
+    date.setUTCDate(date.getUTCDate() + 4 - day);
+
+    const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+    const weekNo = Math.ceil(
+        ((date.getTime() - yearStart.getTime()) / 86400000 + 1) / 7
+    );
+
+    return `Week ${weekNo}, ${date.getUTCFullYear()}`;
+}
+
+// ----------------------------------
+// COMPONENT
+// ----------------------------------
 export const PlayerHistoryPage: React.FC = () => {
-    const [activeTab, setActiveTab] = useState<HistoryTab>("all");
+    const { user } = useCurrentUser();
+
     const [records, setRecords] = useState<PlayerRecord[]>([]);
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const [playerName, setPlayerName] = useState("");
+    const [loadError, setLoadError] = useState<string | null>(null);
 
-    const [selectedForRepeat, setSelectedForRepeat] =
-        useState<PlayerRecord | null>(null);
+    const CURRENT_PLAYER_ID = user?.id ?? "";
 
-    const CURRENT_PLAYER_ID = localStorage.getItem("userId") ?? "";
-
-    useEffect(() => {
-        if (!CURRENT_PLAYER_ID) {
-            setError("No player logged in.");
-            return;
-        }
-
-        void (async () => {
-            await Promise.all([
-                loadRecords(CURRENT_PLAYER_ID),
-                loadPlayerName(),
-            ]);
-        })();
-    }, [CURRENT_PLAYER_ID]);
-
-    // ------------------------------------------------
-    // LOAD PLAYER NAME (FIXED: no userClient)
-    // ------------------------------------------------
-    async function loadPlayerName() {
-        try {
-            const res = await apiGet("/api/user");
-            const users: UserResponse[] = await res.json();
-
-            const me = users.find(u => u.id === CURRENT_PLAYER_ID);
-            if (me) setPlayerName(me.fullName);
-        } catch (err) {
-            console.error("Failed to load player name", err);
-        }
-    }
-
-    // ------------------------------------------------
-    // LOAD PLAYER HISTORY
-    // ------------------------------------------------
-    async function loadRecords(userId: string) {
+    // ----------------------------------
+    // LOAD HISTORY
+    // ----------------------------------
+    async function loadHistory(userId: string) {
         try {
             setLoading(true);
-            setError(null);
+            setLoadError(null);
 
-            const boards: BoardDtoResponse[] = await boardClient.getByUser(userId);
+            const [boards, repeats] = await Promise.all([
+                boardClient.getByUser(userId),
+                repeatClient.getMine(),
+            ]);
 
-            const mapped = boards.map(b => {
-                const purchaseTx = b.transactions?.find(
-                    t => t.type?.toLowerCase() === "purchase"
-                );
+            const repMap = new Map<string, RepeatDtoResponse>();
+            (repeats ?? []).forEach(r => repMap.set(r.id, r));
 
-                const status: RecordStatus =
-                    purchaseTx?.status?.toLowerCase() === "approved"
-                        ? "Complete"
-                        : "Pending";
+            const mapped: PlayerRecord[] = (boards ?? []).map(
+                (b: BoardDtoResponse) => {
+                    const rid = b.repeatId ?? undefined;
+                    const rep = rid ? repMap.get(rid) : undefined;
 
-                return {
-                    id: b.id,
-                    createdAt: b.createdAt ?? new Date().toISOString(),
-                    numbers: b.numbers ?? [],
-                    times: b.times ?? 1,
-                    status,
-                    totalAmountDkk: b.price,
-                };
-            });
+                    return {
+                        id: b.id,
+                        createdAt: b.createdAt ?? null,
+                        weekLabel: getIsoWeekLabel(b.createdAt),
+                        numbers: b.numbers ?? [],
+                        times: b.times ?? 1,
+                        totalAmountDkk: b.price ?? 0,
+                        autoRepeat: !!b.autoRepeat,
+                        repeatId: rid,
+                        repeatOptOut: rep ? !!rep.optOut : false,
+                    };
+                }
+            );
 
             setRecords(mapped);
         } catch (err) {
-            console.error("Failed to load history", err);
-            setError("Failed to load history");
+            console.error("Failed to load history:", err);
+            setLoadError("Failed to load history.");
         } finally {
             setLoading(false);
         }
     }
 
-    function handleReorder(record: PlayerRecord) {
-        setSelectedForRepeat(record);
-        setActiveTab("myRepeats");
-    }
+    useEffect(() => {
+        if (!CURRENT_PLAYER_ID) return;
+        void loadHistory(CURRENT_PLAYER_ID);
+    }, [CURRENT_PLAYER_ID]);
 
-    // ------------------------------------------------
-    // RENDER: ALL HISTORY TAB
-    // ------------------------------------------------
-    function renderAllTab() {
-        if (loading) return <p className="history-status">Loading…</p>;
-        if (error) return <p className="history-status history-status-error">{error}</p>;
-        if (records.length === 0)
-            return <p className="history-status">No history yet.</p>;
+    // ----------------------------------
+    // FIND STARTER BOARD PER REPEAT
+    // ----------------------------------
+    const starterByRepeatId = useMemo(() => {
+        const earliest = new Map<string, { boardId: string; createdAtMs: number }>();
 
-        return (
-            <div className="history-table-wrapper">
-                <table className="history-table">
-                    <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Numbers</th>
-                        <th>Fields</th>
-                        <th>Times</th>
-                        <th>Total</th>
-                        <th>Status</th>
-                        <th>Action</th>
-                    </tr>
-                    </thead>
+        for (const r of records) {
+            if (!r.repeatId || !r.createdAt) continue;
 
-                    <tbody>
-                    {records.map(r => (
-                        <tr key={r.id}>
-                            <td>{new Date(r.createdAt).toLocaleDateString()}</td>
-                            <td>{r.numbers.join(", ")}</td>
-                            <td>{r.numbers.length}</td>
-                            <td>{r.times}</td>
-                            <td>{r.totalAmountDkk} DKK</td>
-                            <td>
-                                <span
-                                    className={
-                                        "history-status-badge " +
-                                        (r.status === "Complete"
-                                            ? "history-status-badge--complete"
-                                            : "history-status-badge--pending")
-                                    }
-                                >
-                                    {r.status}
-                                </span>
-                            </td>
-                            <td>
-                                <button
-                                    className="history-action-btn"
-                                    onClick={() => handleReorder(r)}
-                                >
-                                    Reorder
-                                </button>
-                            </td>
-                        </tr>
-                    ))}
-                    </tbody>
-                </table>
-            </div>
+            const t = new Date(r.createdAt).getTime();
+            const existing = earliest.get(r.repeatId);
+
+            if (!existing || t < existing.createdAtMs) {
+                earliest.set(r.repeatId, { boardId: r.id, createdAtMs: t });
+            }
+        }
+
+        const map = new Map<string, string>();
+        earliest.forEach((v, k) => map.set(k, v.boardId));
+        return map;
+    }, [records]);
+
+    // ----------------------------------
+    // TOGGLE REPEAT
+    // ----------------------------------
+    async function handleRepeatClick(
+        boardId: string,
+        currentAutoRepeat: boolean,
+        repeatOptOut: boolean
+    ) {
+        if (repeatOptOut) return;
+
+        const nextValue = !currentAutoRepeat;
+        const ok = window.confirm(
+            nextValue
+                ? "Start repeat for this ticket?\n\nThe system will auto-buy next draw."
+                : "Stop repeat for this ticket?\n\nThis cannot be undone."
         );
+
+        if (!ok) return;
+
+        try {
+            await boardClient.setAutoRepeat(boardId, { autoRepeat: nextValue });
+            await loadHistory(CURRENT_PLAYER_ID);
+        } catch (err) {
+            console.error("Failed to toggle auto-repeat", err);
+            alert("Could not update repeat setting.");
+        }
     }
 
-    // ------------------------------------------------
-    // RENDER: REPEAT TAB
-    // ------------------------------------------------
-    function renderRepeatTab() {
-        return (
-            <PlayerMyRepeatsPage
-                initialNumbers={selectedForRepeat?.numbers ?? []}
-            />
-        );
-    }
-
-    // ------------------------------------------------
-    // MAIN RENDER
-    // ------------------------------------------------
+    // ----------------------------------
+    // RENDER
+    // ----------------------------------
     return (
         <div className="history-page">
-            <PlayerPageHeader userName={playerName} />
 
             <div className="history-inner">
                 <h1 className="history-title">History</h1>
-                <p className="history-subtitle">Your previous boards and repeats.</p>
+                <p className="history-subtitle">Active & Recent Boards</p>
 
-                <div className="history-tabs">
-                    <button
-                        className={`history-tab-btn ${activeTab === "all" ? "history-tab-btn-active" : ""}`}
-                        onClick={() => setActiveTab("all")}
-                    >
-                        All
-                    </button>
+                {loading && <p className="history-status">Loading…</p>}
+                {loadError && (
+                    <p className="history-status history-status-error">
+                        {loadError}
+                    </p>
+                )}
 
-                    <button
-                        className={`history-tab-btn ${activeTab === "myRepeats" ? "history-tab-btn-active" : ""}`}
-                        onClick={() => setActiveTab("myRepeats")}
-                    >
-                        My repeats
-                    </button>
-                </div>
+                {!loading && !loadError && records.length === 0 && (
+                    <p className="history-status">No history yet.</p>
+                )}
 
-                {activeTab === "all" ? renderAllTab() : renderRepeatTab()}
+                {!loading && !loadError && records.length > 0 && (
+                    <div className="history-table-wrapper">
+                        <table className="history-table">
+                            <thead>
+                            <tr>
+                                <th>Week</th>
+                                <th>Numbers</th>
+                                <th>Fields</th>
+                                <th>Times</th>
+                                <th>Total</th>
+                                <th className="history-col-repeat">Repeat</th>
+                            </tr>
+                            </thead>
+
+                            <tbody>
+                            {records.map(r => {
+                                const starterId = r.repeatId
+                                    ? starterByRepeatId.get(r.repeatId)
+                                    : undefined;
+
+                                const isRepeatInstance =
+                                    r.repeatId && starterId && starterId !== r.id;
+
+                                return (
+                                    <tr key={r.id}>
+                                        <td>{r.weekLabel}</td>
+                                        <td>
+                                            <div className="history-numbers-inline">
+                                                {r.numbers.map(n => (
+                                                    <span
+                                                        key={n}
+                                                        className="history-number-chip"
+                                                    >
+                                                            {n}
+                                                        </span>
+                                                ))}
+                                            </div>
+                                        </td>
+                                        <td>{r.numbers.length}</td>
+                                        <td>{r.times}</td>
+                                        <td>{r.totalAmountDkk} DKK</td>
+                                        <td className="history-col-repeat">
+                                            {isRepeatInstance ? (
+                                                <span className="history-repeat-badge">
+                                                        Repeat
+                                                    </span>
+                                            ) : r.repeatOptOut ? (
+                                                <span className="history-stop-badge">
+                                                        Stopped
+                                                    </span>
+                                            ) : (
+                                                <button
+                                                    type="button"
+                                                    className={
+                                                        r.autoRepeat
+                                                            ? "history-toggle history-toggle--on"
+                                                            : "history-toggle"
+                                                    }
+                                                    onClick={() =>
+                                                        handleRepeatClick(
+                                                            r.id,
+                                                            r.autoRepeat,
+                                                            r.repeatOptOut
+                                                        )
+                                                    }
+                                                    aria-pressed={r.autoRepeat}
+                                                >
+                                                    <span className="history-toggle-knob" />
+                                                </button>
+                                            )}
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
             </div>
         </div>
     );

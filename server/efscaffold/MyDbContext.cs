@@ -18,8 +18,6 @@ public partial class MyDbContext : DbContext
 
     public virtual DbSet<Game> Games { get; set; }
 
-    public virtual DbSet<Player> Players { get; set; }
-
     public virtual DbSet<Repeat> Repeats { get; set; }
 
     public virtual DbSet<Transaction> Transactions { get; set; }
@@ -39,10 +37,16 @@ public partial class MyDbContext : DbContext
             entity.HasIndex(e => e.Playerid, "board_player_idx");
 
             entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.AutoRepeat)
+                .HasDefaultValue(false)
+                .HasColumnName("autoRepeat");
             entity.Property(e => e.Createdat)
                 .HasDefaultValueSql("now()")
                 .HasColumnName("createdat");
             entity.Property(e => e.Gameid).HasColumnName("gameid");
+            entity.Property(e => e.Iswinner)
+                .HasDefaultValue(false)
+                .HasColumnName("iswinner");
             entity.Property(e => e.Numbers).HasColumnName("numbers");
             entity.Property(e => e.Playerid).HasColumnName("playerid");
             entity.Property(e => e.Price).HasColumnName("price");
@@ -93,33 +97,6 @@ public partial class MyDbContext : DbContext
             entity.Property(e => e.Year).HasColumnName("year");
         });
 
-        modelBuilder.Entity<Player>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("player_pkey");
-
-            entity.ToTable("player", "deadpigeons");
-
-            entity.HasIndex(e => e.Email, "player_email_key").IsUnique();
-
-            entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.Active)
-                .HasDefaultValue(false)
-                .HasColumnName("active");
-            entity.Property(e => e.Balance)
-                .HasDefaultValue(0)
-                .HasColumnName("balance");
-            entity.Property(e => e.Createdat)
-                .HasDefaultValueSql("now()")
-                .HasColumnName("createdat");
-            entity.Property(e => e.Email).HasColumnName("email");
-            entity.Property(e => e.Fullname).HasColumnName("fullname");
-            entity.Property(e => e.Userid).HasColumnName("userid");
-
-            entity.HasOne(d => d.User).WithMany(p => p.Players)
-                .HasForeignKey(d => d.Userid)
-                .HasConstraintName("player_userid_fkey");
-        });
-
         modelBuilder.Entity<Repeat>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("repeat_pkey");
@@ -136,9 +113,13 @@ public partial class MyDbContext : DbContext
             entity.Property(e => e.Optout)
                 .HasDefaultValue(false)
                 .HasColumnName("optout");
+            entity.Property(e => e.Optoutat).HasColumnName("optoutat");
             entity.Property(e => e.Playerid).HasColumnName("playerid");
             entity.Property(e => e.Price).HasColumnName("price");
             entity.Property(e => e.Remainingweeks).HasColumnName("remainingweeks");
+            entity.Property(e => e.Times)
+                .HasDefaultValue(1)
+                .HasColumnName("times");
 
             entity.HasOne(d => d.Player).WithMany(p => p.Repeats)
                 .HasForeignKey(d => d.Playerid)

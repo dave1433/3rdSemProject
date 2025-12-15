@@ -16,17 +16,11 @@ var builder = WebApplication.CreateBuilder(args);
 // =======================
 builder.Services.AddSingleton<AppSettings>(sp =>
 {
-    var config = sp.GetRequiredService<IConfiguration>();
-    var settings = config
-                       .GetSection(nameof(AppSettings))
-                       .Get<AppSettings>()
+    var config   = sp.GetRequiredService<IConfiguration>();
+    var settings = config.GetSection(nameof(AppSettings)).Get<AppSettings>()
                    ?? throw new Exception("AppSettings missing");
 
-    Validator.ValidateObject(
-        settings,
-        new ValidationContext(settings),
-        validateAllProperties: true
-    );
+    Validator.ValidateObject(settings, new ValidationContext(settings), validateAllProperties: true);
 
     return settings;
 });
@@ -45,9 +39,10 @@ builder.Services.AddDbContext<MyDbContext>((sp, options) =>
 // =======================
 builder.Services.AddControllers();
 
-// Authentication & Authorization
-builder
-    .Services
+// =======================
+// Authentication + JWT
+// =======================
+builder.Services
     .AddAuthentication(options =>
     {
         options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -57,9 +52,9 @@ builder
     })
     .AddJwtBearer(options =>
     {
+        options.MapInboundClaims = false;
         options.TokenValidationParameters = JwtService.ValidationParameters(builder.Configuration);
 
-        // Optional: debug logs
         options.Events = new JwtBearerEvents
         {
             OnAuthenticationFailed = context =>
@@ -69,19 +64,21 @@ builder
             },
             OnTokenValidated = context =>
             {
-                Console.WriteLine("JWT token validated");
+                Console.WriteLine("JWT token validated (from JwtBearer)");
                 return Task.CompletedTask;
             }
         };
     });
 
+// =======================
+// Authorization Policies
+// =======================
 builder.Services.AddAuthorization(options =>
 {
     options.FallbackPolicy = new AuthorizationPolicyBuilder()
         .RequireAuthenticatedUser()
         .Build();
 
-    // Policies for convenience
     options.AddPolicy("AdminOnly",
         policy => policy.RequireClaim("role", "1"));
 
@@ -89,15 +86,17 @@ builder.Services.AddAuthorization(options =>
         policy => policy.RequireClaim("role", "2"));
 });
 
-
 // =======================
-// Services (FULL SET!)
+// Services
 // =======================
 builder.Services.AddScoped<IBoardService, BoardService>();
 builder.Services.AddScoped<IBoardPriceService, BoardPriceService>();
 builder.Services.AddScoped<ITokenService, JwtService>();
 builder.Services.AddScoped<ITransactionService, TransactionService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IRepeatService, RepeatService>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IAdminGameService, AdminGameService>();
 
 // =======================
 // CORS
@@ -106,19 +105,19 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy
-            .WithOrigins(
+        policy.WithOrigins(
                 "http://localhost:5173",
                 "https://deadpigeons-frontend.fly.dev"
             )
             .AllowAnyHeader()
             .AllowAnyMethod()
-            .AllowCredentials();
+            .AllowCredentials()
+            .SetIsOriginAllowed(_ => true);
     });
 });
 
 // =======================
-// Swagger
+// Swagger / OpenAPI
 // =======================
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddOpenApiDocument(c =>
@@ -130,22 +129,50 @@ builder.Services.AddOpenApiDocument(c =>
 var app = builder.Build();
 
 // =======================
-// Middleware
+// Middleware Pipeline
 // =======================
 app.UseRouting();
 app.UseCors("AllowFrontend");
+
 if (!app.Environment.IsProduction())
 {
     app.UseOpenApi();
     app.UseSwaggerUi();
 }
 
-// IMPORTANT — must be AFTER Swagger is configured
+// generate client AFTER swagger loaded
 app.GenerateApiClientsFromOpenApi("/../../client/src/generated-ts-client.ts")
    .GetAwaiter()
    .GetResult();
+
 app.UseAuthentication();
 app.UseAuthorization();
-app.MapControllers();
 
+
+// ============================
+//  AUTH DEBUG MIDDLEWARE
+// ============================
+/*app.Use(async (context, next) =>
+{
+    Console.WriteLine("=== AUTH DEBUG MIDDLEWARE ===");
+
+    Console.WriteLine("Auth Header: " + context.Request.Headers.Authorization);
+
+    if (context.User?.Identity?.IsAuthenticated == true)
+    {
+        Console.WriteLine("User IS authenticated");
+        foreach (var c in context.User.Claims)
+            Console.WriteLine($"CLAIM -> {c.Type}: {c.Value}");
+    }
+    else
+    {
+        Console.WriteLine("User NOT authenticated");
+    }
+
+    Console.WriteLine("=== END AUTH DEBUG ===");
+
+    await next();
+});*/
+
+app.MapControllers();
 app.Run();

@@ -18,6 +18,7 @@ export const AdminDashboard = () => {
     const [activeTab, setActiveTab] = useState("players");
     const [showBoards, setShowBoards] = useState(false);
 
+    // ❌ DON'T LOAD BOARDS BEFORE AUTH
     const { boards, loading, error, reload } = useAdminBoards();
 
     useEffect(() => {
@@ -27,43 +28,55 @@ export const AdminDashboard = () => {
 
             if (!token) {
                 navigate("/login");
+                setAuthorized(false);
                 return;
             }
 
             if (role !== "1") {
                 navigate("/player");
+                setAuthorized(false);
                 return;
             }
 
+            // ✅ now we are sure -> allow rendering
             setAuthorized(true);
         };
 
         verify();
     }, [navigate]);
 
-    if (authorized === null) return null;
+    // ⛔ DO NOT RENDER ANY DASHBOARD CONTENT UNTIL AUTH IS DECIDED
+    if (authorized === null) {
+        return <div className="p-6 text-gray-600">Checking admin permissions…</div>;
+    }
 
+    // If authorization failed, redirect already happened
+    if (authorized === false) return null;
+
+    // ✅ SAFE: everything below only renders if admin is authenticated
     return (
         <>
-            {/* HEADER WITH PLAYER-STYLE TABS */}
             <AdminHeader activeTab={activeTab} onChangeTab={setActiveTab} />
 
-            {/* CONTENT BELOW TABS */}
             <div className="p-6">
-
                 {activeTab === "players" && (
-                    <>
-                        <PlayerForm />
-                        <PlayerList />
-                    </>
+                    <div className="flex flex-col lg:flex-row gap-6">
+                        <div className="w-full lg:w-1/2">
+                            <PlayerForm />
+                        </div>
+                        <div className="w-full lg:w-1/2">
+                            <PlayerList />
+                        </div>
+                    </div>
                 )}
 
-                {activeTab === "game" && (
-                    <>
-                        <WinningNumbersCard />
-                        <DrawHistoryTable />
-                    </>
+                {activeTab === "game" && authorized && (
+                    <div className="flex flex-col gap-6">
+                        <WinningNumbersCard authorized={authorized} />
+                        <DrawHistoryTable authorized={authorized} />
+                    </div>
                 )}
+
 
                 {activeTab === "transactions" && (
                     <PendingTransactions />
@@ -79,7 +92,6 @@ export const AdminDashboard = () => {
                         onToggle={() => setShowBoards((s) => !s)}
                     />
                 )}
-
             </div>
         </>
     );

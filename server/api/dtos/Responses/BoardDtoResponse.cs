@@ -12,7 +12,10 @@ public class BoardDtoResponse
         Numbers = entity.Numbers?.ToList() ?? new List<int>();
         Price = entity.Price;
         Times = entity.Times;
+        RepeatId = entity.Repeatid;
         CreatedAt = entity.Createdat;
+        AutoRepeat = entity.AutoRepeat;
+        IsWinner = entity.Iswinner;   
 
         Transactions = entity.Transactions?
                            .Select(t => new BoardTransactionDto(t))
@@ -26,7 +29,10 @@ public class BoardDtoResponse
     public List<int> Numbers { get; set; } = new();
     public int Price { get; set; }
     public int Times { get; set; }
+    public string? RepeatId { get; set; }
     public DateTime? CreatedAt { get; set; }
+    public bool AutoRepeat { get; set; }
+    public bool? IsWinner { get; set; }   
 
     public List<BoardTransactionDto> Transactions { get; set; } = new();
 }

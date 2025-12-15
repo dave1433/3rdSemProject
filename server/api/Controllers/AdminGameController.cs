@@ -1,129 +1,71 @@
 ﻿using api.dtos.Requests;
 using api.dtos.Responses;
-using efscaffold;
-using efscaffold.Entities;
+using api.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Infrastructure.Postgres.Scaffolding; 
-namespace api.controllers;
+
+namespace api.Controllers;
 
 [ApiController]
 [Route("api/admin/games")]
+[Authorize(Policy = "AdminOnly")]
 public class AdminGameController : ControllerBase
 {
-    private readonly MyDbContext _db;
+    private readonly IAdminGameService _admin;
 
-    public AdminGameController(MyDbContext db)
+    public AdminGameController(IAdminGameService admin)
     {
-        _db = db;
+        _admin = admin;
     }
 
-    /// <summary>
-    /// Enter winning numbers for a specific ISO week.
-    /// This operation is LOCKED per (Year + WeekNumber).
-    /// </summary>
+    // --------------------------------------------------
+    // ENTER WINNING NUMBERS
+    // --------------------------------------------------
     [HttpPost("draw")]
     public async Task<ActionResult<GameResponse>> EnterWinningNumbers(
-        CreateGameDrawRequest request)
+        [FromBody] CreateGameDrawRequest request)
     {
-        // -----------------------------
-        // Validation
-        // -----------------------------
-        if (request.WinningNumbers.Count != 3)
-            return BadRequest("Exactly 3 winning numbers are required");
-
-        if (request.WinningNumbers.Any(n => n < 1 || n > 16))
-            return BadRequest("Winning numbers must be between 1 and 16");
-
-        // -----------------------------
-        // LOCK: only one draw per week
-        // -----------------------------
-        var alreadyDrawn = await _db.Games
-            .AsNoTracking()
-            .AnyAsync(g =>
-                g.Year == request.Year &&
-                g.Weeknumber == request.WeekNumber &&
-                g.Winningnumbers != null);
-
-        if (alreadyDrawn)
-        {
-            return Conflict(
-                $"Winning numbers are already locked for year {request.Year}, week {request.WeekNumber}");
-        }
-
-        // -----------------------------
-        // Create game draw
-        // -----------------------------
-        var game = new Game
-        {
-            Id = Guid.NewGuid().ToString(),
-            Year = request.Year,
-            Weeknumber = request.WeekNumber,
-            Winningnumbers = request.WinningNumbers,
-            Createdat = DateTime.UtcNow
-        };
-
-        _db.Games.Add(game);
-
         try
         {
-            await _db.SaveChangesAsync();
+            var result = await _admin.EnterWinningNumbersAsync(request);
+            return Ok(result);
         }
-        catch (DbUpdateConcurrencyException)
+        catch (ArgumentException ex)
         {
-            // Safety net if two admins click at the same time
-            return Conflict("Winning numbers were already entered by another admin");
+            return BadRequest(ex.Message);
         }
-
-        // -----------------------------
-        // Response
-        // -----------------------------
-        return Ok(new GameResponse
+        catch (InvalidOperationException ex)
         {
-            Id = game.Id,
-            Year = game.Year,
-            WeekNumber = game.Weeknumber,
-            WinningNumbers = game.Winningnumbers!,
-            CreatedAt = game.Createdat!.Value
-        });
+            return Conflict(ex.Message);
+        }
     }
 
-    /// <summary>
-    /// Used by frontend to check if draw is locked
-    /// </summary>
+    // --------------------------------------------------
+    // CHECK IF WEEK IS LOCKED
+    // --------------------------------------------------
     [HttpGet("draw/status")]
-    public async Task<ActionResult<bool>> IsWeekLocked(int year, int weekNumber)
+    public async Task<ActionResult<bool>> IsWeekLocked(
+        int year,
+        int weekNumber)
     {
-        var locked = await _db.Games
-            .AsNoTracking()
-            .AnyAsync(g =>
-                g.Year == year &&
-                g.Weeknumber == weekNumber &&
-                g.Winningnumbers != null);
-
-        return Ok(locked);
+        return Ok(await _admin.IsWeekLockedAsync(year, weekNumber));
     }
-    
-    
+
+    // --------------------------------------------------
+    // WEEKLY WINNER SUMMARY
+    // --------------------------------------------------
+    [HttpGet("winners/summary")]
+    public async Task<ActionResult<List<WeeklyBoardSummaryDto>>> GetWeeklyWinningSummary()
+    {
+        return Ok(await _admin.GetWeeklyWinningSummaryAsync());
+    }
+
+    // --------------------------------------------------
+    // DRAW HISTORY
+    // --------------------------------------------------
     [HttpGet("draw/history")]
     public async Task<ActionResult<List<GameHistoryResponse>>> GetDrawHistory()
     {
-        var history = await _db.Games
-            .AsNoTracking()
-            .Where(g => g.Winningnumbers != null)
-            .OrderByDescending(g => g.Year)
-            .ThenByDescending(g => g.Weeknumber)
-            .Select(g => new GameHistoryResponse
-            {
-                Id = g.Id,
-                Year = g.Year,
-                WeekNumber = g.Weeknumber,
-                WinningNumbers = g.Winningnumbers!,
-                CreatedAt = g.Createdat!.Value
-            })
-            .ToListAsync();
-
-        return Ok(history);
+        return Ok(await _admin.GetDrawHistoryAsync());
     }
-
 }

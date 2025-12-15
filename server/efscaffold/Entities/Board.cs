@@ -21,6 +21,10 @@ public partial class Board
 
     public int Times { get; set; }
 
+    public bool? Iswinner { get; set; }
+
+    public bool AutoRepeat { get; set; }
+
     public virtual Game? Game { get; set; }
 
     public virtual User? Player { get; set; }

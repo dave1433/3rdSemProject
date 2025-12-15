@@ -2,33 +2,37 @@
 import { useEffect, useState } from "react";
 import { apiGet, apiPost } from "../../api/connection";
 
-export const useWinningNumbers = (year: number, weekNumber: number) => {
+export const useWinningNumbers = (
+    year: number,
+    weekNumber: number,
+    authorized: boolean
+) => {
     const [selected, setSelected] = useState<number[]>([]);
     const [loading, setLoading] = useState(false);
     const [locked, setLocked] = useState(false);
 
     useEffect(() => {
+        if (!authorized) return; // ⛔ DO NOT CALL API BEFORE AUTH
+
         const loadStatus = async () => {
             try {
-                const res = await apiGet(`/api/admin/games/draw/status?year=${year}&weekNumber=${weekNumber}`);
+                const res = await apiGet(
+                    `/api/admin/games/draw/status?year=${year}&weekNumber=${weekNumber}`
+                );
                 if (!res.ok) {
                     setLocked(false);
                     return;
                 }
+
                 const body = await res.json();
-                if (typeof body === "boolean") {
-                    setLocked(body);
-                } else if (body && typeof body.locked === "boolean") {
-                    setLocked(body.locked);
-                } else {
-                    setLocked(Boolean(body));
-                }
+                setLocked(Boolean(body));
             } catch {
                 setLocked(false);
             }
         };
+
         void loadStatus();
-    }, [year, weekNumber]);
+    }, [year, weekNumber, authorized]);
 
     const toggleNumber = (n: number) => {
         if (locked) return;
@@ -45,7 +49,6 @@ export const useWinningNumbers = (year: number, weekNumber: number) => {
             alert("Select exactly 3 numbers");
             return;
         }
-        
 
         setLoading(true);
 
@@ -57,8 +60,7 @@ export const useWinningNumbers = (year: number, weekNumber: number) => {
             });
 
             if (!res.ok) {
-                const msg = await res.text();
-                alert(msg || "Failed to save draw");
+                alert(await res.text());
                 return;
             }
 
@@ -72,14 +74,11 @@ export const useWinningNumbers = (year: number, weekNumber: number) => {
 
     const clearSelection = () => setSelected([]);
 
-    const onToggle = toggleNumber;
-
     return {
         selected,
         loading,
         locked,
         toggleNumber,
-        onToggle,
         submitDraw,
         clearSelection,
     };

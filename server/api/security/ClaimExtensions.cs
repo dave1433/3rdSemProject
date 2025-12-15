@@ -5,19 +5,20 @@ namespace api.security;
 
 public static class ClaimExtensions
 {
-    // used by GetUserInfoAsync
+    // Used by GetUserInfoAsync() and anywhere userId is needed
     public static string GetUserId(this ClaimsPrincipal claims) =>
         claims.FindFirst("sub")?.Value
         ?? claims.FindFirst(ClaimTypes.NameIdentifier)?.Value
         ?? throw new InvalidOperationException("No user id claim found");
 
+    // Extract role claim from JWT
     public static int GetRole(this ClaimsPrincipal claims)
     {
         var value = claims.FindFirst("role")?.Value;
         return int.TryParse(value, out var role) ? role : 0;
     }
 
-    // used by JwtService.CreateToken
+    // Claims added to JWT on login
     public static IEnumerable<Claim> ToClaims(this AuthUserInfo user) =>
         new[]
         {
@@ -26,5 +27,6 @@ public static class ClaimExtensions
         };
 
     public static ClaimsPrincipal ToPrincipal(this AuthUserInfo user) =>
-        new ClaimsPrincipal(new ClaimsIdentity(user.ToClaims(), "jwt"));
+        new ClaimsPrincipal(
+            new ClaimsIdentity(user.ToClaims(), "jwt"));
 }

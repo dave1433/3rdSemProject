@@ -1,12 +1,8 @@
-import React from "react";
-import { NavLink, useNavigate } from "react-router";
+import React, { useEffect, useState } from "react";
+import { NavLink, useNavigate, useLocation } from "react-router";
 import "../css/PlayerPageHeader.css";
-import { User, LogOut } from 'lucide-react';
-
-interface PlayerPageHeaderProps {
-    userName: string;
-    balance?: number | null;
-}
+import { User, LogOut, Menu, X } from "lucide-react";
+import { useCurrentUser } from "../../core/hooks/useCurrentUser";
 
 const navItems = [
     { label: "Board", path: "/player/board" },
@@ -15,35 +11,49 @@ const navItems = [
     { label: "My Transactions", path: "/player/transactions" },
 ];
 
-export const PlayerPageHeader: React.FC<PlayerPageHeaderProps> = ({
-                                                                      userName, balance,
-                                                                  }) => {
+export const PlayerPageHeader: React.FC = () => {
     const navigate = useNavigate();
+    const location = useLocation();
+    const [menuOpen, setMenuOpen] = useState(false);
+
+    const { user, loading, clearUser } = useCurrentUser();
+
+    // close mobile menu on route change
+    useEffect(() => {
+        setMenuOpen(false);
+    }, [location.pathname]);
 
     function handleLogout() {
-        // clear whatever you store on login
-        localStorage.removeItem("token");
-        localStorage.removeItem("role");
-        localStorage.removeItem("userId");
-
+        localStorage.clear();
+        clearUser();              //  clears global cache + subscribers
         navigate("/");
     }
 
-    const balanceLabel =
-        balance == null ? "Balance: 0 DKK" : `Balance: ${balance} DKK`;
+    const userName = user?.fullName || "Player";
+    const balance = user?.balance ?? 0;
 
     return (
         <header className="player-header">
-            {/* Logo */}
-            <div className="player-header_logo">
-                <img src="../../../src/assets/logo1.png" alt="Jerne IF" />
+            {/* LEFT */}
+            <div className="player-header_left">
+                <div className="player-header_logo">
+                    <img src="../../../src/assets/logo1.png" alt="Jerne IF" />
+                </div>
+
+                <button
+                    type="button"
+                    className="player-header_burger"
+                    onClick={() => setMenuOpen(v => !v)}
+                >
+                    {menuOpen ? <X size={22} /> : <Menu size={22} />}
+                </button>
             </div>
 
-            {/* Navigation */}
-            <nav className="player-header_nav">
+            {/* DESKTOP NAV */}
+            <nav className="player-header_nav player-header_nav--desktop">
                 <ul className="player-header_nav-list">
-                    {navItems.map((item) => (
-                        <li key={item.path} className="player-header_nav-item">
+                    {navItems.map(item => (
+                        <li key={item.path}>
                             <NavLink
                                 to={item.path}
                                 className={({ isActive }) =>
@@ -58,24 +68,51 @@ export const PlayerPageHeader: React.FC<PlayerPageHeaderProps> = ({
                 </ul>
             </nav>
 
-            {/* Right-side user/balance card */}
+            {/* USER */}
             <div className="player-header_user-card">
-                <div className="player-header_user-avatar">
-                    <User size={20} />
-                </div>
+                <User size={20} />
                 <div className="player-header_user-text">
-                    <div className="player-header_user-name">{userName}</div>
-                    <div className="player-header_user-balance">{balanceLabel}</div>
+                    <div className="player-header_user-name">
+                        {loading ? "…" : userName}
+                    </div>
+                    <div className="player-header_user-balance">
+                        Balance: {loading ? "…" : balance} DKK
+                    </div>
                 </div>
             </div>
+
             <button
                 type="button"
                 className="player-header_logout-btn"
                 onClick={handleLogout}
-                aria-label="Log out"
             >
                 <LogOut size={20} />
             </button>
+
+            {/* MOBILE MENU */}
+            <div
+                className={
+                    "player-header_mobile-menu" +
+                    (menuOpen ? " player-header_mobile-menu--open" : "")
+                }
+            >
+                {navItems.map(item => (
+                    <NavLink
+                        key={item.path}
+                        to={item.path}
+                        className="player-header_mobile-link"
+                    >
+                        {item.label}
+                    </NavLink>
+                ))}
+            </div>
+
+            {menuOpen && (
+                <div
+                    className="player-header_backdrop"
+                    onClick={() => setMenuOpen(false)}
+                />
+            )}
         </header>
     );
 };
