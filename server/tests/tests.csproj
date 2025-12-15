@@ -5,32 +5,31 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
 
-        <!-- Test project -->
+        <!-- REQUIRED: marks this as a test project -->
         <IsTestProject>true</IsTestProject>
     </PropertyGroup>
 
     <ItemGroup>
+        <!-- REQUIRED: test runner -->
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.13.0" />
 
-        <!-- xUnit v2 (required for Xunit.DependencyInjection) -->
+        <!-- xUnit -->
         <PackageReference Include="xunit" Version="2.9.2" />
         <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
 
-        <!-- Dependency Injection for tests -->
-        <PackageReference Include="Xunit.DependencyInjection" Version="11.1.0" />
-
         <!-- Testcontainers -->
-        <PackageReference Include="Testcontainers.PostgreSql" Version="4.9.0" />
+        <PackageReference Include="Testcontainers.PostgreSql" Version="4.0.0" />
 
-        <!-- EF Core provider for your MyDbContext -->
+        <!-- EF Core + PostgreSQL -->
         <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.0" />
         <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.0" />
 
-        <!-- Optional but very nice assertions -->
+        <!-- Assertions -->
         <PackageReference Include="FluentAssertions" Version="6.12.0" />
     </ItemGroup>
 
     <ItemGroup>
+        <!-- References to production projects -->
         <ProjectReference Include="..\api\api.csproj" />
         <ProjectReference Include="..\efscaffold\efscaffold.csproj" />
     </ItemGroup>

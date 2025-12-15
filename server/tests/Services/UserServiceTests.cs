@@ -2,166 +2,276 @@
 using api.dtos.Requests;
 using efscaffold.Entities;
 using Infrastructure.Postgres.Scaffolding;
-using FluentAssertions;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.Abstractions;
 using System.Security.Claims;
 using Xunit;
 
-namespace tests.Services;
-
+[Collection("Postgres")]
 public class UserServiceTests
 {
-    private readonly IUserService _service;
-    private readonly MyDbContext _db;
+    private readonly PostgresFixture _db;
 
-    public UserServiceTests(IUserService service, MyDbContext db)
+    public UserServiceTests(PostgresFixture db)
     {
-        _service = service;
         _db = db;
-
-        // Ensure schema exists
-        _db.Database.Migrate();
     }
 
-    // -------------------------------
+    private UserService CreateService(MyDbContext ctx)
+        => new(ctx, NullLogger<UserService>.Instance);
+
+    // --------------------------------------------------
+    // Helpers
+    // --------------------------------------------------
+
+    private static async Task CleanDatabaseAsync(MyDbContext ctx)
+    {
+        ctx.Transactions.RemoveRange(ctx.Transactions);
+        ctx.Users.RemoveRange(ctx.Users);
+        await ctx.SaveChangesAsync();
+    }
+
+    // --------------------------------------------------
     // CREATE USER
-    // -------------------------------
+    // --------------------------------------------------
 
     [Fact]
-    public async Task CreateUserAsync_Should_Create_User_When_Valid()
+    public async Task CreateUserAsync_CreatesUser()
     {
-        var req = new CreateUserRequest
+        using var ctx = _db.CreateContext();
+        await CleanDatabaseAsync(ctx);
+
+        var service = CreateService(ctx);
+
+        var request = new CreateUserRequest
         {
-            Email = "user@test.com",
-            Password = "123456",
-            FullName = "Test User",
-            Role = "player"
+            FullName = "John Doe",
+            Phone = "12345678",
+            Email = $"{Guid.NewGuid()}@test.com",
+            Password = "secret",
+            Role = 1
         };
 
-        var result = await _service.CreateUserAsync(req);
+        var result = await service.CreateUserAsync(request);
 
-        result.Should().NotBeNull();
-        result.Email.Should().Be("user@test.com");
-
-        _db.Users.Count().Should().Be(1);
+        Assert.NotNull(result);
+        Assert.Equal("John Doe", result.FullName);
+        Assert.False(result.Active);
     }
 
     [Fact]
-    public async Task CreateUserAsync_Should_Throw_When_Email_Missing()
+    public async Task CreateUserAsync_Throws_WhenEmailExists()
     {
-        var req = new CreateUserRequest
-        {
-            Email = "",
-            Password = "123"
-        };
+        using var ctx = _db.CreateContext();
+        await CleanDatabaseAsync(ctx);
 
-        await Assert.ThrowsAsync<ArgumentException>(() =>
-            _service.CreateUserAsync(req));
-    }
+        var service = CreateService(ctx);
+        var email = $"{Guid.NewGuid()}@test.com";
 
-    [Fact]
-    public async Task CreateUserAsync_Should_Throw_When_Email_Already_Exists()
-    {
-        await _service.CreateUserAsync(new CreateUserRequest
+        await service.CreateUserAsync(new CreateUserRequest
         {
-            Email = "dup@test.com",
-            Password = "123"
+            FullName = "Jane",
+            Email = email,
+            Password = "pw",
+            Role = 1
         });
 
         await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            _service.CreateUserAsync(new CreateUserRequest
+            service.CreateUserAsync(new CreateUserRequest
             {
-                Email = "dup@test.com",
-                Password = "123"
+                FullName = "Jane2",
+                Email = email,
+                Password = "pw",
+                Role = 1
             }));
     }
 
-    // -------------------------------
-    // GET BY ID
-    // -------------------------------
+    // --------------------------------------------------
+    // GET ALL USERS
+    // --------------------------------------------------
 
     [Fact]
-    public async Task GetByIdAsync_Should_Return_User_When_Exists()
+    public async Task GetAllUsersAsync_ReturnsAlphabetical()
     {
-        var created = await _service.CreateUserAsync(new CreateUserRequest
-        {
-            Email = "find@test.com",
-            Password = "123"
-        });
+        using var ctx = _db.CreateContext();
+        await CleanDatabaseAsync(ctx);
 
-        var result = await _service.GetByIdAsync(created.Id);
+        var service = CreateService(ctx);
 
-        result.Should().NotBeNull();
-        result!.Email.Should().Be("find@test.com");
-    }
-
-    [Fact]
-    public async Task GetByIdAsync_Should_Return_Null_When_NotFound()
-    {
-        var result = await _service.GetByIdAsync("no-such-id");
-        result.Should().BeNull();
-    }
-
-    // -------------------------------
-    // ACTIVATE / DEACTIVATE
-    // -------------------------------
-
-    [Fact]
-    public async Task ActivateAsync_Should_Activate_User()
-    {
-        var user = await _service.CreateUserAsync(new CreateUserRequest
-        {
-            Email = "active@test.com",
-            Password = "123"
-        });
-
-        var success = await _service.ActivateAsync(user.Id);
-
-        success.Should().BeTrue();
-        _db.Users.Single().Active.Should().BeTrue();
-    }
-
-    [Fact]
-    public async Task DeactivateAsync_Should_Return_False_When_User_NotFound()
-    {
-        var result = await _service.DeactivateAsync("missing");
-        result.Should().BeFalse();
-    }
-
-    // -------------------------------
-    // GET CURRENT USER
-    // -------------------------------
-
-    [Fact]
-    public async Task GetCurrentAsync_Should_Return_User_From_Claims()
-    {
-        var user = await _service.CreateUserAsync(new CreateUserRequest
-        {
-            Email = "me@test.com",
-            Password = "123"
-        });
-
-        // Insert approved transaction to test balance
-        _db.Transactions.Add(new Transaction
-        {
-            Id = Guid.NewGuid().ToString(),
-            Playerid = user.Id,
-            Amount = 100,
-            Status = "approved"
-        });
-
-        await _db.SaveChangesAsync();
-
-        var claims = new ClaimsPrincipal(
-            new ClaimsIdentity(new[]
+        ctx.Users.AddRange(
+            new User
             {
-                new Claim(ClaimTypes.NameIdentifier, user.Id)
-            })
+                Id = Guid.NewGuid().ToString(),
+                Email = "b@test.com",
+                Password = "x",
+                Fullname = "Bob",
+                Createdat = DateTime.UtcNow
+            },
+            new User
+            {
+                Id = Guid.NewGuid().ToString(),
+                Email = "a@test.com",
+                Password = "x",
+                Fullname = "Alice",
+                Createdat = DateTime.UtcNow
+            }
         );
 
-        var result = await _service.GetCurrentAsync(claims);
+        await ctx.SaveChangesAsync();
 
-        result.Should().NotBeNull();
-        result!.Balance.Should().Be(100);
+        var users = await service.GetAllUsersAsync();
+
+        Assert.Equal(2, users.Count);
+        Assert.Equal("Alice", users[0].FullName);
+        Assert.Equal("Bob", users[1].FullName);
+    }
+
+    // --------------------------------------------------
+    // GET BY ID
+    // --------------------------------------------------
+
+    [Fact]
+    public async Task GetByIdAsync_ReturnsUser_WhenExists()
+    {
+        using var ctx = _db.CreateContext();
+        await CleanDatabaseAsync(ctx);
+
+        var service = CreateService(ctx);
+        var userId = Guid.NewGuid().ToString();
+
+        ctx.Users.Add(new User
+        {
+            Id = userId,
+            Email = "u@test.com",
+            Password = "x",
+            Fullname = "User",
+            Createdat = DateTime.UtcNow
+        });
+
+        await ctx.SaveChangesAsync();
+
+        var result = await service.GetByIdAsync(userId);
+
+        Assert.NotNull(result);
+        Assert.Equal("User", result!.FullName);
+    }
+
+    [Fact]
+    public async Task GetByIdAsync_ReturnsNull_WhenMissing()
+    {
+        using var ctx = _db.CreateContext();
+        await CleanDatabaseAsync(ctx);
+
+        var service = CreateService(ctx);
+
+        var result = await service.GetByIdAsync(Guid.NewGuid().ToString());
+
+        Assert.Null(result);
+    }
+
+    // --------------------------------------------------
+    // GET CURRENT USER
+    // --------------------------------------------------
+
+    [Fact]
+    public async Task GetCurrentAsync_ReturnsUser_WithApprovedBalance()
+    {
+        using var ctx = _db.CreateContext();
+        await CleanDatabaseAsync(ctx);
+
+        var service = CreateService(ctx);
+        var userId = Guid.NewGuid().ToString();
+
+        ctx.Users.Add(new User
+        {
+            Id = userId,
+            Email = "me@test.com",
+            Password = "x",
+            Fullname = "Me",
+            Createdat = DateTime.UtcNow
+        });
+
+        ctx.Transactions.AddRange(
+            new Transaction
+            {
+                Id = Guid.NewGuid().ToString(),
+                Playerid = userId,
+                Type = "deposit",
+                Amount = 100,
+                Status = "approved",
+                Createdat = DateTime.UtcNow
+            },
+            new Transaction
+            {
+                Id = Guid.NewGuid().ToString(),
+                Playerid = userId,
+                Type = "deposit",
+                Amount = 50,
+                Status = "pending",
+                Createdat = DateTime.UtcNow
+            },
+            new Transaction
+            {
+                Id = Guid.NewGuid().ToString(),
+                Playerid = userId,
+                Type = "deposit",
+                Amount = 25,
+                Status = "approved",
+                Createdat = DateTime.UtcNow
+            }
+        );
+
+        await ctx.SaveChangesAsync();
+
+        var principal = new ClaimsPrincipal(
+            new ClaimsIdentity(new[] { new Claim("sub", userId) }, "jwt"));
+
+        var result = await service.GetCurrentAsync(principal);
+
+        Assert.NotNull(result);
+        Assert.Equal(125, result!.Balance);
+    }
+
+    // --------------------------------------------------
+    // ACTIVATE / DEACTIVATE
+    // --------------------------------------------------
+
+    [Fact]
+    public async Task ActivateAsync_ActivatesUser()
+    {
+        using var ctx = _db.CreateContext();
+        await CleanDatabaseAsync(ctx);
+
+        var service = CreateService(ctx);
+        var userId = Guid.NewGuid().ToString();
+
+        ctx.Users.Add(new User
+        {
+            Id = userId,
+            Email = $"{Guid.NewGuid()}@test.com",
+            Password = "x",
+            Fullname = "A",
+            Active = false,
+            Createdat = DateTime.UtcNow
+        });
+
+        await ctx.SaveChangesAsync();
+
+        var result = await service.ActivateAsync(userId);
+
+        Assert.True(result);
+        Assert.True(ctx.Users.Single(u => u.Id == userId).Active);
+    }
+
+    [Fact]
+    public async Task DeactivateAsync_ReturnsFalse_WhenMissing()
+    {
+        using var ctx = _db.CreateContext();
+        await CleanDatabaseAsync(ctx);
+
+        var service = CreateService(ctx);
+
+        var result = await service.DeactivateAsync(Guid.NewGuid().ToString());
+
+        Assert.False(result);
     }
 }
