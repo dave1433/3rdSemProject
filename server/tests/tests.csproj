@@ -7,6 +7,9 @@
 
         <!-- REQUIRED: marks this as a test project -->
         <IsTestProject>true</IsTestProject>
+
+        <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+
     </PropertyGroup>
 
     <ItemGroup>
@@ -16,6 +19,8 @@
         <!-- xUnit -->
         <PackageReference Include="xunit" Version="2.9.2" />
         <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+        <PackageReference Include="Xunit.DependencyInjection" Version="9.1.0" />
+
 
         <!-- Testcontainers -->
         <PackageReference Include="Testcontainers.PostgreSql" Version="4.0.0" />
