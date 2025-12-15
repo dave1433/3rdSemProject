@@ -141,18 +141,22 @@ public class AdminGameService : IAdminGameService
     // --------------------------------------------------
     private static DateTime CalculateJoinDeadline(int year, int week)
     {
-#if WINDOWS
-        var tz = TimeZoneInfo.FindSystemTimeZoneById("Romance Standard Time");
-#else
-        var tz = TimeZoneInfo.FindSystemTimeZoneById("Europe/Copenhagen");
-#endif
-        var jan4 = new DateTime(year, 1, 4);
-        int day  = (int)jan4.DayOfWeek;
+        // ISO week calculation (UTC)
+        var jan4 = new DateTime(year, 1, 4, 0, 0, 0, DateTimeKind.Utc);
+
+        int day = (int)jan4.DayOfWeek;
         if (day == 0) day = 7;
 
-        var monday = jan4.AddDays(1 - day).AddDays((week - 1) * 7);
-        var saturday = monday.AddDays(5).AddHours(16).AddMinutes(59).AddSeconds(59);
+        var monday = jan4
+            .AddDays(1 - day)
+            .AddDays((week - 1) * 7);
 
-        return TimeZoneInfo.ConvertTimeToUtc(saturday, tz);
+        // Saturday 16:59:59 UTC
+        return monday
+            .AddDays(5)
+            .AddHours(16)
+            .AddMinutes(59)
+            .AddSeconds(59);
     }
 }
+

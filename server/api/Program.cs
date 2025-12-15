@@ -152,7 +152,7 @@ app.UseAuthorization();
 // ============================
 //  AUTH DEBUG MIDDLEWARE
 // ============================
-app.Use(async (context, next) =>
+/*app.Use(async (context, next) =>
 {
     Console.WriteLine("=== AUTH DEBUG MIDDLEWARE ===");
 
@@ -172,7 +172,7 @@ app.Use(async (context, next) =>
     Console.WriteLine("=== END AUTH DEBUG ===");
 
     await next();
-});
+});*/
 
 app.MapControllers();
 app.Run();
