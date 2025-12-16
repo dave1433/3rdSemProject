@@ -1,7 +1,3 @@
-/* ================================
-   MOBILE ADMIN MENU CONTAINER
-   ================================ */
-
 .admin-mobile-menu {
     position: absolute;
     top: 100%;
@@ -53,18 +49,41 @@
 }
 
 /* ================================
-   MOBILE ALERT BELL
+   MOBILE ALERT BELL (IMPROVED)
    ================================ */
 
 .admin-mobile-alert {
+    position: relative;
     display: inline-flex;
     align-items: center;
     justify-content: center;
 
-    color: #dc2626;
+    /* 🔴 more vibrant red */
+    color: #ff2d2d;
+
     margin-left: 10px;
 
-    animation: bell-pulse 1.2s infinite ease-in-out;
+    /* 🔔 bigger + stronger pulse */
+    animation: bell-pulse-strong 1.1s infinite ease-in-out;
+    transform-origin: center;
+
+    /* ✨ subtle glow */
+    text-shadow: 0 0 8px rgba(255, 45, 45, 0.8);
+}
+
+/* 🔴 RED DOT (ADDED, DOES NOT AFFECT LAYOUT) */
+.admin-mobile-alert::after {
+    content: "";
+    position: absolute;
+    top: -3px;
+    right: -3px;
+
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+
+    background: #ff2d2d;
+    box-shadow: 0 0 6px rgba(255, 45, 45, 0.9);
 }
 
 /* ================================
@@ -77,20 +96,20 @@
 }
 
 /* ================================
-   SHARED BELL ANIMATION
+   SHARED BELL ANIMATION (STRONGER)
    ================================ */
 
-@keyframes bell-pulse {
+@keyframes bell-pulse-strong {
     0% {
         transform: scale(1);
-        opacity: 0.9;
+        opacity: 0.85;
     }
     50% {
-        transform: scale(1.35);
+        transform: scale(1.5);
         opacity: 1;
     }
     100% {
         transform: scale(1);
-        opacity: 0.9;
+        opacity: 0.85;
     }
 }
