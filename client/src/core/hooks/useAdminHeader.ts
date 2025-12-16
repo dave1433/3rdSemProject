@@ -1,9 +1,38 @@
 import { useNavigate } from "react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { apiGet } from "../../api/connection";
 
 export function useAdminHeader() {
     const navigate = useNavigate();
+
     const [activeTab, setActiveTab] = useState("players");
+    const [adminName, setAdminName] = useState<string>("Loading...");
+
+    useEffect(() => {
+        const fetchAdmin = async () => {
+            try {
+                const res = await apiGet("/api/user/me");
+
+                if (!res.ok) {
+                    setAdminName("Admin");
+                    return;
+                }
+
+                const text = await res.text();
+                if (!text) {
+                    setAdminName("Admin");
+                    return;
+                }
+
+                const data = JSON.parse(text);
+                setAdminName(data.fullName ?? "Admin");
+            } catch {
+                setAdminName("Admin");
+            }
+        };
+
+        fetchAdmin();
+    }, []);
 
     function handleLogout() {
         localStorage.removeItem("token");
@@ -15,6 +44,7 @@ export function useAdminHeader() {
     return {
         activeTab,
         setActiveTab,
+        adminName, // 👈 NEW
         handleLogout,
         tabs: [
             { id: "players", label: "Players" },

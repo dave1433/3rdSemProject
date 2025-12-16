@@ -1,16 +1,18 @@
-import { Logo } from "./Logo";
-import { User, LogOut, Menu, X } from "lucide-react";
-import { AdminMobileNavView } from "./AdminMobileNavView";
+import {Logo} from "./Logo";
+import {User, LogOut, Menu, X} from "lucide-react";
+import {AdminMobileNavView} from "./AdminMobileNavView";
 import "../css/AdminHeader.css";
 
 interface Props {
-    activeTab: string;
-    tabs: { id: string; label: string }[];
-    onChangeTab: (tab: string) => void;
-    onLogout: () => void;
-    onOpenMobile: () => void;
-    onCloseMobile: () => void;
-    mobileOpen: boolean;
+    activeTab: string,
+    tabs: { id: string; label: string }[],
+    adminName: string,
+    onChangeTab: (tab: string) => void,
+    onLogout: () => void,
+    onOpenMobile: () => void,
+    onCloseMobile: () => void,
+    mobileOpen: boolean,
+    adminName1?: string
 }
 
 export const AdminHeaderView = ({
@@ -20,7 +22,8 @@ export const AdminHeaderView = ({
                                     onLogout,
                                     onOpenMobile,
                                     onCloseMobile,
-                                    mobileOpen
+                                    mobileOpen,
+                                    adminName,
                                 }: Props) => {
     return (
         <header className="admin-header">
@@ -32,9 +35,9 @@ export const AdminHeaderView = ({
                     onClick={mobileOpen ? onCloseMobile : onOpenMobile}
                     aria-label={mobileOpen ? "Close menu" : "Open menu"}
                 >
-                    {mobileOpen ? <X size={24} /> : <Menu size={24} />}
+                    {mobileOpen ? <X size={24}/> : <Menu size={24}/>}
                 </button>
-                <Logo />
+                <Logo/>
             </div>
 
             {/* CENTER: DESKTOP NAV */}
@@ -60,16 +63,16 @@ export const AdminHeaderView = ({
             {/* RIGHT: USER */}
             <div className="admin-header_user-card">
                 <div className="admin-header_user-avatar">
-                    <User size={18} />
+                    <User size={18}/>
                 </div>
                 <div className="admin-header_user-text">
-                    <div className="admin-header_user-name">Admin User</div>
+                    <div className="admin-header_user-name">{adminName}</div>
                 </div>
                 <button
                     className="admin-header_logout-btn"
                     onClick={onLogout}
                 >
-                    <LogOut size={20} />
+                    <LogOut size={20}/>
                 </button>
             </div>
 

@@ -1,4 +1,4 @@
-import React, {useEffect} from "react";
+import React, { useEffect, useState } from "react";
 import { useAdminHeader } from "../../core/hooks/useAdminHeader";
 import { AdminHeaderView } from "./AdminHeaderView";
 
@@ -11,8 +11,15 @@ export const AdminHeader = ({
                                 activeTab: propActiveTab,
                                 onChangeTab: propOnChangeTab
                             }: Props) => {
-    const { activeTab, setActiveTab, handleLogout, tabs } = useAdminHeader();
-    const [mobileOpen, setMobileOpen] = React.useState(false);
+    const {
+        activeTab,
+        setActiveTab,
+        adminName,   // 👈 kept
+        handleLogout,
+        tabs
+    } = useAdminHeader();
+
+    const [mobileOpen, setMobileOpen] = useState(false);
 
     const currentActiveTab = propActiveTab ?? activeTab;
 
@@ -24,30 +31,33 @@ export const AdminHeader = ({
         }
         setMobileOpen(false);
     };
-    const openMobile = () => setMobileOpen(true);
-    const closeMobile = () => setMobileOpen(false);
 
     useEffect(() => {
-        const onResize = () => {
+        const closeIfDesktop = () => {
             if (window.innerWidth > 900) {
                 setMobileOpen(false);
             }
         };
-        window.addEventListener("resize", onResize);
-        return () => window.removeEventListener("resize", onResize);
-    }, []);
 
+        window.addEventListener("resize", closeIfDesktop);
+        window.visualViewport?.addEventListener("resize", closeIfDesktop);
+
+        return () => {
+            window.removeEventListener("resize", closeIfDesktop);
+            window.visualViewport?.removeEventListener("resize", closeIfDesktop);
+        };
+    }, []);
 
     return (
         <AdminHeaderView
             activeTab={currentActiveTab}
             tabs={tabs}
+            adminName={adminName}
             onChangeTab={handleChangeTab}
             onLogout={handleLogout}
-            onOpenMobile={openMobile}
+            onOpenMobile={() => setMobileOpen(true)}
+            onCloseMobile={() => setMobileOpen(false)}
             mobileOpen={mobileOpen}
-            onCloseMobile={closeMobile}
         />
-
     );
 };
