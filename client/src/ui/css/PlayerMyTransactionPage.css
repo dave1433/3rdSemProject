@@ -250,8 +250,20 @@
 }
 
 .req{
-    color: #b02a1a;
+    color: #b02a1a;}
+
+/* Make the balance history table scroll when there are many rows */
+.balance-table-wrapper {
+    max-height: calc(100vh - 240px);
+    overflow-y: auto;
 }
+
+.balance-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
 @media (max-width: 900px) {
     .balance-layout {
         flex-direction: column;

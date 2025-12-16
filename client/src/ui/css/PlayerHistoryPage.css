@@ -43,6 +43,14 @@
     overflow: hidden;
     border: 1px solid #ddd;
     background: #f9f6f2;
+    max-height: calc(100vh - 220px);
+    overflow-y: auto;
+}
+
+.history-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
 }
 
 .history-table {

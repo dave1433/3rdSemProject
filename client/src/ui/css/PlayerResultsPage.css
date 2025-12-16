@@ -78,6 +78,14 @@
     overflow: hidden;
     border: 1px solid #ddd;
     background: #f9f6f2;
+    max-height: calc(100vh - 220px);
+    overflow-y: auto;
+}
+
+.results-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 999;
 }
 
 .results-table {
