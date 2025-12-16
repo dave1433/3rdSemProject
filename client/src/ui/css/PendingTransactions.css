@@ -1,14 +1,16 @@
 ﻿.pending-transactions-page {
     padding: 2rem;
     display: flex;
+    justify-content: center;
+    width: 100%;
 }
 
 .pending-transactions-card {
     background: #ffffff;
-    flex: 1;
-    display: flex;
+    width: 100%;
+    max-width: 900px;
     border-radius: 12px;
-    padding: 1.5rem 2rem;
+    padding: 1.5rem;
     box-shadow: 0 4px 12px rgba(0,0,0,0.04);
 }
 
@@ -69,4 +71,22 @@
 
 .pending-transactions-status--error {
     color: #c81e1e;
+}
+
+@media (max-width: 900px) {
+
+    .pending-transactions-page {
+        padding: 1rem;
+    }
+
+    .pending-transactions-card {
+        padding: 1rem;
+        border-radius: 10px;
+    }
+
+    .pending-transactions-table th,
+    .pending-transactions-table td {
+        padding: 0.5rem;
+        font-size: 0.85rem;
+    }
 }

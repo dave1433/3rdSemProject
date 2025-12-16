@@ -1,9 +1,6 @@
 ﻿import React, { useEffect, useState } from "react";
 import "../css/PendingTransactions.css";
-
 import { openapiAdapter } from "../../api/connection";
-
-// 👇 MUST be type-only import (TS config requires it)
 import type { TransactionDtoResponse } from "../../generated-ts-client";
 import { TransactionClient } from "../../generated-ts-client";
 
