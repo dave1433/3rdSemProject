@@ -1,5 +1,6 @@
 ﻿using api.dtos.Requests;
 using api.dtos.Responses;
+using api.Errors;
 using api.security;
 using efscaffold.Entities;
 using Infrastructure.Postgres.Scaffolding;
@@ -30,10 +31,12 @@ public class UserService : IUserService
     {
         // Server-side validation
         if (string.IsNullOrWhiteSpace(request.Email))
-            throw new ArgumentException("Email required");
+            throw ApiErrors.BadRequest(
+                "Email is required.");
 
         if (await _db.Users.AnyAsync(u => u.Email == request.Email))
-            throw new InvalidOperationException("Email already exists");
+            throw ApiErrors.Conflict(
+                "An account with this email already exists.");
 
         var user = new User
         {
