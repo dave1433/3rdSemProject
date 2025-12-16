@@ -8,6 +8,37 @@
     background-color: #2E4658;
 }
 
+.admin-header-alert {
+    margin-left: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #dc2626;
+
+    /* 👇 make the bell bigger */
+    font-size: 20px;
+
+    /* 👇 visual emphasis */
+    transform-origin: center;
+    animation: bell-pulse 1.2s infinite ease-in-out;
+}
+
+@keyframes bell-pulse {
+    0% {
+        transform: scale(1);
+        opacity: 0.9;
+    }
+    50% {
+        transform: scale(1.35);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 0.9;
+    }
+}
+
+
 
 /* Logo */
 .admin-header_logo {
