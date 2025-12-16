@@ -68,7 +68,7 @@ function mapTransaction(t: TransactionDtoResponse): BalanceTransaction {
 // COMPONENT
 // ----------------------
 export const PlayerMyTransactionPage: React.FC = () => {
-    const { user, updateBalance } = useCurrentUser();
+    const { user } = useCurrentUser();
     const CURRENT_USER_ID = user?.id ?? "";
 
     const [transactions, setTransactions] = useState<BalanceTransaction[]>([]);
@@ -189,7 +189,7 @@ export const PlayerMyTransactionPage: React.FC = () => {
                                 onSubmit={handleSubmitDeposit}
                             >
                                 <div className="balance-form-row">
-                                    <label className="balance-form-label">Amount (DKK)</label>
+                                    <label className="balance-form-label">Amount (DKK) <span className="req">*</span></label>
                                     <input
                                         type="number"
                                         min={1}
@@ -201,7 +201,7 @@ export const PlayerMyTransactionPage: React.FC = () => {
                                 </div>
 
                                 <div className="balance-form-row">
-                                    <label className="balance-form-label">MobilePay reference</label>
+                                    <label className="balance-form-label">MobilePay reference <span className="req">*</span></label>
                                     <input
                                         type="text"
                                         className="balance-input"

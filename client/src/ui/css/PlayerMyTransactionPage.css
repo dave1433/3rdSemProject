@@ -248,6 +248,10 @@
     background: #f6d3d0;
     color: #b02a1a;
 }
+
+.req{
+    color: #b02a1a;
+}
 @media (max-width: 900px) {
     .balance-layout {
         flex-direction: column;
