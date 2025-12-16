@@ -1,34 +1,42 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <OutputType>Exe</OutputType>
-    <RootNamespace>tests</RootNamespace>
-    <TargetFramework>net9.0</TargetFramework>
-      <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
-      <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
-  </PropertyGroup>
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
 
-  <ItemGroup>
-    <Content Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
-  </ItemGroup>
+        <!-- REQUIRED: marks this as a test project -->
+        <IsTestProject>true</IsTestProject>
 
-  <ItemGroup>
-    <Using Include="Xunit" />
-  </ItemGroup>
+        <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.13.0" />
-    <PackageReference Include="Testcontainers.PostgreSql" Version="4.9.0" />
-    <PackageReference Include="Xunit.DependencyInjection" Version="11.1.0" />
-    <PackageReference Include="xunit.v3" Version="3.1.0" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5" />
-  </ItemGroup>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\api\api.csproj" />
-    <ProjectReference Include="..\efscaffold\efscaffold.csproj" />
-  </ItemGroup>
+    <ItemGroup>
+        <!-- REQUIRED: test runner -->
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.13.0" />
+
+        <!-- xUnit -->
+        <PackageReference Include="xunit" Version="2.9.2" />
+        <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+        <PackageReference Include="Xunit.DependencyInjection" Version="9.1.0" />
+
+
+        <!-- Testcontainers -->
+        <PackageReference Include="Testcontainers.PostgreSql" Version="4.0.0" />
+
+        <!-- EF Core + PostgreSQL -->
+        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.0" />
+        <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.0" />
+
+        <!-- Assertions -->
+        <PackageReference Include="FluentAssertions" Version="6.12.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <!-- References to production projects -->
+        <ProjectReference Include="..\api\api.csproj" />
+        <ProjectReference Include="..\efscaffold\efscaffold.csproj" />
+    </ItemGroup>
 
 </Project>
