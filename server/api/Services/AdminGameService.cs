@@ -1,5 +1,6 @@
 ﻿using api.dtos.Requests;
 using api.dtos.Responses;
+using api.Errors;
 using efscaffold.Entities;
 using Infrastructure.Postgres.Scaffolding;
 using Microsoft.EntityFrameworkCore;
@@ -32,7 +33,7 @@ public class AdminGameService : IAdminGameService
 
         var game = await CreateGameAsync(request);
 
-        //  THIS IS THE KEY LINE
+        // Generate boards from active repeats
         await _repeatService.GenerateBoardsForGameAsync(game.Id);
 
         await EvaluateWinnersAsync(game);
@@ -81,13 +82,16 @@ public class AdminGameService : IAdminGameService
     private static void ValidateRequest(CreateGameDrawRequest request)
     {
         if (request.WinningNumbers == null || request.WinningNumbers.Count != 3)
-            throw new ArgumentException("Exactly 3 winning numbers are required.");
+            throw ApiErrors.BadRequest(
+                "Please select exactly 3 winning numbers.");
 
         if (request.WinningNumbers.Any(n => n < 1 || n > 16))
-            throw new ArgumentException("Winning numbers must be between 1 and 16.");
+            throw ApiErrors.BadRequest(
+                "Winning numbers must be between 1 and 16.");
 
         if (request.WinningNumbers.Distinct().Count() != 3)
-            throw new ArgumentException("Winning numbers must be unique.");
+            throw ApiErrors.BadRequest(
+                "Each winning number must be unique.");
     }
 
     private async Task EnsureWeekNotLocked(int year, int weekNumber)
@@ -98,8 +102,9 @@ public class AdminGameService : IAdminGameService
             g.Winningnumbers != null);
 
         if (locked)
-            throw new InvalidOperationException(
-                $"Winning numbers already locked for {year} week {weekNumber}");
+            throw ApiErrors.Conflict(
+                $"The draw for week {weekNumber}, {year} has already been completed. " +
+                $"You cannot change the winning numbers.");
     }
 
     private async Task<Game> CreateGameAsync(CreateGameDrawRequest request)

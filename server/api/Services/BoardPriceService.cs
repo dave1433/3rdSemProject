@@ -1,4 +1,4 @@
-using efscaffold;
+using api.Errors;
 using efscaffold.Entities;
 using Infrastructure.Postgres.Scaffolding;
 using Microsoft.EntityFrameworkCore;
@@ -14,6 +14,9 @@ public class BoardPriceService : IBoardPriceService
         _db = db;
     }
 
+    // --------------------------------------------------
+    // PUBLIC QUERIES
+    // --------------------------------------------------
     public async Task<IReadOnlyList<Boardprice>> GetAllAsync()
     {
         return await _db.Boardprices
@@ -29,8 +32,8 @@ public class BoardPriceService : IBoardPriceService
             .SingleOrDefaultAsync(bp => bp.Fieldscount == fieldsCount);
 
         if (row == null)
-            throw new InvalidOperationException(
-                $"No board price configured for {fieldsCount} fields.");
+            throw ApiErrors.NotFound(
+                $"No price is configured for a board with {fieldsCount} fields.");
 
         return row.Price;
     }
