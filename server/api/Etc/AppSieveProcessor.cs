@@ -16,6 +16,16 @@ public sealed class AppSieveProcessor : SieveProcessor
         mapper.Property<Transaction>(t => t.Status).CanFilter().CanSort();
         mapper.Property<Transaction>(t => t.Type).CanFilter().CanSort();
         mapper.Property<Transaction>(t => t.Amount).CanFilter().CanSort();
+        
+        // Users (Players list)
+        mapper.Property<User>(u => u.Fullname).CanFilter().CanSort().HasName("fullName");
+        mapper.Property<User>(u => u.Email).CanFilter().CanSort();
+        mapper.Property<User>(u => u.Phone).CanFilter().CanSort();
+        mapper.Property<User>(u => u.Role).CanFilter().CanSort();
+        mapper.Property<User>(u => u.Active).CanFilter().CanSort();
+        mapper.Property<User>(u => u.Balance).CanFilter().CanSort();
+        mapper.Property<User>(u => u.Createdat).CanSort().HasName("createdAt");
+
         return mapper;
     }
 }

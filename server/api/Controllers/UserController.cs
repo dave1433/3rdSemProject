@@ -3,6 +3,7 @@ using api.dtos.Responses;
 using api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Sieve.Models;
 
 namespace api.Controllers;
 
@@ -25,8 +26,14 @@ public class UserController : ControllerBase
 
     // Anyone authenticated can list users (admin & player)
     [HttpGet]
-    public async Task<ActionResult<List<UserResponse>>> GetUsers()
-        => Ok(await _users.GetAllUsersAsync());
+    public async Task<ActionResult<List<UserResponse>>> GetUsers(
+        [FromQuery] string? q,
+        [FromQuery] SieveModel sieveModel
+    )
+    {
+        var users = await _users.GetAllUsersAsync(q, sieveModel);
+        return Ok(users);
+    }
 
     // Get information about the currently logged-in user
     [HttpGet("me")]

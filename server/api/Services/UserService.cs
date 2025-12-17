@@ -5,6 +5,8 @@ using efscaffold.Entities;
 using Infrastructure.Postgres.Scaffolding;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
+using Sieve.Models;
+using Sieve.Services;
 
 namespace api.Services;
 
@@ -12,11 +14,13 @@ public class UserService : IUserService
 {
     private readonly MyDbContext _db;
     private readonly ILogger<UserService> _logger;
+    private readonly SieveProcessor _sieve;
 
-    public UserService(MyDbContext db, ILogger<UserService> logger)
+    public UserService(MyDbContext db, ILogger<UserService> logger, SieveProcessor sieve)
     {
         _db     = db;
         _logger = logger;
+        _sieve = sieve;
     }
 
     // -------------------------------
@@ -55,10 +59,40 @@ public class UserService : IUserService
     // -------------------------------
     public async Task<List<UserResponse>> GetAllUsersAsync()
     {
-        var users = await _db.Users
-            .OrderBy(u => u.Fullname.ToLower()) // alphabetical
-            .ToListAsync();
+        var sieveModel = new SieveModel { Sorts = "fullName" };
+        return await GetAllUsersAsync(q: null, sieveModel);
+    }
+    
+    // -------------------------------
+    // GET ALL USERS (Sieve + Search)
+    // -------------------------------
+    public async Task<List<UserResponse>> GetAllUsersAsync(string? q, SieveModel sieveModel)
+    {
+        var query = _db.Users
+            .AsNoTracking()
+            .AsQueryable();
 
+        // ✅ optional search across multiple fields
+        if (!string.IsNullOrWhiteSpace(q))
+        {
+            var term = q.Trim();
+
+            // If you're on Postgres (you are), ILike works great
+            query = query.Where(u =>
+                EF.Functions.ILike(u.Fullname!, $"%{term}%") ||
+                EF.Functions.ILike(u.Email, $"%{term}%") ||
+                EF.Functions.ILike(u.Phone!, $"%{term}%")
+            );
+        }
+
+        // ✅ default sort if client didn't send Sorts
+        if (string.IsNullOrWhiteSpace(sieveModel.Sorts))
+            sieveModel.Sorts = "fullName"; // uses your AppSieveProcessor HasName("fullName")
+
+        // ✅ apply Sieve (filters/sorts/paging)
+        query = _sieve.Apply(sieveModel, query);
+
+        var users = await query.ToListAsync();
         return users.Select(ToResponse).ToList();
     }
 
