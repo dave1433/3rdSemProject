@@ -84,6 +84,7 @@
 .balance-section-title {
     font-size: 1.05rem;
     margin: 0 0 4px 0;
+    font-weight: 600;
 }
 
 .balance-section-subtitle {
@@ -311,11 +312,12 @@
 }
 
 .tx-select{
-    height: 38px;
+    height: 30px;
     padding: 0 12px;
     border-radius: 10px;
     border: 1px solid rgba(0,0,0,0.12);
     background: #fff;
+    font-size: 14px;
 }
 
 /* pager */

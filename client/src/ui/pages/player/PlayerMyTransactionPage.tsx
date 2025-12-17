@@ -299,7 +299,7 @@ export const PlayerMyTransactionPage: React.FC = () => {
                     {/* RIGHT SIDE */}
                     <div className="balance-right">
                         <section className="balance-card">
-                            <h2 className="balance-section-title">Balance history</h2>
+                            <h2 className="balance-section-title">Transaction history</h2>
 
                             {/* FILTER/SORT CONTROLS */}
                             <div className="tx-toolbar">
