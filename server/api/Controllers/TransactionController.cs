@@ -2,6 +2,7 @@
 using api.dtos.Responses;
 using api.Services;
 using Microsoft.AspNetCore.Mvc;
+using Sieve.Models;
 
 namespace api.Controllers;
 
@@ -17,7 +18,7 @@ public class TransactionController : ControllerBase
     }
 
     // GET /api/Transaction/user/{userId}
-    [HttpGet("user/{userId}")]
+    /*[HttpGet("user/{userId}")]
     public async Task<ActionResult<List<TransactionDtoResponse>>> GetByUser(string userId)
     {
         var result = await _service.GetByUserAsync(userId);
@@ -30,7 +31,7 @@ public class TransactionController : ControllerBase
     {
         var result = await _service.GetPendingAsync();
         return Ok(result);
-    }
+    }*/
 
     // POST /api/Transaction/deposit
     [HttpPost("deposit")]
@@ -58,5 +59,26 @@ public class TransactionController : ControllerBase
 
         var updated = await _service.UpdateStatusAsync(id, dto, adminUserId);
         return Ok(updated);
+    }
+    
+    // GET /api/Transaction/user/{userId}
+    [HttpGet("user/{userId}")]
+    public async Task<ActionResult<List<TransactionDtoResponse>>> GetByUser(
+        string userId,
+        [FromQuery] SieveModel sieveModel
+    )
+    {
+        var result = await _service.GetByUserAsync(userId, sieveModel);
+        return Ok(result);
+    }
+
+// GET /api/Transaction/pending (Admin view)
+    [HttpGet("pending")]
+    public async Task<ActionResult<List<TransactionDtoResponse>>> GetPending(
+        [FromQuery] SieveModel sieveModel
+    )
+    {
+        var result = await _service.GetPendingAsync(sieveModel);
+        return Ok(result);
     }
 }

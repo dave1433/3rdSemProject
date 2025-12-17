@@ -9,6 +9,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using api.Errors;
+using api.Etc;
+using Sieve.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -98,6 +100,8 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IRepeatService, RepeatService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAdminGameService, AdminGameService>();
+builder.Services.AddScoped<SieveProcessor, AppSieveProcessor>();
+
 
 // =======================
 // CORS

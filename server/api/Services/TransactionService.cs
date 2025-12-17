@@ -3,40 +3,57 @@ using api.dtos.Responses;
 using efscaffold.Entities;
 using Infrastructure.Postgres.Scaffolding;
 using Microsoft.EntityFrameworkCore;
+using Sieve.Models;
+using Sieve.Services;
 
 namespace api.Services;
 
 public class TransactionService : ITransactionService
 {
     private readonly MyDbContext _db;
+    private readonly SieveProcessor _sieve;
 
-    public TransactionService(MyDbContext db)
+    public TransactionService(MyDbContext db, SieveProcessor sieve)
     {
         _db = db;
+        _sieve = sieve;
     }
 
     // GET /api/Transaction/user/{userId}
-    public async Task<List<TransactionDtoResponse>> GetByUserAsync(string userId)
+    public async Task<List<TransactionDtoResponse>> GetByUserAsync(string userId, SieveModel sieveModel)
     {
-        var transactions = await _db.Transactions
+        var query = _db.Transactions
             .Where(t => t.Playerid == userId)
-            .OrderByDescending(t => t.Createdat)
-            .ToListAsync();
+            .AsNoTracking()
+            .AsQueryable();
 
+        // Optional: default sort if client didn't send sorts
+        if (string.IsNullOrWhiteSpace(sieveModel.Sorts))
+            sieveModel.Sorts = "-createdat";
+
+        query = _sieve.Apply(sieveModel, query);
+
+        var transactions = await query.ToListAsync();
         return transactions.Select(t => new TransactionDtoResponse(t)).ToList();
     }
 
-    // GET pending transactions (admin)
-    public async Task<List<TransactionDtoResponse>> GetPendingAsync()
+    public async Task<List<TransactionDtoResponse>> GetPendingAsync(SieveModel sieveModel)
     {
-        var entities = await _db.Transactions
+        var query = _db.Transactions
             .Include(t => t.Player)
             .Where(t => t.Status == "pending")
-            .OrderByDescending(t => t.Createdat)
-            .ToListAsync();
+            .AsNoTracking()
+            .AsQueryable();
 
+        if (string.IsNullOrWhiteSpace(sieveModel.Sorts))
+            sieveModel.Sorts = "-createdat";
+
+        query = _sieve.Apply(sieveModel, query);
+
+        var entities = await query.ToListAsync();
         return entities.Select(t => new TransactionDtoResponse(t)).ToList();
     }
+
 
     // POST create deposit request
     public async Task<TransactionDtoResponse> CreateDepositAsync(CreateTransactionRequest ctr)
@@ -66,8 +83,10 @@ public class TransactionService : ITransactionService
 
         _db.Transactions.Add(tx);
         await _db.SaveChangesAsync();
+        Console.WriteLine("TX saved. ConnStr: " + _db.Database.GetConnectionString());
 
         return new TransactionDtoResponse(tx);
+        
     }
 
     // PUT update transaction status
