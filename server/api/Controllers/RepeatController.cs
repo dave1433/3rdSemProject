@@ -9,7 +9,7 @@ namespace api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize] // player must be logged in
+[Authorize(Policy = "PlayerOnly")]
 public class RepeatController : ControllerBase
 {
     private readonly IRepeatService _repeatService;

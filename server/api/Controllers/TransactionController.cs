@@ -13,10 +13,12 @@ namespace api.Controllers;
 public class TransactionController : ControllerBase
 {
     private readonly ITransactionService _service;
+    private readonly IAuthService _authService;
 
-    public TransactionController(ITransactionService service)
+    public TransactionController(ITransactionService service, IAuthService authService)
     {
         _service = service;
+        _authService = authService;
     }
 
     // POST /api/Transaction/deposit
@@ -57,6 +59,13 @@ public class TransactionController : ControllerBase
         [FromQuery] SieveModel sieveModel
     )
     {
+        var authUser = await _authService.GetUserInfoAsync(User);
+        if (authUser is null) return Unauthorized();
+
+        // Player can ONLY see their own transactions
+        if (authUser.Role == 2 && authUser.Id != userId)
+            return StatusCode(403, new { message = "Players may view only their own boards." });
+
         var result = await _service.GetByUserAsync(userId, sieveModel);
         return Ok(result);
     }
