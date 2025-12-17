@@ -9,6 +9,7 @@ namespace api.Controllers;
 
 [ApiController]
 [Route("api/user")]
+[Authorize]
 public class UserController : ControllerBase
 {
     private readonly IUserService _users;
