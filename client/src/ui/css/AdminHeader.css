@@ -8,6 +8,52 @@
     background-color: #2E4658;
 }
 
+/* 🔔 UPDATED BELL ONLY */
+.admin-header-alert {
+    margin-left: 8px;
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    /* 🔔 BIGGER bell */
+    font-size: 28px;
+
+    color: #dc2626;
+
+    transform-origin: center;
+    animation: bell-pulse 1.2s infinite ease-in-out;
+}
+
+
+/* 🔴 RED DOT (ADDED) */
+.admin-header-alert::after {
+    content: "";
+    position: absolute;
+    top: -4px;
+    right: -4px;
+
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #dc2626;
+}
+
+/* SAME ANIMATION (UNCHANGED LOGIC) */
+@keyframes bell-pulse {
+    0% {
+        transform: scale(1);
+        opacity: 0.9;
+    }
+    50% {
+        transform: scale(1.35);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 0.9;
+    }
+}
 
 /* Logo */
 .admin-header_logo {
@@ -97,6 +143,7 @@
 .admin-header_user-name {
     font-size: 1rem;
     font-weight: 500;
+    color: white;
 }
 
 .admin-header_mobile-btn {
@@ -120,19 +167,13 @@
     color: #C80000;
 }
 
-/* ================================
-   RESPONSIVE — MOBILE HEADER
-   ================================ */
-
+/* RESPONSIVE — MOBILE HEADER (UNCHANGED) */
 @media (max-width: 900px) {
-
-    /* Reduce header padding for mobile */
     .admin-header {
         padding: 12px 20px 12px 20px;
         flex-wrap: wrap;
     }
 
-    /* Show hamburger */
     .admin-header_mobile-btn {
         display: inline-block;
         background: none;
@@ -143,12 +184,10 @@
         margin-right: 10px;
     }
 
-    /* Hide desktop nav on mobile */
     .admin-header_nav {
         display: none;
     }
 
-    /* Logo repositioning */
     .admin-header_logo {
         padding-bottom: 0;
         display: flex;
@@ -156,19 +195,14 @@
         gap: 10px;
     }
 
-    /* User card moves to the right */
     .admin-header_user-card {
         margin-left: auto;
         padding: 0.3rem 0.6rem;
     }
 }
 
-/* ================
-   EXTRA SMALL MOBILE
-   ================ */
 @media (max-width: 600px) {
-
     .admin-header_user-card {
-        display: none;  /* hide user card */
+        display: none;
     }
 }
