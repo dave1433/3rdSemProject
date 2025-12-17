@@ -51,6 +51,7 @@
     width: 100%;
     max-width: none;
     box-sizing: border-box;
+    text-align: center;
 }
 
 /* grid */
@@ -90,11 +91,15 @@
 /* fields tabs */
 .player-board-fields-tabs {
     display: inline-flex;
+    gap: 8px;
+    padding: 4px;
+    margin: 0 auto 16px auto;
     border-radius: 999px;
     background: #e9e5de;
-    padding: 4px;
-    gap: 4px;
-    margin-bottom: 16px;
+
+    max-width: 100%;
+    overflow-x: auto;
+    white-space: nowrap;
 }
 
 .player-board-fields-tab {
@@ -225,8 +230,15 @@
 }
 
 .player-board-bets-card h2 {
-    margin: 0 0 12px 0;
     font-size: 1.1rem;
+    margin-bottom: 12px;
+    text-align: left;
+}
+
+.player-board-bets-card p {
+    font-size: 0.9rem;
+    margin-bottom: 12px;
+    text-align: left;
 }
 
 .player-board-bets-empty {
@@ -383,7 +395,22 @@
     font-weight: 600;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 600px) {
+    .player-board-fields-text {
+        font-size: 0.7rem;
+        letter-spacing: 0.05em;
+    }
+
+    .player-board-fields-tab {
+        flex: 0 0 auto;
+        padding: 4px 5px;
+    }
+
+    .player-board-fields-tabs {
+        width: 100%;
+        justify-content: center;
+    }
+
     .player-board-layout {
         flex-direction: column;
         gap: 16px;
