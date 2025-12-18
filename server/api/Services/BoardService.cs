@@ -1,6 +1,7 @@
 using System.Globalization;
 using api.dtos.Requests;
 using api.dtos.Responses;
+using api.Errors;
 using efscaffold.Entities;
 using Infrastructure.Postgres.Scaffolding;
 using Microsoft.EntityFrameworkCore;
@@ -84,44 +85,31 @@ public class BoardService : IBoardService
 
         var now = DateTime.UtcNow;
 
-        // Determine ISO week / year
         var currentWeek = ISOWeek.GetWeekOfYear(now);
         var currentYear = now.Year;
 
-        // ---------------------------------------------------------
-        // NEW RULE: A draw MUST exist before buying boards
-        // ---------------------------------------------------------
         var game = await _db.Games
             .FirstOrDefaultAsync(g => g.Year == currentYear && g.Weeknumber == currentWeek);
 
         if (game == null)
-        {
-            throw new Exception("This week's game has not been created yet. Please wait for the draw to open.");
-        }
+            throw ApiErrors.Conflict(
+                "This week's game has not been created yet. Please wait for the draw to open.");
 
         if (game.Winningnumbers == null || game.Winningnumbers.Count == 0)
-        {
-            throw new Exception("You cannot purchase boards until this week's winning numbers are set.");
-        }
-        
+            throw ApiErrors.Conflict(
+                "You cannot purchase boards until this week's winning numbers are set.");
+
         if (game.Joindeadline != null && DateTime.UtcNow > game.Joindeadline.Value)
-            throw new Exception("Board is locked (deadline passed).");
+            throw ApiErrors.Conflict(
+                "Board purchases are closed because the deadline has passed.");
 
-        var gameId = game.Id;
-
-        // ---------------------------------------------------------
-        // Load user
-        // ---------------------------------------------------------
         var player = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId);
         if (player == null)
-            throw new Exception("User not found");
+            throw ApiErrors.NotFound("User not found.");
 
         var boardsToAdd = new List<Board>();
         int totalCost = 0;
 
-        // ---------------------------------------------------------
-        // Build boards & compute total cost
-        // ---------------------------------------------------------
         foreach (var dto in list)
         {
             var fields = dto.Numbers.Count;
@@ -132,13 +120,14 @@ public class BoardService : IBoardService
                 .SingleOrDefaultAsync();
 
             if (basePrice == null)
-                throw new Exception($"No price found for {fields} fields.");
+                throw ApiErrors.NotFound(
+                    $"No price is configured for a board with {fields} fields.");
 
             var boardPrice = basePrice.Value * dto.Times;
 
-            // Validate balance incrementally
             if (player.Balance < totalCost + boardPrice)
-                throw new Exception("Insufficient balance.");
+                throw ApiErrors.Conflict(
+                    "You do not have enough balance to complete this purchase.");
 
             totalCost += boardPrice;
 
@@ -146,7 +135,7 @@ public class BoardService : IBoardService
             {
                 Id = Guid.NewGuid().ToString(),
                 Playerid = userId,
-                Gameid = gameId,
+                Gameid = game.Id,
                 Numbers = dto.Numbers,
                 Times = dto.Times,
                 Price = boardPrice,
@@ -157,14 +146,8 @@ public class BoardService : IBoardService
             boardsToAdd.Add(board);
         }
 
-        // ---------------------------------------------------------
-        // Deduct balance
-        // ---------------------------------------------------------
         player.Balance -= totalCost;
 
-        // ---------------------------------------------------------
-        // Create transactions
-        // ---------------------------------------------------------
         foreach (var board in boardsToAdd)
         {
             _db.Transactions.Add(new Transaction
@@ -179,39 +162,41 @@ public class BoardService : IBoardService
             });
         }
 
-        // Save all
         await _db.Boards.AddRangeAsync(boardsToAdd);
         await _db.SaveChangesAsync();
 
         return boardsToAdd.Select(b => new BoardDtoResponse(b)).ToList();
     }
+
+    // ---------------------------------------------------------
+    // Auto-repeat
+    // ---------------------------------------------------------
     public async Task<AutoRepeatResponse> SetAutoRepeatAsync(string playerId, string boardId, bool autoRepeat)
     {
         var board = await _db.Boards
             .FirstOrDefaultAsync(b => b.Id == boardId && b.Playerid == playerId);
 
         if (board == null)
-            throw new Exception("Board not found for this player.");
+            throw ApiErrors.NotFound(
+                "The selected board could not be found for your account.");
 
         if (autoRepeat)
         {
-            // If board already has a repeat record and it was stopped => cannot restart
             if (!string.IsNullOrEmpty(board.Repeatid))
             {
                 var existing = await _db.Repeats
                     .FirstOrDefaultAsync(r => r.Id == board.Repeatid && r.Playerid == playerId);
 
                 if (existing != null && existing.Optout)
-                    throw new InvalidOperationException("This repeat was stopped and cannot be restarted. Please buy a new ticket to repeat again.");
+                    throw ApiErrors.Conflict(
+                        "This repeat was stopped and cannot be restarted. Please buy a new board to repeat again.");
             }
 
             board.AutoRepeat = true;
 
-            // Create repeat row if missing
             if (string.IsNullOrEmpty(board.Repeatid))
             {
                 const int defaultWeeks = 10;
-
                 var fields = board.Numbers.Count;
 
                 var unitPrice = await _db.Boardprices
@@ -220,7 +205,8 @@ public class BoardService : IBoardService
                     .SingleOrDefaultAsync();
 
                 if (unitPrice == null)
-                    throw new Exception($"No price found for {fields} fields.");
+                    throw ApiErrors.NotFound(
+                        $"No price is configured for a board with {fields} fields.");
 
                 var times = board.Times <= 0 ? 1 : board.Times;
                 var total = unitPrice.Value * times;
@@ -231,10 +217,9 @@ public class BoardService : IBoardService
                     Playerid = playerId,
                     Numbers = board.Numbers,
                     Times = times,
-                    Price = total,                  // ✅ snapshot (NOT 0 anymore)
+                    Price = total,
                     Remainingweeks = defaultWeeks,
                     Optout = false,
-                    Optoutat = null,
                     Createdat = DateTime.UtcNow
                 };
 
@@ -255,14 +240,13 @@ public class BoardService : IBoardService
                 {
                     repeat.Optout = true;
                     repeat.Optoutat = DateTime.UtcNow;
-                    repeat.Remainingweeks = 0; // mark ended
+                    repeat.Remainingweeks = 0;
                 }
             }
         }
 
         await _db.SaveChangesAsync();
 
-        // return JSON so frontend can update without extra calls
         var stopped = false;
         if (!string.IsNullOrEmpty(board.Repeatid))
         {
@@ -278,13 +262,16 @@ public class BoardService : IBoardService
             IsStopped = stopped
         };
     }
-    
-        public async Task ProcessRepeatOrdersForGameAsync(string gameId)
+
+    // ---------------------------------------------------------
+    // Repeat processing
+    // ---------------------------------------------------------
+    public async Task ProcessRepeatOrdersForGameAsync(string gameId)
     {
         var game = await _db.Games.FirstOrDefaultAsync(g => g.Id == gameId);
-        if (game == null) throw new Exception("Game not found.");
+        if (game == null)
+            throw ApiErrors.NotFound("Game not found.");
 
-        // Only process when winning numbers selected (your "game starts" moment)
         if (game.Winningnumbers == null || game.Winningnumbers.Count == 0)
             return;
 
@@ -293,9 +280,7 @@ public class BoardService : IBoardService
             .ToListAsync();
 
         foreach (var r in repeats)
-        {
             await ProcessSingleRepeatForGameAsync(r.Id, gameId);
-        }
     }
 
     private async Task ProcessSingleRepeatForGameAsync(string repeatId, string gameId)
@@ -320,21 +305,17 @@ public class BoardService : IBoardService
                 .SingleOrDefaultAsync();
 
             if (unitPrice == null)
-                throw new Exception($"No price found for {fields} fields.");
+                throw ApiErrors.NotFound(
+                    $"No price is configured for a board with {fields} fields.");
 
-            // Guard times so total never becomes 0 because of bad data
             var times = repeat.Times <= 0 ? 1 : repeat.Times;
             var total = unitPrice.Value * times;
             var now = DateTime.UtcNow;
-            if (total <= 0)
-                throw new Exception($"Repeat total calculated as {total}. fields={fields}, unitPrice={unitPrice.Value}, times={times}");
 
-            // Lock user row for safe balance update
             var player = await _db.Users
                 .FromSqlInterpolated($@"select * from deadpigeons.""user"" where id = {repeat.Playerid} for update")
                 .SingleAsync();
 
-            // Insufficient balance => stop repeat + rejected transaction
             if (player.Balance < total)
             {
                 _db.Transactions.Add(new Transaction
@@ -344,7 +325,6 @@ public class BoardService : IBoardService
                     Type = "purchase",
                     Amount = -total,
                     Status = "rejected",
-                    Boardid = null,
                     Createdat = now
                 });
 
@@ -357,15 +337,14 @@ public class BoardService : IBoardService
                 return;
             }
 
-            // Create repeated board for THIS game with correct total price
             var board = new Board
             {
                 Id = Guid.NewGuid().ToString(),
                 Playerid = repeat.Playerid,
                 Gameid = gameId,
                 Numbers = repeat.Numbers,
-                Times = times,         
-                Price = total,          
+                Times = times,
+                Price = total,
                 Repeatid = repeat.Id,
                 AutoRepeat = false,
                 Createdat = now,
@@ -373,11 +352,8 @@ public class BoardService : IBoardService
             };
 
             _db.Boards.Add(board);
-
-            // Save board first. Unique index uq_board_repeat_game prevents duplicates.
             await _db.SaveChangesAsync();
 
-            // Deduct + transaction
             player.Balance -= total;
 
             _db.Transactions.Add(new Transaction
@@ -385,7 +361,7 @@ public class BoardService : IBoardService
                 Id = Guid.NewGuid().ToString(),
                 Playerid = repeat.Playerid,
                 Type = "purchase",
-                Amount = -total,        // never 0 now
+                Amount = -total,
                 Status = "approved",
                 Boardid = board.Id,
                 Createdat = now
@@ -403,16 +379,19 @@ public class BoardService : IBoardService
         }
         catch (DbUpdateException ex) when (IsUniqueViolation(ex))
         {
-            // already created a board for (repeatId, gameId) -> do nothing
             await tx.RollbackAsync();
         }
     }
+
     private static bool IsUniqueViolation(DbUpdateException ex)
     {
         var pg = ex.InnerException as PostgresException;
-        return pg?.SqlState == PostgresErrorCodes.UniqueViolation; // 23505
+        return pg?.SqlState == PostgresErrorCodes.UniqueViolation;
     }
 
+    // ---------------------------------------------------------
+    // Board locked status
+    // ---------------------------------------------------------
     public async Task<IsBoardLockedResponse> GetIsBoardLockedAsync()
     {
         var now = DateTime.UtcNow;
@@ -434,7 +413,6 @@ public class BoardService : IBoardService
             };
         }
 
-        // Your rule: purchases allowed ONLY after winning numbers are set
         if (game.Winningnumbers == null || game.Winningnumbers.Count == 0)
         {
             return new IsBoardLockedResponse

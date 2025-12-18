@@ -40,7 +40,20 @@ builder.Services.AddDbContext<MyDbContext>((sp, options) =>
 // =======================
 // Controllers
 // =======================
-builder.Services.AddControllers();
+builder.Services
+    .AddControllers()
+    //  ENSURE MODEL VALIDATION ERRORS USE YOUR API ERROR FORMAT
+    .ConfigureApiBehaviorOptions(options =>
+    {
+        options.InvalidModelStateResponseFactory = context =>
+        {
+            var firstError = context.ModelState.Values
+                .SelectMany(v => v.Errors)
+                .FirstOrDefault()?.ErrorMessage;
+
+            throw ApiErrors.BadRequest(firstError ?? "Invalid request");
+        };
+    });
 
 // =======================
 // Authentication + JWT
@@ -138,7 +151,7 @@ var app = builder.Build();
 // =======================
 app.UseRouting();
 
-//  GLOBAL ERROR HANDLING (ADD THIS)
+//  GLOBAL ERROR HANDLING (VERY IMPORTANT)
 app.UseMiddleware<ApiExceptionMiddleware>();
 
 app.UseCors("AllowFrontend");
@@ -156,7 +169,6 @@ app.GenerateApiClientsFromOpenApi("/../../client/src/generated-ts-client.ts")
 
 app.UseAuthentication();
 app.UseAuthorization();
-
 
 // ============================
 //  AUTH DEBUG MIDDLEWARE

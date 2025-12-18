@@ -1,5 +1,6 @@
 using api.dtos.Requests;
 using api.dtos.Responses;
+using api.Errors;
 using efscaffold.Entities;
 using Infrastructure.Postgres.Scaffolding;
 using Microsoft.EntityFrameworkCore;
@@ -24,16 +25,20 @@ public class RepeatService : IRepeatService
         CancellationToken ct = default)
     {
         if (request.Numbers == null || request.Numbers.Count == 0)
-            throw new ArgumentException("Numbers must not be empty.");
+            throw ApiErrors.BadRequest(
+                "You must select numbers for the repeat.");
 
         if (request.Numbers.Count < 5 || request.Numbers.Count > 8)
-            throw new ArgumentException("Numbers must be between 5 and 8.");
+            throw ApiErrors.BadRequest(
+                "You must select between 5 and 8 numbers.");
 
         if (request.Times <= 0)
-            throw new ArgumentException("Times must be positive.");
+            throw ApiErrors.BadRequest(
+                "Times must be a positive number.");
 
         if (request.Weeks <= 0)
-            throw new ArgumentException("Weeks must be positive.");
+            throw ApiErrors.BadRequest(
+                "Weeks must be a positive number.");
 
         var currentGame = await _db.Games
             .OrderByDescending(g => g.Year)
@@ -41,7 +46,8 @@ public class RepeatService : IRepeatService
             .FirstOrDefaultAsync(ct);
 
         if (currentGame == null)
-            throw new InvalidOperationException("No game available.");
+            throw ApiErrors.Conflict(
+                "No active game is available at the moment.");
 
         var fields = request.Numbers.Count;
 
@@ -49,10 +55,10 @@ public class RepeatService : IRepeatService
             .FirstOrDefaultAsync(bp => bp.Fieldscount == fields, ct);
 
         if (boardPriceRow == null)
-            throw new InvalidOperationException($"No price configured for {fields} fields.");
+            throw ApiErrors.NotFound(
+                $"No price is configured for a board with {fields} numbers.");
 
         var pricePerWeek = boardPriceRow.Price * request.Times;
-
         var repeatId = Guid.NewGuid().ToString();
 
         var repeat = new Repeat
@@ -111,7 +117,6 @@ public class RepeatService : IRepeatService
             .ToListAsync(ct);
 
         var result = new List<RepeatDtoResponse>();
-
         foreach (var repeat in repeats)
             result.Add(await MapToResponseAsync(repeat, ct));
 
@@ -130,7 +135,8 @@ public class RepeatService : IRepeatService
             .FirstOrDefaultAsync(r => r.Id == repeatId && r.Playerid == playerId, ct);
 
         if (repeat == null)
-            throw new KeyNotFoundException("Repeat not found.");
+            throw ApiErrors.NotFound(
+                "The repeat could not be found for your account.");
 
         repeat.Optout = true;
         repeat.Remainingweeks = 0;
@@ -145,131 +151,125 @@ public class RepeatService : IRepeatService
         string gameId,
         CancellationToken ct = default)
     {
-    var game = await _db.Games.FirstOrDefaultAsync(g => g.Id == gameId, ct);
-    if (game == null)
-        throw new KeyNotFoundException("Game not found.");
+        var game = await _db.Games.FirstOrDefaultAsync(g => g.Id == gameId, ct);
+        if (game == null)
+            throw ApiErrors.NotFound("Game not found.");
 
-    // Game must be started (winning numbers set)
-    if (game.Winningnumbers == null || game.Winningnumbers.Count == 0)
-        return;
+        if (game.Winningnumbers == null || game.Winningnumbers.Count == 0)
+            return;
 
-    var repeats = await _db.Repeats
-        .Where(r =>
-            !r.Optout &&
-            r.Remainingweeks > 0 &&
-            r.Createdat < game.Createdat) // ⏱️ FIX: repeat must predate this game
-        .ToListAsync(ct);
+        var repeats = await _db.Repeats
+            .Where(r =>
+                !r.Optout &&
+                r.Remainingweeks > 0 &&
+                r.Createdat < game.Createdat)
+            .ToListAsync(ct);
 
-    if (repeats.Count == 0)
-        return;
+        if (repeats.Count == 0)
+            return;
 
-    var prices = await _db.Boardprices.ToDictionaryAsync(
-        p => p.Fieldscount,
-        p => p.Price,
-        ct);
+        var prices = await _db.Boardprices.ToDictionaryAsync(
+            p => p.Fieldscount,
+            p => p.Price,
+            ct);
 
-    foreach (var repeat in repeats)
-    {
-        await using var tx = await _db.Database.BeginTransactionAsync(ct);
-
-        try
+        foreach (var repeat in repeats)
         {
-            // 🔒 IDEMPOTENCY GUARD
-            var alreadyProcessed = await _db.Boards.AnyAsync(
-                b => b.Gameid == gameId && b.Repeatid == repeat.Id,
-                ct);
+            await using var tx = await _db.Database.BeginTransactionAsync(ct);
 
-            if (alreadyProcessed)
+            try
             {
-                await tx.RollbackAsync(ct);
-                continue;
-            }
+                var alreadyProcessed = await _db.Boards.AnyAsync(
+                    b => b.Gameid == gameId && b.Repeatid == repeat.Id,
+                    ct);
 
-            var numbers = repeat.Numbers ?? new List<int>();
-            if (!prices.TryGetValue(numbers.Count, out var basePrice))
-            {
-                await tx.RollbackAsync(ct);
-                continue;
-            }
+                if (alreadyProcessed)
+                {
+                    await tx.RollbackAsync(ct);
+                    continue;
+                }
 
-            var times = repeat.Price / basePrice;
-            if (times <= 0) times = 1;
+                var numbers = repeat.Numbers ?? new List<int>();
+                if (!prices.TryGetValue(numbers.Count, out var basePrice))
+                {
+                    await tx.RollbackAsync(ct);
+                    continue;
+                }
 
-            var total = basePrice * times;
+                var times = repeat.Price / basePrice;
+                if (times <= 0) times = 1;
 
-            // Lock user row
-            var player = await _db.Users
-                .FromSqlInterpolated($@"
-                    select * from deadpigeons.""user""
-                    where id = {repeat.Playerid} for update")
-                .SingleAsync(ct);
+                var total = basePrice * times;
 
-            // ❌ Insufficient balance → stop repeat
-            if (player.Balance < total)
-            {
+                var player = await _db.Users
+                    .FromSqlInterpolated($@"
+                        select * from deadpigeons.""user""
+                        where id = {repeat.Playerid} for update")
+                    .SingleAsync(ct);
+
+                if (player.Balance < total)
+                {
+                    _db.Transactions.Add(new Transaction
+                    {
+                        Id = Guid.NewGuid().ToString(),
+                        Playerid = repeat.Playerid,
+                        Type = "purchase",
+                        Amount = -total,
+                        Status = "rejected",
+                        Createdat = DateTime.UtcNow
+                    });
+
+                    repeat.Optout = true;
+                    repeat.Remainingweeks = 0;
+
+                    await _db.SaveChangesAsync(ct);
+                    await tx.CommitAsync(ct);
+                    continue;
+                }
+
+                var board = new Board
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    Playerid = repeat.Playerid,
+                    Gameid = gameId,
+                    Numbers = numbers,
+                    Times = times,
+                    Price = total,
+                    Repeatid = repeat.Id,
+                    Createdat = DateTime.UtcNow
+                };
+
+                _db.Boards.Add(board);
+
+                player.Balance -= total;
+
                 _db.Transactions.Add(new Transaction
                 {
                     Id = Guid.NewGuid().ToString(),
                     Playerid = repeat.Playerid,
                     Type = "purchase",
                     Amount = -total,
-                    Status = "rejected",
+                    Status = "approved",
+                    Boardid = board.Id,
                     Createdat = DateTime.UtcNow
                 });
 
-                repeat.Optout = true;
-                repeat.Remainingweeks = 0;
+                repeat.Remainingweeks--;
+                if (repeat.Remainingweeks <= 0)
+                {
+                    repeat.Remainingweeks = 0;
+                    repeat.Optout = true;
+                }
 
                 await _db.SaveChangesAsync(ct);
                 await tx.CommitAsync(ct);
-                continue;
             }
-
-            // ✅ Create board
-            var board = new Board
+            catch
             {
-                Id = Guid.NewGuid().ToString(),
-                Playerid = repeat.Playerid,
-                Gameid = gameId,
-                Numbers = numbers,
-                Times = times,
-                Price = total,
-                Repeatid = repeat.Id,
-                Createdat = DateTime.UtcNow
-            };
-
-            _db.Boards.Add(board);
-
-            // Deduct balance
-            player.Balance -= total;
-
-            _db.Transactions.Add(new Transaction
-            {
-                Id = Guid.NewGuid().ToString(),
-                Playerid = repeat.Playerid,
-                Type = "purchase",
-                Amount = -total,
-                Status = "approved",
-                Boardid = board.Id,
-                Createdat = DateTime.UtcNow
-            });
-
-            repeat.Remainingweeks--;
-            if (repeat.Remainingweeks <= 0)
-            {
-                repeat.Remainingweeks = 0;
-                repeat.Optout = true;
+                await tx.RollbackAsync(ct);
+                throw;
             }
-
-            await _db.SaveChangesAsync(ct);
-            await tx.CommitAsync(ct);
         }
-        catch
-        {
-            await tx.RollbackAsync(ct);
-            throw;
-        }
-    }
     }
 
     // --------------------------------------------------

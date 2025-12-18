@@ -1,6 +1,8 @@
 ﻿using api.Services;
 using api.dtos.Requests;
+using api.Errors;
 using efscaffold.Entities;
+using Infrastructure.Postgres.Scaffolding;
 using Sieve.Models;
 using tests.Fixtures;
 using Xunit;
@@ -15,8 +17,8 @@ public class TransactionServiceTests
         _db = db;
     }
 
-    private TransactionService CreateService(Infrastructure.Postgres.Scaffolding.MyDbContext ctx)
-        => new(ctx, SieveTestFactory.Create()); // 
+    private TransactionService CreateService(MyDbContext ctx)
+        => new(ctx, SieveTestFactory.Create());
 
     // ---------------------------------
     // CREATE DEPOSIT
@@ -65,7 +67,7 @@ public class TransactionServiceTests
     // CREATE DEPOSIT - USER NOT FOUND
     // ---------------------------------
     [Fact]
-    public async Task CreateDepositAsync_Throws_WhenUserNotFound()
+    public async Task CreateDepositAsync_ThrowsNotFound_WhenUserMissing()
     {
         using var ctx = _db.CreateContext();
 
@@ -78,9 +80,11 @@ public class TransactionServiceTests
             MobilePayRef = "MP404"
         };
 
-        await Assert.ThrowsAsync<ArgumentException>(() =>
+        var ex = await Assert.ThrowsAsync<ApiException>(() =>
             service.CreateDepositAsync(request)
         );
+
+        Assert.Equal(404, ex.StatusCode);
     }
 
     // ---------------------------------
@@ -129,17 +133,14 @@ public class TransactionServiceTests
 
         var service = CreateService(ctx);
 
-        var dto = new UpdateTransactionStatusRequest
-        {
-            Status = "approved"
-        };
-
-        var result = await service.UpdateStatusAsync(tx.Id, dto, admin.Id);
+        var result = await service.UpdateStatusAsync(
+            tx.Id,
+            new UpdateTransactionStatusRequest { Status = "approved" },
+            admin.Id
+        );
 
         Assert.Equal("approved", result.Status);
-
-        var updatedUser = ctx.Users.Single(u => u.Id == user.Id);
-        Assert.Equal(250, updatedUser.Balance);
+        Assert.Equal(250, ctx.Users.Single(u => u.Id == user.Id).Balance);
     }
 
     // ---------------------------------
@@ -188,24 +189,21 @@ public class TransactionServiceTests
 
         var service = CreateService(ctx);
 
-        var dto = new UpdateTransactionStatusRequest
-        {
-            Status = "rejected"
-        };
-
-        var result = await service.UpdateStatusAsync(tx.Id, dto, admin.Id);
+        var result = await service.UpdateStatusAsync(
+            tx.Id,
+            new UpdateTransactionStatusRequest { Status = "rejected" },
+            admin.Id
+        );
 
         Assert.Equal("rejected", result.Status);
-
-        var updatedUser = ctx.Users.Single(u => u.Id == user.Id);
-        Assert.Equal(100, updatedUser.Balance);
+        Assert.Equal(100, ctx.Users.Single(u => u.Id == user.Id).Balance);
     }
 
     // ---------------------------------
     // UPDATE STATUS - INVALID STATUS
     // ---------------------------------
     [Fact]
-    public async Task UpdateStatusAsync_Throws_WhenStatusInvalid()
+    public async Task UpdateStatusAsync_ThrowsBadRequest_WhenStatusInvalid()
     {
         using var ctx = _db.CreateContext();
 
@@ -236,19 +234,22 @@ public class TransactionServiceTests
 
         var service = CreateService(ctx);
 
-        await Assert.ThrowsAsync<ArgumentException>(() =>
+        var ex = await Assert.ThrowsAsync<ApiException>(() =>
             service.UpdateStatusAsync(
                 tx.Id,
                 new UpdateTransactionStatusRequest { Status = "lol" },
-                "admin")
+                "admin"
+            )
         );
+
+        Assert.Equal(400, ex.StatusCode);
     }
 
     // ---------------------------------
     // GET BY USER
     // ---------------------------------
     [Fact]
-    public async Task GetByUserAsync_ReturnsUserTransactionsOrderedByDate()
+    public async Task GetByUserAsync_ReturnsNewestFirst()
     {
         using var ctx = _db.CreateContext();
 
@@ -290,23 +291,22 @@ public class TransactionServiceTests
 
         var service = CreateService(ctx);
 
-        var list = await service.GetByUserAsync(user.Id, new SieveModel()); 
+        var list = await service.GetByUserAsync(user.Id, new SieveModel());
 
         Assert.Equal(2, list.Count);
-        Assert.Equal("t2", list[0].Id); // newest first
+        Assert.Equal("t2", list[0].Id);
     }
 
     // ---------------------------------
     // GET PENDING (ADMIN)
     // ---------------------------------
     [Fact]
-    public async Task GetPendingAsync_ReturnsOnlyPendingTransactions()
+    public async Task GetPendingAsync_ReturnsOnlyPending()
     {
         using var ctx = _db.CreateContext();
 
-        //  CLEAN DB (important)
-        ctx.Transactions.RemoveRange(ctx.Transactions);
         ctx.Users.RemoveRange(ctx.Users);
+        ctx.Transactions.RemoveRange(ctx.Transactions);
         await ctx.SaveChangesAsync();
 
         var user = new User
@@ -347,7 +347,7 @@ public class TransactionServiceTests
 
         var service = CreateService(ctx);
 
-        var list = await service.GetPendingAsync(new SieveModel()); 
+        var list = await service.GetPendingAsync(new SieveModel());
 
         Assert.Single(list);
         Assert.Equal("pending", list[0].Status);

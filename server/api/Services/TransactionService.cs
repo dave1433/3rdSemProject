@@ -1,5 +1,6 @@
 ﻿using api.dtos.Requests;
 using api.dtos.Responses;
+using api.Errors;
 using efscaffold.Entities;
 using Infrastructure.Postgres.Scaffolding;
 using Microsoft.EntityFrameworkCore;
@@ -37,6 +38,7 @@ public class TransactionService : ITransactionService
         return transactions.Select(t => new TransactionDtoResponse(t)).ToList();
     }
 
+    // GET pending transactions (admin)
     public async Task<List<TransactionDtoResponse>> GetPendingAsync(SieveModel sieveModel)
     {
         var query = _db.Transactions
@@ -62,15 +64,14 @@ public class TransactionService : ITransactionService
         var user = await _db.Users
             .SingleOrDefaultAsync(u => u.Id == ctr.UserId);
 
-        if (user is null)
-        {
-            throw new ArgumentException("User not found", nameof(ctr.UserId));
-        }
+        if (user == null)
+            throw ApiErrors.NotFound(
+                "The specified user could not be found.");
 
         var tx = new Transaction
         {
             Id = Guid.NewGuid().ToString(),
-            Playerid = ctr.UserId,          // DB column is Playerid
+            Playerid = ctr.UserId,
             Type = "deposit",
             Amount = ctr.Amount,
             Mobilepayref = ctr.MobilePayRef,
@@ -98,10 +99,9 @@ public class TransactionService : ITransactionService
         var tx = await _db.Transactions
             .SingleOrDefaultAsync(t => t.Id == transactionId);
 
-        if (tx is null)
-        {
-            throw new ArgumentException("Transaction not found", nameof(transactionId));
-        }
+        if (tx == null)
+            throw ApiErrors.NotFound(
+                "The transaction could not be found.");
 
         var oldStatus = tx.Status;
         var newStatus = dto.Status.ToLowerInvariant();
@@ -112,9 +112,8 @@ public class TransactionService : ITransactionService
         }
 
         if (newStatus is not ("approved" or "rejected"))
-        {
-            throw new ArgumentException("Status must be 'approved' or 'rejected'.", nameof(dto.Status));
-        }
+            throw ApiErrors.BadRequest(
+                "Transaction status must be either 'approved' or 'rejected'.");
 
         tx.Status = newStatus;
         tx.Processedby = adminUserId;
@@ -125,14 +124,16 @@ public class TransactionService : ITransactionService
         {
             if (tx.Type is "deposit" or "refund")
             {
-                if (tx.Playerid is null)
-                    throw new InvalidOperationException("Transaction missing UserId.");
+                if (tx.Playerid == null)
+                    throw ApiErrors.Conflict(
+                        "This transaction is missing a user reference.");
 
                 var user = await _db.Users
                     .SingleOrDefaultAsync(u => u.Id == tx.Playerid);
 
-                if (user is null)
-                    throw new InvalidOperationException("User not found for transaction.");
+                if (user == null)
+                    throw ApiErrors.NotFound(
+                        "The user associated with this transaction could not be found.");
 
                 // deposit/refund: amount adds to balance
                 user.Balance += tx.Amount;

@@ -1,4 +1,5 @@
 ﻿using api.Services;
+using api.Errors;
 using efscaffold.Entities;
 using Xunit;
 
@@ -72,7 +73,7 @@ public class BoardPriceServiceTests
     // GET PRICE PER BOARD - NOT FOUND
     // ---------------------------------
     [Fact]
-    public async Task GetPricePerBoardAsync_Throws_WhenPriceMissing()
+    public async Task GetPricePerBoardAsync_ThrowsNotFound_WhenMissing()
     {
         using var ctx = _db.CreateContext();
 
@@ -81,8 +82,10 @@ public class BoardPriceServiceTests
 
         var service = new BoardPriceService(ctx);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        var ex = await Assert.ThrowsAsync<ApiException>(() =>
             service.GetPricePerBoardAsync(99)
         );
+
+        Assert.Equal(404, ex.StatusCode);
     }
 }

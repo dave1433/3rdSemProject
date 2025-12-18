@@ -42,7 +42,7 @@
     border-radius: 8px;
     border: 1px solid #ddd;
     background: #f9f6f2;
-    max-height: calc(100vh - 220px);
+    max-height: 600px;
     overflow-y: auto;
 }
 
