@@ -1,6 +1,7 @@
 interface LogoProps {
     className?: string;
     alt?: string;
+    size?: number;
 }
 
 export const Logo = ({
