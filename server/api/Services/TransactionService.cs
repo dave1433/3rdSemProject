@@ -39,7 +39,7 @@ public class TransactionService : ITransactionService
     }
 
     // GET pending transactions (admin)
-    public async Task<List<TransactionDtoResponse>> GetPendingAsync()
+    public async Task<List<TransactionDtoResponse>> GetPendingAsync(SieveModel sieveModel)
     {
         var query = _db.Transactions
             .Include(t => t.Player)
