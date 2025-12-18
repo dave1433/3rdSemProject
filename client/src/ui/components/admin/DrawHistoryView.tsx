@@ -1,5 +1,5 @@
 import React from "react";
-import type { DrawHistory } from "../../core/hooks/useDrawHistory";
+import type { DrawHistory } from "../../../core/hooks/useDrawHistory.ts";
 
 type Props = {
     history: DrawHistory[];

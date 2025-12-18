@@ -11,6 +11,15 @@ export interface BalanceTransaction {
     description: string;
 }
 
+export interface PendingTransactionRow {
+    id: string;
+    createdAt: string;
+    playerName: string;
+    mobilePayId: string;
+    amountDkk: number;
+}
+
+
 export const TYPE_OPTIONS = ["all", "deposit", "purchase", "refund"] as const;
 export type TypeFilter = typeof TYPE_OPTIONS[number];
 

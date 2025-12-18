@@ -1,5 +1,5 @@
 import {usePlayerForm} from "../../core/hooks/usePlayerForm.ts";
-import {PlayerFormView} from "./PlayerFormView.tsx";
+import {PlayerFormView} from "./player/PlayerFormView.tsx";
 
 export const PlayerForm = () => {
     const { form, handleChange, handleSubmit } = usePlayerForm();

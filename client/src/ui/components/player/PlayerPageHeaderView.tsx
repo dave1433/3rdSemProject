@@ -1,7 +1,7 @@
 import { NavLink } from "react-router";
 import { User, LogOut, Menu, X } from "lucide-react";
-import "../css/PlayerPageHeader.css";
-import {Logo} from "./Logo.tsx";
+import "../../css/PlayerPageHeader.css";
+import {Logo} from "../common/Logo.tsx";
 
 const navItems = [
     { label: "Board", path: "/player/board" },

@@ -1,6 +1,6 @@
 ﻿import { Outlet, Navigate } from "react-router";
-import { PlayerPageHeader } from "./PlayerPageHeader";
-import { useCurrentUser } from "../../core/hooks/useCurrentUser";
+import { PlayerPageHeader } from "../components/PlayerPageHeader.tsx";
+import { useCurrentUser } from "../../core/hooks/useCurrentUser.ts";
 
 export default function PlayerRootLayout() {
     const { user, loading } = useCurrentUser();

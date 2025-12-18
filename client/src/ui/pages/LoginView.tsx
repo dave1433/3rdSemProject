@@ -1,7 +1,7 @@
-import { Input } from "../components/Input";
-import { Button } from "../components/Button";
-import { Card } from "../components/Card";
-import { Logo } from "../components/Logo";
+import { Input } from "../components/common/Input.tsx";
+import { Button } from "../components/common/Button.tsx";
+import { Card } from "../components/common/Card.tsx";
+import { Logo } from "../components/common/Logo.tsx";
 import type { FormEvent } from "react";
 
 export const LoginView = ({ onSubmit }: { onSubmit: (e: FormEvent) => void }) => {
