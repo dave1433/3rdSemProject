@@ -1,6 +1,6 @@
-import { Input } from "./Input";
-import { Button } from "./Button";
-import { PhoneInput } from "./PhoneInput";
+import { Input } from "../common/Input.tsx";
+import { Button } from "../common/Button.tsx";
+import { PhoneInput } from "../common/PhoneInput.tsx";
 import type { ChangeEvent, FormEvent } from "react"
 
  interface Props {

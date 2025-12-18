@@ -1,274 +1,56 @@
-import React, { useEffect, useMemo, useState } from "react";
 import "../../css/PlayerBoardPage.css";
 
-import { openapiAdapter } from "../../../api/connection";
-import {
-    BoardClient,
-    BoardPriceClient,
-} from "../../../generated-ts-client";
-
-import type {
-    BoardPriceDtoResponse,
-    CreateBoardRequest,
-} from "../../../generated-ts-client";
-
 import { useCurrentUser } from "../../../core/hooks/useCurrentUser";
+import { usePlayerBoard } from "../../../core/hooks/usePlayerBoard";
+import { getIsoWeekLabel } from "../../../utils/date/getIsoWeekLabel";
+import type { FieldsCount } from "../../../core/board/types";
+import type {FC} from "react";
 
-// ----------------------
-// TYPES
-// ----------------------
-type FieldsCount = 5 | 6 | 7 | 8;
-
-interface BetPlacement {
-    id: string;
-    numbers: number[];
-    fields: number;
-    times: number;
-    unitPriceDkk: number;
-    amountDkk: number;
-}
-
-type PriceMap = Partial<Record<FieldsCount, number>>;
-
-type SubmitStatus =
-    | { type: "idle" }
-    | { type: "loading"; text: string }
-    | { type: "success"; text: string }
-    | { type: "error"; text: string };
-
-// ----------------------
-// CLIENTS
-// ----------------------
-const boardClient = openapiAdapter(BoardClient);
-const boardPriceClient = openapiAdapter(BoardPriceClient);
-
-// ----------------------
-// HELPERS
-// ----------------------
-function getIsoWeekLabel(dateString?: string | null): string {
-    if (!dateString) return "";
-    const d = new Date(dateString);
-    if (Number.isNaN(d.getTime())) return "";
-
-    const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-    const day = date.getUTCDay() || 7;
-    date.setUTCDate(date.getUTCDate() + 4 - day);
-    const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
-    const weekNo = Math.ceil(
-        ((date.getTime() - yearStart.getTime()) / 86400000 + 1) / 7
-    );
-    const year = date.getUTCFullYear();
-    return `Week ${weekNo}, ${year}`;
-}
-
-function getErrorMessage(err: unknown): string {
-    if (err instanceof Error && err.message) return err.message;
-    return "Failed to submit. Please try again.";
-}
-
-// ----------------------
-// COMPONENT
-// ----------------------
-export const PlayerBoardPage: React.FC = () => {
+export const PlayerBoardPage: FC = () => {
     const { user, updateBalance } = useCurrentUser();
+    const FIELD_OPTIONS: FieldsCount[] = [5, 6, 7, 8];
 
-    const playerId = user?.id ?? "";
-    const balanceValue = user?.balance ?? 0;
 
-    const [fieldsCount, setFieldsCount] = useState<FieldsCount>(5);
-    const [selectedNumbers, setSelectedNumbers] = useState<number[]>([]);
-    const [times, setTimes] = useState(1);
-    const [bets, setBets] = useState<BetPlacement[]>([]);
+    const {
+        // state
+        selectedNumbers,
+        bets,
+        fieldsCount,
+        times,
+        loading,
+        error,
+        warningMsg,
+        submitStatus,
 
-    const [priceByFields, setPriceByFields] = useState<PriceMap>({});
-    const [loading, setLoading] = useState(false);
-    const [loadError, setLoadError] = useState<string | null>(null);
+        // derived
+        numbers,
+        price,
+        totalAmount,
+        addLockMessage,
+        submitLockMessage,
+        submitBtnDisabled,
 
-    const [submitStatus, setSubmitStatus] = useState<SubmitStatus>({ type: "idle" });
-    const [warningMsg, setWarningMsg] = useState<string | null>(null);
-
-    const numbers = useMemo(
-        () => Array.from({ length: 16 }, (_, i) => i + 1),
-        []
+        // actions
+        toggleNumber,
+        setFieldsCount,
+        setTimes,
+        clearSelection,
+        addBet,
+        removeBet,
+        submit,
+    } = usePlayerBoard(
+        user?.id ?? "",
+        user?.balance ?? 0,
+        updateBalance
     );
 
-    const fields = selectedNumbers.length;
+    const weekLabel = getIsoWeekLabel(new Date().toISOString());
 
-    const unitPrice = useMemo(
-        () => priceByFields[fieldsCount] ?? 0,
-        [priceByFields, fieldsCount]
-    );
-
-    const price = useMemo(() => {
-        if (fields !== fieldsCount) return 0;
-        return unitPrice * times;
-    }, [fields, fieldsCount, unitPrice, times]);
-
-    const totalAmount = useMemo(
-        () => bets.reduce((sum, b) => sum + b.amountDkk, 0),
-        [bets]
-    );
-
-    const weekLabel = useMemo(
-        () => getIsoWeekLabel(new Date().toISOString()),
-        []
-    );
-
-    // ----------------------
-    // BALANCE LOCKS
-    // ----------------------
-    const canAddToCart = useMemo(() => {
-        if (unitPrice <= 0) return false;
-        if (fields !== fieldsCount) return false;
-
-        const nextAmount = unitPrice * times;
-        return balanceValue >= totalAmount + nextAmount;
-    }, [unitPrice, fields, fieldsCount, times, balanceValue, totalAmount]);
-
-    const canSubmitCart = useMemo(() => {
-        if (bets.length === 0) return false;
-        return balanceValue >= totalAmount;
-    }, [bets.length, balanceValue, totalAmount]);
-
-    const addLockMessage = useMemo(() => {
-        if (unitPrice <= 0) return null;
-        if (fields !== fieldsCount) return null;
-
-        const nextAmount = unitPrice * times;
-        const remaining = balanceValue - totalAmount;
-
-        if (remaining >= nextAmount) return null;
-
-        return `Insufficient balance. You have ${remaining} DKK left for this cart, but this ticket costs ${nextAmount} DKK.`;
-    }, [unitPrice, fields, fieldsCount, times, balanceValue, totalAmount]);
-
-    const submitLockMessage = useMemo(() => {
-        if (bets.length === 0) return null;
-        if (balanceValue >= totalAmount) return null;
-        return `Insufficient balance to submit. Total is ${totalAmount} DKK but your balance is ${balanceValue} DKK.`;
-    }, [bets.length, totalAmount, balanceValue]);
-
-    // ----------------------
-    // LOAD PRICES
-    // ----------------------
-    useEffect(() => {
-        if (!playerId) return;
-
-        (async () => {
-            try {
-                setLoading(true);
-                setLoadError(null);
-
-                const rows: BoardPriceDtoResponse[] =
-                    (await boardPriceClient.getAll()) ?? [];
-
-                const map: PriceMap = {};
-                for (const r of rows) {
-                    if ([5, 6, 7, 8].includes(r.fieldsCount)) {
-                        map[r.fieldsCount as FieldsCount] = r.price;
-                    }
-                }
-                setPriceByFields(map);
-            } catch (e) {
-                console.error(e);
-                setLoadError("Failed to load board page.");
-            } finally {
-                setLoading(false);
-            }
-        })();
-    }, [playerId]);
-
-    // ----------------------
-    // SELECT NUMBER
-    // ----------------------
-    function toggleNumber(n: number) {
-        setSelectedNumbers(prev => {
-            if (prev.includes(n)) return prev.filter(x => x !== n);
-            if (prev.length >= fieldsCount) return prev;
-            return [...prev, n].sort((a, b) => a - b);
-        });
-    }
-
-    // ----------------------
-    // ADD BET
-    // ----------------------
-    function handleMakeBet() {
-        if (!canAddToCart) return;
-
-        setSubmitStatus({ type: "idle" });
-
-        const amount = unitPrice * times;
-
-        setBets(old => [
-            ...old,
-            {
-                id: Date.now().toString(),
-                numbers: selectedNumbers,
-                fields,
-                times,
-                unitPriceDkk: unitPrice,
-                amountDkk: amount,
-            },
-        ]);
-
-        setSelectedNumbers([]);
-        setTimes(1);
-    }
-
-    // ----------------------
-    // SUBMIT
-    // ----------------------
-    async function handleSubmit() {
-        if (!canSubmitCart) return;
-
-        const payload: CreateBoardRequest[] = bets.map(b => ({
-            userId: playerId,
-            numbers: b.numbers,
-            times: b.times,
-        }));
-
-        try {
-            setWarningMsg(null);
-            setSubmitStatus({ type: "loading", text: "Purchasing…" });
-
-            await boardClient.purchase(payload);
-
-            // 🔥 UPDATE GLOBAL BALANCE
-            updateBalance(balanceValue - totalAmount);
-
-            setBets([]);
-            setSelectedNumbers([]);
-            setTimes(1);
-
-            setSubmitStatus({ type: "success", text: "Purchase succeeded ✅" });
-            setTimeout(() => setSubmitStatus({ type: "idle" }), 3000);
-        } catch (err) {
-            const msg = getErrorMessage(err);
-
-            if (msg.includes("draw")) {
-                setWarningMsg(
-                    "This week's game has not been created yet. Please wait for the draw to open."
-                );
-            }
-
-            setSubmitStatus({ type: "error", text: msg });
-            setTimeout(() => setSubmitStatus({ type: "idle" }), 5000);
-        }
-    }
-    
-    const submitBtnDisabled =
-        !canSubmitCart || submitStatus.type === "loading";
-
-    // ----------------------
-    // RENDER
-    // ----------------------
     return (
         <div className="player-board-page">
-
             <main className="player-board-main">
                 <h1 className="player-board-week">{weekLabel}</h1>
 
-                {/*  warning under week */}
                 {warningMsg && (
                     <p className="player-board-status player-board-status--error">
                         {warningMsg}
@@ -276,22 +58,23 @@ export const PlayerBoardPage: React.FC = () => {
                 )}
 
                 {loading && <p className="player-board-status">Loading…</p>}
-                {loadError && (
+                {error && (
                     <p className="player-board-status player-board-status--error">
-                        {loadError}
+                        {error}
                     </p>
                 )}
 
-                {!loading && !loadError && (
+                {!loading && !error && (
                     <div className="player-board-layout">
-                        {/* LEFT SIDE */}
+                        {/* LEFT */}
                         <section className="player-board-left">
                             <div className="player-board-card">
                                 <div className="player-board-grid">
-                                    {numbers.map((n) => {
+                                    {numbers.map(n => {
                                         const selected = selectedNumbers.includes(n);
                                         const disabled =
-                                            !selected && selectedNumbers.length >= fieldsCount;
+                                            !selected &&
+                                            selectedNumbers.length >= fieldsCount;
 
                                         return (
                                             <button
@@ -312,7 +95,7 @@ export const PlayerBoardPage: React.FC = () => {
                                 </div>
 
                                 <div className="player-board-fields-tabs">
-                                    {[5, 6, 7, 8].map((f) => (
+                                    {FIELD_OPTIONS.map(f => (
                                         <button
                                             key={f}
                                             type="button"
@@ -322,16 +105,14 @@ export const PlayerBoardPage: React.FC = () => {
                                                     ? " player-board-fields-tab--active"
                                                     : "")
                                             }
-                                            onClick={() => {
-                                                setFieldsCount(f as FieldsCount);
-                                                setSelectedNumbers((prev) => prev.slice(0, f));
-                                            }}
+                                            onClick={() => setFieldsCount(f)}
                                         >
-                      <span className="player-board-fields-text">
-                        {f} numbers
-                      </span>
+                                            <span className="player-board-fields-text">
+                                                 {f} numbers
+                                            </span>
                                         </button>
                                     ))}
+
                                 </div>
 
                                 <div className="player-board-meta">
@@ -340,21 +121,24 @@ export const PlayerBoardPage: React.FC = () => {
                                         <div className="player-board-times-control">
                                             <button
                                                 type="button"
-                                                onClick={() => setTimes((t) => Math.max(1, t - 1))}
+                                                onClick={() => setTimes(Math.max(1, times - 1))}
                                             >
                                                 −
                                             </button>
 
                                             <input
                                                 type="number"
-                                                value={times}
                                                 min={1}
-                                                onChange={(e) =>
+                                                value={times}
+                                                onChange={e =>
                                                     setTimes(Math.max(1, Number(e.target.value) || 1))
                                                 }
                                             />
 
-                                            <button type="button" onClick={() => setTimes((t) => t + 1)}>
+                                            <button
+                                                type="button"
+                                                onClick={() => setTimes(times + 1)}
+                                            >
                                                 +
                                             </button>
                                         </div>
@@ -362,7 +146,9 @@ export const PlayerBoardPage: React.FC = () => {
 
                                     <div>
                                         <span className="player-board-meta-label">Value</span>
-                                        <div className="player-board-value-box">{price} DKK</div>
+                                        <div className="player-board-value-box">
+                                            {price} DKK
+                                        </div>
                                     </div>
                                 </div>
 
@@ -376,11 +162,7 @@ export const PlayerBoardPage: React.FC = () => {
                                     <button
                                         type="button"
                                         className="player-board-btn player-board-btn--secondary"
-                                        onClick={() => {
-                                            setSelectedNumbers([]);
-                                            setTimes(1);
-                                            setSubmitStatus({ type: "idle" });
-                                        }}
+                                        onClick={clearSelection}
                                     >
                                         Clear
                                     </button>
@@ -388,8 +170,8 @@ export const PlayerBoardPage: React.FC = () => {
                                     <button
                                         type="button"
                                         className="player-board-btn player-board-btn--primary"
-                                        disabled={!canAddToCart}
-                                        onClick={handleMakeBet}
+                                        onClick={addBet}
+                                        disabled={!!addLockMessage}
                                     >
                                         Purchase
                                     </button>
@@ -397,38 +179,28 @@ export const PlayerBoardPage: React.FC = () => {
                             </div>
                         </section>
 
-                        {/* RIGHT SIDE */}
+                        {/* RIGHT */}
                         <section className="player-board-right">
                             <div className="player-board-card player-board-bets-card">
                                 <h2>My Board Numbers</h2>
 
                                 {bets.length === 0 ? (
-                                    <p className="player-board-bets-empty">No purchase yet.</p>
+                                    <p className="player-board-bets-empty">
+                                        No purchase yet.
+                                    </p>
                                 ) : (
                                     <table className="player-board-bets-table">
-                                        <thead>
-                                        <tr>
-                                            <th>Numbers</th>
-                                            <th>Times</th>
-                                            <th>Amount</th>
-                                            <th />
-                                        </tr>
-                                        </thead>
-
                                         <tbody>
-                                        {bets.map((b) => (
+                                        {bets.map(b => (
                                             <tr key={b.id}>
                                                 <td>{b.numbers.join(", ")}</td>
                                                 <td>{b.times}</td>
                                                 <td>{b.amountDkk} DKK</td>
-                                                <td className="player-board-bets-remove">
+                                                <td>
                                                     <button
                                                         type="button"
-                                                        className="player-board-bets-remove-btn"
                                                         disabled={submitStatus.type === "loading"}
-                                                        onClick={() =>
-                                                            setBets((bs) => bs.filter((x) => x.id !== b.id))
-                                                        }
+                                                        onClick={() => removeBet(b.id)}
                                                     >
                                                         ✕
                                                     </button>
@@ -441,9 +213,9 @@ export const PlayerBoardPage: React.FC = () => {
 
                                 <div className="player-board-bets-footer">
                                     <div className="player-board-bets-summary-row">
-                    <span>
-                      Amount: <strong>{totalAmount} DKK</strong>
-                    </span>
+                                        <span>
+                                           Amount: <strong>{totalAmount} DKK</strong>
+                                        </span>
                                     </div>
 
                                     {submitLockMessage && (
@@ -457,26 +229,12 @@ export const PlayerBoardPage: React.FC = () => {
                                             type="button"
                                             className="player-board-bets-btn player-board-bets-btn--submit"
                                             disabled={submitBtnDisabled}
-                                            onClick={handleSubmit}
+                                            onClick={submit}
                                         >
-                                            {submitStatus.type === "loading" ? "Purchasing…" : "Submit"}
+                                            {submitStatus.type === "loading"
+                                                ? "Purchasing…"
+                                                : "Submit"}
                                         </button>
-
-                                        {/* ✅ message directly under the submit button */}
-                                        {submitStatus.type !== "idle" && (
-                                            <p
-                                                className={
-                                                    "player-board-submit-msg " +
-                                                    (submitStatus.type === "error"
-                                                        ? "player-board-submit-msg--error"
-                                                        : submitStatus.type === "success"
-                                                            ? "player-board-submit-msg--success"
-                                                            : "player-board-submit-msg--loading")
-                                                }
-                                            >
-                                                {submitStatus.text}
-                                            </p>
-                                        )}
                                     </div>
                                 </div>
                             </div>

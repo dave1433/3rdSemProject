@@ -1,6 +1,6 @@
 import React from "react";
 import { usePlayerHeader } from "../../core/hooks/usePlayerHeader";
-import { PlayerPageHeaderView } from "./PlayerPageHeaderView";
+import { PlayerPageHeaderView } from "./player/PlayerPageHeaderView.tsx";
 
 export const PlayerPageHeader: React.FC = () => {
     const {

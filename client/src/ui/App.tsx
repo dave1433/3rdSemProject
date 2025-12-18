@@ -3,7 +3,7 @@ import {
     Navigate,
     RouterProvider,
 } from "react-router";
-import PlayerRootLayout from "./components/PlayerRootLayout";
+import PlayerRootLayout from "./layout/PlayerRootLayout.tsx";
 
 import { PlayerBoardPage } from "./pages/player/PlayerBoardPage";
 import { PlayerHistoryPage } from "./pages/player/PlayerHistoryPage";

@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { Player } from "../../core/hooks/usePlayerList";
-import { apiPatch, openapiAdapter } from "../../api/connection";
-import { UserClient } from "../../generated-ts-client";
-import type { UserResponse } from "../../generated-ts-client";
+import type { Player } from "../../../core/hooks/usePlayerList.tsx";
+import { apiPatch, openapiAdapter } from "../../../api/connection.ts";
+import { UserClient } from "../../../generated-ts-client.ts";
+import type { UserResponse } from "../../../generated-ts-client.ts";
 
 interface Props {
     players: Player[]; // kept for compatibility, but we fetch from API

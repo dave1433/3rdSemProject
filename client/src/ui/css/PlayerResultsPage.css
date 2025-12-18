@@ -1,9 +1,17 @@
+/* ======================================================
+   RESULTS PAGE 
+   ====================================================== */
+/* match Board/History page background */
 .results-page {
     min-height: 100vh;
     background: #D9D9D9;
     display: flex;
     flex-direction: column;
 }
+
+/* ------------------------------------------------------
+   INNER WRAPPER
+   ------------------------------------------------------ */
 
 .results-inner {
     font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
@@ -15,24 +23,9 @@
     box-sizing: border-box;
 }
 
-/* header */
-.results-number-row {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-}
-
-.results-number-pill {
-    width: 28px;
-    height: 28px;
-    border-radius: 999px;
-    background: #bbaea8;          /* same beige as other number pills */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.85rem;
-    color: #262626;
-}
+/* ------------------------------------------------------
+   TITLES
+   ------------------------------------------------------ */
 
 .results-title {
     font-size: 1.6rem;
@@ -82,16 +75,23 @@
     overflow-y: auto;
 }
 
-.results-table thead th {
-    position: sticky;
-    top: 0;
-    z-index: 999;
-}
+/* ------------------------------------------------------
+   TABLE
+   ------------------------------------------------------ */
 
 .results-table {
     width: 100%;
     border-collapse: collapse;
     font-size: 0.9rem;
+}
+
+.results-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    text-align: left;
+    background: #ebe6de;
+    font-weight: 600;
 }
 
 .results-table th,
@@ -100,43 +100,22 @@
     border-bottom: 1px solid #e0ddd8;
 }
 
-.results-table th {
-    text-align: left;
-    background: #ebe6de;
-    font-weight: 600;
-}
-
 .results-table tr:nth-child(even) td {
     background: #f5f1eb;
 }
 
-/* winning amount badges */
-.results-amount-badge {
-    display: inline-block;
-    padding: 2px 10px;
-    border-radius: 999px;
-    font-size: 0.8rem;
-    font-weight: 500;
-}
+/* ------------------------------------------------------
+   NUMBERS
+   ------------------------------------------------------ */
 
-.results-amount-badge--win {
-    background: #00a86b1a;
-    color: #007046;
-}
-
-.results-amount-badge--zero {
-    background: #e0ded9;
-    color: #555;
-}
-
-.results-number-row{
+.results-number-row {
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
     align-items: center;
 }
 
-.results-winning-square{
+.results-winning-square {
     width: 36px;
     height: 36px;
     display: inline-flex;
@@ -149,11 +128,40 @@
     font-size: 12px;
 }
 
-@media (max-width: 900px) {
-    .results-page {
-        flex-direction: column;
-        gap: 16px;
-    }
+/* ------------------------------------------------------
+   WIN AMOUNT BADGES
+   ------------------------------------------------------ */
+
+.results-amount-badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 500;
 }
 
+.results-amount-badge--win {
+    background: rgba(0, 168, 107, 0.15);
+    color: #007046;
+}
 
+.results-amount-badge--zero {
+    background: #e0ded9;
+    color: #555;
+}
+
+/* ------------------------------------------------------
+   MOBILE FIXES (CRITICAL)
+   ------------------------------------------------------ */
+
+@media (max-width: 768px) {
+    /* prevent background bleed under fixed header */
+    .results-inner {
+        padding-top: 16px;
+    }
+
+    /* offset sticky table header from mobile navbar */
+    .results-table thead th {
+        top: 0; /* mobile header height */
+    }
+}
