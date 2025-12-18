@@ -6,6 +6,15 @@ import {
 } from "../../generated-ts-client";
 import type { BalanceTransaction } from "./types";
 
+export interface PendingTransactionRow {
+    id: string;
+    createdAt: string;
+    playerName: string;
+    mobilePayId: string;
+    amountDkk: number;
+}
+
+
 const transactionClient = openapiAdapter(TransactionClient);
 
 export function mapTransaction(
@@ -69,8 +78,29 @@ export async function fetchUserTransactions(
     return (rows ?? []).map(mapTransaction);
 }
 
+export async function fetchPendingTransactions(): Promise<PendingTransactionRow[]> {
+    const backend: TransactionDtoResponse[] =
+        (await transactionClient.getPending()) ?? [];
+
+    return backend.map(t => ({
+        id: t.id,
+        createdAt: t.createdAt ?? new Date().toISOString(),
+        playerName: t.fullName ?? "Unknown user",
+        mobilePayId: t.mobilePayRef ?? "",
+        amountDkk: t.amount ?? 0,
+    }));
+}
+
 export async function createDeposit(
     req: CreateTransactionRequest
 ) {
     return transactionClient.createDeposit(req);
+}
+
+export async function approveTransaction(id: string): Promise<void> {
+    await transactionClient.updateStatus(id, { status: "approved" });
+}
+
+export async function rejectTransaction(id: string): Promise<void> {
+    await transactionClient.updateStatus(id, { status: "rejected" });
 }

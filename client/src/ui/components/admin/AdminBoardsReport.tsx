@@ -1,5 +1,5 @@
 ﻿import { useState } from "react";
-import { apiGet } from "../../api/connection";
+import { apiGet } from "../../../api/connection.ts";
 
 interface AdminBoard {
     boardId: string;

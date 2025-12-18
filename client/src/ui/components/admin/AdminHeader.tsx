@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { AdminHeaderView } from "./AdminHeaderView";
+import { AdminHeaderView } from "./sections/AdminHeaderView.tsx";
 
 interface Props {
     activeTab: string;

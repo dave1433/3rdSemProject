@@ -1,7 +1,7 @@
-import { Logo } from "./Logo";
+import { Logo } from "../../common/Logo.tsx";
 import { User, LogOut, Menu, X, Bell } from "lucide-react";
-import { AdminMobileNavView } from "./AdminMobileNavView";
-import "../css/AdminHeader.css";
+import { AdminMobileNavView } from "../AdminMobileNavView.tsx";
+import "../../../css/AdminHeader.css";
 
 interface Tab {
     id: string;
