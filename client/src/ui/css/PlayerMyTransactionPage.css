@@ -87,6 +87,7 @@
 .balance-section-title {
     font-size: 1.05rem;
     margin: 0 0 4px 0;
+    font-weight: 600;
 }
 
 .balance-section-subtitle {
@@ -258,6 +259,127 @@
     background: #f6d3d0;
     color: #b02a1a;
 }
+
+.req{
+    color: #b02a1a;}
+
+/* Make the balance history table scroll when there are many rows */
+.balance-table-wrapper {
+    max-height: calc(100vh - 240px);
+    overflow-y: auto;
+}
+
+.balance-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+/* Toolbar wrapper */
+.tx-toolbar{
+    display: flex;
+    flex-direction: column;      /* ✅ 2 rows */
+    gap: 12px;
+    padding: 12px;
+    border: 1px solid rgba(0,0,0,0.08);
+    border-radius: 12px;
+    background: rgba(255,255,255,0.55);
+    backdrop-filter: blur(6px);
+    margin-bottom: 12px;
+}
+
+/* each row */
+.tx-row{
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+}
+
+/* Row 1: keep controls on one line, allow scroll if too tight */
+.tx-row--top{
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 2px;
+}
+
+/* Row 2: page size left, pagination right */
+.tx-row--bottom{
+    justify-content: space-between;
+}
+
+/* control block */
+.tx-control{
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 140px;
+}
+
+.tx-label{
+    font-size: 12px;
+    font-weight: 600;
+    opacity: 0.75;
+}
+
+.tx-select{
+    height: 30px;
+    padding: 0 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(0,0,0,0.12);
+    background: #fff;
+    font-size: 14px;
+}
+
+/* pager */
+.tx-pager{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.tx-page-indicator{
+    font-size: 13px;
+    font-weight: 600;
+    opacity: 0.8;
+}
+
+.tx-page-btn{
+    height: 38px;
+    padding: 0 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(0,0,0,0.12);
+    background: #fff;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.tx-page-btn:disabled{
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Mobile: stack nicely */
+@media (max-width: 720px) {
+    .tx-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .tx-toolbar__right {
+        justify-content: space-between;
+    }
+
+    .tx-control {
+        min-width: 0;
+        flex: 1;
+    }
+
+    .tx-toolbar__left {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
 @media (max-width: 900px) {
     .balance-layout {
         flex-direction: column;

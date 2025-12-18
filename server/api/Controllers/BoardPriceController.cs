@@ -1,12 +1,14 @@
 using api.dtos.Responses;
 using api.Services;
 using Microsoft.AspNetCore.Mvc;
-using Infrastructure.Postgres.Scaffolding; 
+using Infrastructure.Postgres.Scaffolding;
+using Microsoft.AspNetCore.Authorization;
 
 namespace api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class BoardPriceController : ControllerBase
 {
     private readonly IBoardPriceService _service;

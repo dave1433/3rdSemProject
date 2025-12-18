@@ -1,6 +1,8 @@
 ﻿using api.Services;
 using api.dtos.Requests;
 using efscaffold.Entities;
+using Sieve.Models;
+using tests.Fixtures;
 using Xunit;
 
 [Collection("Postgres")]
@@ -12,6 +14,9 @@ public class TransactionServiceTests
     {
         _db = db;
     }
+
+    private TransactionService CreateService(Infrastructure.Postgres.Scaffolding.MyDbContext ctx)
+        => new(ctx, SieveTestFactory.Create()); // 
 
     // ---------------------------------
     // CREATE DEPOSIT
@@ -35,7 +40,7 @@ public class TransactionServiceTests
         ctx.Users.Add(user);
         await ctx.SaveChangesAsync();
 
-        var service = new TransactionService(ctx);
+        var service = CreateService(ctx);
 
         var request = new CreateTransactionRequest
         {
@@ -64,7 +69,7 @@ public class TransactionServiceTests
     {
         using var ctx = _db.CreateContext();
 
-        var service = new TransactionService(ctx);
+        var service = CreateService(ctx);
 
         var request = new CreateTransactionRequest
         {
@@ -103,7 +108,7 @@ public class TransactionServiceTests
             Email = "admin@test.com",
             Fullname = "Admin User",
             Password = "hashed",
-            Role = 1,      // admin
+            Role = 1,
             Balance = 0,
             Active = true
         };
@@ -122,7 +127,7 @@ public class TransactionServiceTests
         ctx.Transactions.Add(tx);
         await ctx.SaveChangesAsync();
 
-        var service = new TransactionService(ctx);
+        var service = CreateService(ctx);
 
         var dto = new UpdateTransactionStatusRequest
         {
@@ -162,7 +167,7 @@ public class TransactionServiceTests
             Email = "admin2@test.com",
             Fullname = "Admin Two",
             Password = "hashed",
-            Role = 1,      // admin
+            Role = 1,
             Balance = 0,
             Active = true
         };
@@ -181,7 +186,7 @@ public class TransactionServiceTests
         ctx.Transactions.Add(tx);
         await ctx.SaveChangesAsync();
 
-        var service = new TransactionService(ctx);
+        var service = CreateService(ctx);
 
         var dto = new UpdateTransactionStatusRequest
         {
@@ -195,7 +200,6 @@ public class TransactionServiceTests
         var updatedUser = ctx.Users.Single(u => u.Id == user.Id);
         Assert.Equal(100, updatedUser.Balance);
     }
-
 
     // ---------------------------------
     // UPDATE STATUS - INVALID STATUS
@@ -230,7 +234,7 @@ public class TransactionServiceTests
         ctx.Transactions.Add(tx);
         await ctx.SaveChangesAsync();
 
-        var service = new TransactionService(ctx);
+        var service = CreateService(ctx);
 
         await Assert.ThrowsAsync<ArgumentException>(() =>
             service.UpdateStatusAsync(
@@ -284,9 +288,9 @@ public class TransactionServiceTests
 
         await ctx.SaveChangesAsync();
 
-        var service = new TransactionService(ctx);
+        var service = CreateService(ctx);
 
-        var list = await service.GetByUserAsync(user.Id);
+        var list = await service.GetByUserAsync(user.Id, new SieveModel()); 
 
         Assert.Equal(2, list.Count);
         Assert.Equal("t2", list[0].Id); // newest first
@@ -308,7 +312,7 @@ public class TransactionServiceTests
         var user = new User
         {
             Id = "user-6",
-            Email = "pending@test.com",   // now guaranteed unique
+            Email = "pending@test.com",
             Fullname = "Admin Test",
             Password = "hashed",
             Role = 2,
@@ -341,12 +345,11 @@ public class TransactionServiceTests
 
         await ctx.SaveChangesAsync();
 
-        var service = new TransactionService(ctx);
+        var service = CreateService(ctx);
 
-        var list = await service.GetPendingAsync();
+        var list = await service.GetPendingAsync(new SieveModel()); 
 
         Assert.Single(list);
         Assert.Equal("pending", list[0].Status);
     }
 }
-

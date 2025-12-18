@@ -4,6 +4,7 @@ using efscaffold.Entities;
 using Infrastructure.Postgres.Scaffolding;
 using Microsoft.Extensions.Logging.Abstractions;
 using System.Security.Claims;
+using tests.Fixtures;
 using Xunit;
 
 [Collection("Postgres")]
@@ -17,7 +18,7 @@ public class UserServiceTests
     }
 
     private UserService CreateService(MyDbContext ctx)
-        => new(ctx, NullLogger<UserService>.Instance);
+        => new(ctx, NullLogger<UserService>.Instance, SieveTestFactory.Create()); 
 
     // --------------------------------------------------
     // Helpers
