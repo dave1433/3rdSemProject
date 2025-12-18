@@ -212,7 +212,11 @@ export const PlayerBoardPage: FC = () => {
                                 )}
 
                                 <div className="player-board-bets-footer">
-                                    <strong>{totalAmount} DKK</strong>
+                                    <div className="player-board-bets-summary-row">
+                                        <span>
+                                           Amount: <strong>{totalAmount} DKK</strong>
+                                        </span>
+                                    </div>
 
                                     {submitLockMessage && (
                                         <p className="player-board-status player-board-status--error">
@@ -220,15 +224,18 @@ export const PlayerBoardPage: FC = () => {
                                         </p>
                                     )}
 
-                                    <button
-                                        type="button"
-                                        disabled={submitBtnDisabled}
-                                        onClick={submit}
-                                    >
-                                        {submitStatus.type === "loading"
-                                            ? "Purchasing…"
-                                            : "Submit"}
-                                    </button>
+                                    <div className="player-board-bets-buttons">
+                                        <button
+                                            type="button"
+                                            className="player-board-bets-btn player-board-bets-btn--submit"
+                                            disabled={submitBtnDisabled}
+                                            onClick={submit}
+                                        >
+                                            {submitStatus.type === "loading"
+                                                ? "Purchasing…"
+                                                : "Submit"}
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </section>

@@ -20,11 +20,13 @@ export async function fetchPlayerHistory(
     ]);
 
     const repMap = new Map<string, RepeatDtoResponse>();
-    (repeats ?? []).forEach((r: RepeatDtoResponse) => repMap.set(r.id, r));
+    (repeats ?? []).forEach((r: RepeatDtoResponse) =>
+        repMap.set(r.id, r)
+    );
 
     return (boards ?? []).map((b: BoardDtoResponse) => {
-        const rid = b.repeatId ?? undefined;
-        const rep = rid ? repMap.get(rid) : undefined;
+        const repeatId = b.repeatId ?? undefined;
+        const repeat = repeatId ? repMap.get(repeatId) : undefined;
 
         return {
             id: b.id,
@@ -33,9 +35,14 @@ export async function fetchPlayerHistory(
             numbers: b.numbers ?? [],
             times: b.times ?? 1,
             totalAmountDkk: b.price ?? 0,
+
+            // DO NOT invert backend values
             autoRepeat: !b.autoRepeat,
-            repeatId: rid,
-            repeatOptOut: rep ? !rep.optOut : false,
+
+            repeatId,
+
+            // DO NOT invert this either
+            repeatOptOut: repeat ? !repeat.optOut : false,
         };
     });
 }

@@ -14,6 +14,14 @@ export function usePlayerHeader() {
         setMenuOpen(false);
     }, [location.pathname]);
 
+    useEffect(() => {
+        document.body.style.overflow = menuOpen ? "hidden" : "";
+        return () => {
+            document.body.style.overflow = "";
+        };
+    }, [menuOpen]);
+
+
     function toggleMenu() {
         setMenuOpen(v => !v);
     }
