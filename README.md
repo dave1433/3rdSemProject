@@ -136,6 +136,7 @@ No token required:
 
 ### Authenticated user (role = Player or Admin)
 Users must be logged in (JWT required).
+
 **Boards**
 - `GET /api/board/user/{userId}` (player = only own boards; admin = any user)
 
@@ -165,6 +166,7 @@ Players must be authenticated.
 
 ### Admin only (role = Admin)
 Admins must be authenticated.
+
 **Admin game management**
 - `POST /api/admin/games/draw` (trigger draw)
 - `GET /api/admin/games/draw/status` (view draw status)
@@ -190,7 +192,7 @@ Admins must be authenticated.
 ![DBdeadpigeons.png](client/public/DBdeadpigeons.png)
 
 ## Deployment
-** The backend is deployed using Docker and Fly.io.
+**The backend is deployed using Docker and Fly.io.**
 - The API is built with a multi-stage Docker build
 - A lightweight ASP.NET runtime image is used in production
 - Deployed to Fly.io in the fra region
@@ -204,7 +206,7 @@ Admins must be authenticated.
 - Frontend runs on http://localhost:5173
 - API requests are proxied to the backend
 - CORS allows the local frontend origin
-  ** Production
+**Production**
 - Frontend and backend are hosted separately
 - Backend is accessed over HTTPS via Fly.io
 - CORS allows only the production frontend domain
