@@ -38,7 +38,8 @@ public class TransactionService : ITransactionService
         return transactions.Select(t => new TransactionDtoResponse(t)).ToList();
     }
 
-    public async Task<List<TransactionDtoResponse>> GetPendingAsync(SieveModel sieveModel)
+    // GET pending transactions (admin)
+    public async Task<List<TransactionDtoResponse>> GetPendingAsync()
     {
         var query = _db.Transactions
             .Include(t => t.Player)
@@ -106,7 +107,9 @@ public class TransactionService : ITransactionService
         var newStatus = dto.Status.ToLowerInvariant();
 
         if (oldStatus == newStatus)
+        {
             return new TransactionDtoResponse(tx);
+        }
 
         if (newStatus is not ("approved" or "rejected"))
             throw ApiErrors.BadRequest(
@@ -132,7 +135,7 @@ public class TransactionService : ITransactionService
                     throw ApiErrors.NotFound(
                         "The user associated with this transaction could not be found.");
 
-                // deposit / refund increases balance
+                // deposit/refund: amount adds to balance
                 user.Balance += tx.Amount;
             }
         }
