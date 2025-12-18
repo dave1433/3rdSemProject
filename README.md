@@ -1,34 +1,34 @@
 # Dead Pigeons 🐦 (3rd Semester Project)
 
 - [Dead Pigeons](#dead-pigeons)
-  - [Live demo](#live-demo)
-      - [Run API](#run-api)
-      - [Run Client](#run-client)
-      - [Run Tests](#run-tests)
-  - [Prerequisites](#prerequisites)
-  - [Environment](#environment)
-  - [Configuration](#configuration)
-      - [API configuration](#api-configuration)
-      - [Client configuration](#client-configuration)
-      - [Testing](#testing)
-          - [How we test](#how-we-test)
-  - [Linting](#linting)
-  - [Authentication](#authentication)
-  - [JWT](#jwt)
-  - [Authorization](#authorization)
-      - [Anonymous (not logged in)](#anonymous-not-logged-in)
-      - [Authenticated user (role = Player or Admin)](#authenticated-user-role--player-or-admin)
-      - [Player only (role = Player)](#player-only-role--player)
-      - [Admin only (role = Admin)](#admin-only-role--admin)
-  - [Architecture / Data model](#architecture--data-model)
-  - [Deployment](#deployment)
-      - [Proxy & Frontend Integration](#proxy--frontend-integration)
-  - [Limitations](#limitations)
+    - [Live demo](#live-demo)
+        - [Run API](#run-api)
+        - [Run Client](#run-client)
+        - [Run Tests](#run-tests)
+    - [Prerequisites](#prerequisites)
+    - [Environment](#environment)
+    - [Configuration](#configuration)
+        - [API configuration](#api-configuration)
+        - [Client configuration](#client-configuration)
+        - [Testing](#testing)
+            - [How we test](#how-we-test)
+    - [Linting](#linting)
+    - [Authentication](#authentication)
+    - [JWT](#jwt)
+    - [Authorization](#authorization)
+        - [Anonymous (not logged in)](#anonymous-not-logged-in)
+        - [Authenticated user (role = Player or Admin)](#authenticated-user-role--player-or-admin)
+        - [Player only (role = Player)](#player-only-role--player)
+        - [Admin only (role = Admin)](#admin-only-role--admin)
+    - [Architecture / Data model](#architecture--data-model)
+    - [Deployment](#deployment)
+        - [Proxy & Frontend Integration](#proxy--frontend-integration)
+    - [Limitations](#limitations)
 
 ## Dead Pigeons
-This project was developed for the local sports club, Jerne IF. 
-It delivers a web-based solution that digitizes the game workflow, 
-making it easier to operate the game, manage players and boards, 
+This project was developed for the local sports club, Jerne IF.
+It delivers a web-based solution that digitizes the game workflow,
+making it easier to operate the game, manage players and boards,
 and scale as participation grows.
 Our project has Mobile-friendly UI (responsive layout for phone/tablet).
 
@@ -80,7 +80,7 @@ Full-stack lottery web application with:
 - Swagger is enabled (please see `server/api/Program.cs`).
 - Sieve is enabled for selected list endpoints (filter/sort/paging via query parameters using `SieveModel`).
 
-### Client configuration 
+### Client configuration
 - `VITE_API_URL` is stored in `client/.env`.
 - Build modes: development vs production (Vite).
 - Proxy settings for local development are configured in `client/vite.config.ts`.
@@ -92,7 +92,7 @@ Full-stack lottery web application with:
 - XUnit.DependencyInjection for test setup / DI wiring.
 
 ## Linting
-Client linting is handled with ESLint (TypeScript + React rules). 
+Client linting is handled with ESLint (TypeScript + React rules).
 `eslint.config.js` contains the configuration.
 The client uses ESLint (v9 “flat config”) with TypeScript + React rules.
 
@@ -103,11 +103,11 @@ The client uses ESLint (v9 “flat config”) with TypeScript + React rules.
 - Ignored:
     - `dist/`
 - Rules include:
-    - `@eslint/js` 
-    - `typescript-eslint` 
-    - `eslint-plugin-react-hooks` 
+    - `@eslint/js`
+    - `typescript-eslint`
+    - `eslint-plugin-react-hooks`
     - `eslint-plugin-react-refresh` (Vite)
- 
+
 ## Authentication
 The API uses email + password login.
 - Users log in with **email** and **password**.
@@ -217,3 +217,4 @@ Admins must be authenticated.
   User registration does not include email verification or “forgot password” functionality.
 - **No internationalization (i18n).**
   The client UI does not support multiple languages.
+
