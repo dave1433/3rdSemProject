@@ -45,6 +45,9 @@
 
 /* cards */
 .balance-card {
+    display: flex;
+    flex-direction: column;
+    max-height: 850px;
     background: #f9f6f2;
     border-radius: 12px;
     border: 1px solid #d4cec7;
@@ -155,6 +158,7 @@
 /* pending deposits list */
 .balance-pending-card {
     margin-top: 4px;
+    max-height: 456px;
 }
 
 .balance-pending-list {
@@ -164,6 +168,7 @@
     display: flex;
     flex-direction: column;
     gap: 6px;
+    overflow-y: auto;
 }
 
 .balance-pending-item {
@@ -187,10 +192,12 @@
 }
 
 /* history table */
-.balance-table-wrapper {
+.balance-table-scrollable-wrapper {
+    display: flex;
+    overflow-y: auto;
+    flex: 1;
     margin-top: 8px;
     border-radius: 8px;
-    overflow: hidden;
     border: 1px solid #ddd;
     background: #f9f6f2;
 }
@@ -208,8 +215,11 @@
 }
 
 .balance-table th {
-    text-align: left;
+    position: sticky;
+    top: 0;
     background: #ebe6de;
+    z-index: 1;
+    text-align: left;
     font-weight: 600;
 }
 
@@ -373,5 +383,17 @@
 @media (max-width: 900px) {
     .balance-layout {
         flex-direction: column;
+    }
+
+    .balance-card{
+        max-height: 500px;
+    }
+
+    .balance-pending-card {
+        max-height: 300px;
+    }
+
+    .balance-table-scrollable-wrapper {
+        overflow-x: auto;
     }
 }

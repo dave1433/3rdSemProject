@@ -8,6 +8,7 @@ import { DrawHistoryTable } from "../components/DrawHistoryTable";
 import { PendingTransactions } from "../components/PendingTransactions";
 import { AdminBoardsView } from "../components/AdminBoardsView";
 import { useAdminBoards } from "../../core/hooks/useAdminBoards";
+import { useAdminHeader } from "../../core/hooks/useAdminHeader";
 
 export const AdminDashboard = () => {
     const navigate = useNavigate();
@@ -16,44 +17,44 @@ export const AdminDashboard = () => {
     const [activeTab, setActiveTab] = useState("players");
     const [showBoards, setShowBoards] = useState(false);
 
+    // ✅ SINGLE SOURCE OF TRUTH FOR HEADER + NOTIFICATIONS
+    const adminHeader = useAdminHeader();
+
     const { boards, loading, error, reload } = useAdminBoards();
 
     useEffect(() => {
-        const verify = () => {
-            const token = localStorage.getItem("token");
-            const role = localStorage.getItem("role");
+        const token = localStorage.getItem("token");
+        const role = localStorage.getItem("role");
 
-            if (!token) {
-                navigate("/login");
-                setAuthorized(false);
-                return;
-            }
+        if (!token) {
+            navigate("/login");
+            setAuthorized(false);
+            return;
+        }
 
-            if (role !== "1") {
-                navigate("/player");
-                setAuthorized(false);
-                return;
-            }
+        if (role !== "1") {
+            navigate("/player");
+            setAuthorized(false);
+            return;
+        }
 
-            // ✅ now we are sure -> allow rendering
-            setAuthorized(true);
-        };
-
-        verify();
+        setAuthorized(true);
     }, [navigate]);
 
-    // ⛔ DO NOT RENDER ANY DASHBOARD CONTENT UNTIL AUTH IS DECIDED
+    // ⛔ WAIT FOR AUTH CHECK
     if (authorized === null) {
         return <div className="p-6 text-gray-600">Checking admin permissions…</div>;
     }
 
-    // If authorization failed, redirect already happened
     if (!authorized) return null;
 
-    // ✅ SAFE: everything below only renders if admin is authenticated
     return (
         <>
-            <AdminHeader activeTab={activeTab} onChangeTab={setActiveTab} />
+            <AdminHeader
+                activeTab={activeTab}
+                onChangeTab={setActiveTab}
+                headerState={adminHeader}
+            />
 
             <div className="p-6">
                 {activeTab === "players" && (
@@ -67,14 +68,18 @@ export const AdminDashboard = () => {
                     </div>
                 )}
 
-                {activeTab === "game" && authorized && (
+                {activeTab === "game" && (
                     <div className="flex flex-col gap-6">
-                        <WinningNumbersCard authorized={authorized} />
-                        <DrawHistoryTable authorized={authorized} />
+                        <WinningNumbersCard authorized />
+                        <DrawHistoryTable authorized />
                     </div>
                 )}
 
-                {activeTab === "transactions" && <PendingTransactions />}
+                {activeTab === "transactions" && (
+                    <PendingTransactions
+                        onStatusChange={adminHeader.reloadPendingTransactions}
+                    />
+                )}
 
                 {activeTab === "history" && (
                     <AdminBoardsView

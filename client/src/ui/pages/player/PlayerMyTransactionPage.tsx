@@ -410,7 +410,7 @@ export const PlayerMyTransactionPage: React.FC = () => {
                                 </div>
                             </div>
 
-                            <div className="balance-table-wrapper">
+                            <div className="balance-table-scrollable-wrapper">
                                 <table className="balance-table">
                                     <thead>
                                     <tr>

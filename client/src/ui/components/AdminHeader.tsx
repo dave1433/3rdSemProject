@@ -1,36 +1,32 @@
 import React, { useEffect, useState } from "react";
-import { useAdminHeader } from "../../core/hooks/useAdminHeader";
 import { AdminHeaderView } from "./AdminHeaderView";
 
 interface Props {
-    activeTab?: string;
-    onChangeTab?: React.Dispatch<React.SetStateAction<string>> | ((tab: string) => void);
+    activeTab: string;
+    onChangeTab: (tab: string) => void;
+    headerState: {
+        adminName: string;
+        handleLogout: () => void;
+        tabs: {
+            id: string;
+            label: string;
+            alert?: boolean;
+        }[];
+    };
 }
 
 export const AdminHeader = ({
-                                activeTab: propActiveTab,
-                                onChangeTab: propOnChangeTab
+                                activeTab,
+                                onChangeTab,
+                                headerState
                             }: Props) => {
     const {
-        activeTab,
-        setActiveTab,
-        adminName,   // 👈 kept
+        adminName,
         handleLogout,
         tabs
-    } = useAdminHeader();
+    } = headerState;
 
     const [mobileOpen, setMobileOpen] = useState(false);
-
-    const currentActiveTab = propActiveTab ?? activeTab;
-
-    const handleChangeTab = (tab: string) => {
-        if (propOnChangeTab) {
-            (propOnChangeTab as React.Dispatch<React.SetStateAction<string>>)(tab);
-        } else {
-            setActiveTab(tab);
-        }
-        setMobileOpen(false);
-    };
 
     useEffect(() => {
         const closeIfDesktop = () => {
@@ -50,10 +46,10 @@ export const AdminHeader = ({
 
     return (
         <AdminHeaderView
-            activeTab={currentActiveTab}
+            activeTab={activeTab}
             tabs={tabs}
             adminName={adminName}
-            onChangeTab={handleChangeTab}
+            onChangeTab={onChangeTab}
             onLogout={handleLogout}
             onOpenMobile={() => setMobileOpen(true)}
             onCloseMobile={() => setMobileOpen(false)}
