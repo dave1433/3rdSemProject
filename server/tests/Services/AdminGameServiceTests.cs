@@ -1,5 +1,6 @@
 ﻿using api.Services;
 using api.dtos.Requests;
+using api.Errors;
 using Xunit;
 
 [Collection("Postgres")]
@@ -40,10 +41,10 @@ public class AdminGameServiceTests
     }
 
     // ----------------------------
-    // UNHAPPY PATH
+    // INVALID WINNING NUMBERS
     // ----------------------------
     [Fact]
-    public async Task EnterWinningNumbersAsync_Throws_WhenWinningNumbersInvalid()
+    public async Task EnterWinningNumbersAsync_ThrowsBadRequest_WhenWinningNumbersInvalid()
     {
         using var ctx = _db.CreateContext();
 
@@ -59,15 +60,18 @@ public class AdminGameServiceTests
             WinningNumbers = new List<int> { 1, 1, 1 }
         };
 
-        await Assert.ThrowsAsync<ArgumentException>(() =>
-            service.EnterWinningNumbersAsync(request));
+        var ex = await Assert.ThrowsAsync<ApiException>(() =>
+            service.EnterWinningNumbersAsync(request)
+        );
+
+        Assert.Equal(400, ex.StatusCode);
     }
 
     // ----------------------------
     // WEEK LOCKED
     // ----------------------------
     [Fact]
-    public async Task EnterWinningNumbersAsync_Throws_WhenWeekAlreadyLocked()
+    public async Task EnterWinningNumbersAsync_ThrowsConflict_WhenWeekAlreadyLocked()
     {
         using var ctx = _db.CreateContext();
 
@@ -83,9 +87,13 @@ public class AdminGameServiceTests
             WinningNumbers = new List<int> { 1, 2, 3 }
         };
 
+        // First call locks the week
         await service.EnterWinningNumbersAsync(request);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            service.EnterWinningNumbersAsync(request));
+        var ex = await Assert.ThrowsAsync<ApiException>(() =>
+            service.EnterWinningNumbersAsync(request)
+        );
+
+        Assert.Equal(409, ex.StatusCode);
     }
 }

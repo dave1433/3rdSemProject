@@ -1,5 +1,6 @@
 ﻿using api.Services;
 using api.dtos.Requests;
+using api.Errors;
 using efscaffold.Entities;
 using Infrastructure.Postgres.Scaffolding;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -18,7 +19,7 @@ public class UserServiceTests
     }
 
     private UserService CreateService(MyDbContext ctx)
-        => new(ctx, NullLogger<UserService>.Instance, SieveTestFactory.Create()); 
+        => new(ctx, NullLogger<UserService>.Instance, SieveTestFactory.Create());
 
     // --------------------------------------------------
     // Helpers
@@ -60,7 +61,7 @@ public class UserServiceTests
     }
 
     [Fact]
-    public async Task CreateUserAsync_Throws_WhenEmailExists()
+    public async Task CreateUserAsync_ThrowsConflict_WhenEmailExists()
     {
         using var ctx = _db.CreateContext();
         await CleanDatabaseAsync(ctx);
@@ -76,14 +77,17 @@ public class UserServiceTests
             Role = 1
         });
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        var ex = await Assert.ThrowsAsync<ApiException>(() =>
             service.CreateUserAsync(new CreateUserRequest
             {
                 FullName = "Jane2",
                 Email = email,
                 Password = "pw",
                 Role = 1
-            }));
+            })
+        );
+
+        Assert.Equal(409, ex.StatusCode);
     }
 
     // --------------------------------------------------

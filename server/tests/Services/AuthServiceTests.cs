@@ -1,5 +1,6 @@
 ﻿using api.Services;
 using api.dtos.Requests;
+using api.Errors;
 using efscaffold.Entities;
 using Xunit;
 
@@ -25,7 +26,7 @@ public class AuthServiceTests
         {
             Id = "auth-1",
             Email = "auth@test.com",
-            Fullname = "Auth User", //  ENTITY NAME
+            Fullname = "Auth User",
             Role = 2,
             Password = api.security.PasswordHasher.Hash("secret"),
             Active = true,
@@ -35,10 +36,7 @@ public class AuthServiceTests
         ctx.Users.Add(user);
         await ctx.SaveChangesAsync();
 
-        var service = new AuthService(
-            ctx,
-            new FakeLogger<AuthService>()
-        );
+        var service = new AuthService(ctx);
 
         var request = new AuthRequest
         {
@@ -51,14 +49,14 @@ public class AuthServiceTests
         Assert.NotNull(result);
         Assert.Equal(user.Id, result.Id);
         Assert.Equal(2, result.Role);
-        Assert.Equal("Auth User", result.FullName); //  DTO NAME
+        Assert.Equal("Auth User", result.FullName);
     }
 
     // ----------------------------
     // WRONG PASSWORD
     // ----------------------------
     [Fact]
-    public async Task AuthenticateAsync_Throws_WhenPasswordInvalid()
+    public async Task AuthenticateAsync_ThrowsUnauthorized_WhenPasswordInvalid()
     {
         using var ctx = _db.CreateContext();
 
@@ -76,10 +74,7 @@ public class AuthServiceTests
         ctx.Users.Add(user);
         await ctx.SaveChangesAsync();
 
-        var service = new AuthService(
-            ctx,
-            new FakeLogger<AuthService>()
-        );
+        var service = new AuthService(ctx);
 
         var request = new AuthRequest
         {
@@ -87,8 +82,10 @@ public class AuthServiceTests
             Password = "incorrect"
         };
 
-        await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
+        var ex = await Assert.ThrowsAsync<ApiException>(() =>
             service.AuthenticateAsync(request)
         );
+
+        Assert.Equal(401, ex.StatusCode);
     }
 }
