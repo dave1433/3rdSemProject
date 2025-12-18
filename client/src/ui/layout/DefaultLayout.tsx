@@ -16,7 +16,6 @@ export const DefaultLayout = ({ children }: { children: React.ReactNode }) => {
             "
         >
             {children}
-        </div>
+    </div>
     );
 };
-

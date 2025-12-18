@@ -40,9 +40,12 @@
 .history-table-wrapper {
     margin-top: 8px;
     border-radius: 8px;
-    overflow: hidden;
     border: 1px solid #ddd;
     background: #f9f6f2;
+
+    max-height: 600px;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .history-table {
@@ -59,6 +62,10 @@
 }
 
 .history-table th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+
     text-align: left;
     background: #ebe6de;
     font-weight: 600;

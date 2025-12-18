@@ -3,8 +3,16 @@
     align-items: center;
     justify-content: space-between;
     padding: 20px clamp(16px, 5vw, 80px);
+    position: relative;
     font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     background-color: #2E4658;
+}
+
+/* logo */
+.player-header_logo {
+    font-weight: 600;
+    font-size: 1.4rem;
+    padding-bottom: 20px;
 }
 
 /* nav */
@@ -58,7 +66,8 @@
     align-items: center;
     gap: 0.75rem;
 
-    /* glassmorphism */
+    color: #fff;
+
     background: rgba(255, 255, 255, 0.12);
     border-radius: 999px;
     padding: 0.35rem 0.8rem;
@@ -160,8 +169,13 @@
 
 /* backdrop */
 .player-header_backdrop {
-    display: none;
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.25);
+    z-index: 90; /* 👈 below menu, above page */
 }
+
 
 /* ===== MOBILE ===== */
 @media (max-width: 900px) {
@@ -183,17 +197,21 @@
         top: 100%;
         left: 0;
         right: 0;
+
         background: #2E4658;
         display: flex;
         flex-direction: column;
         padding: 12px 16px;
         gap: 8px;
-        transform: translateY(-10px);
+
+        transform: translateY(-8px);
         opacity: 0;
         pointer-events: none;
+
         transition: opacity 0.15s ease, transform 0.15s ease;
-        z-index: 50;
+        z-index: 100; /* 👈 higher than content */
     }
+
 
     .player-header_mobile-menu--open {
         transform: translateY(0);
@@ -218,39 +236,8 @@
     }
 
     .player-header_mobile-logout{
+        display: flex;
+        justify-content: flex-start;
         text-align: left;
-    }
-
-    .player-header_mobile-logout span {
-        text-align: left;
-        width: 100%;
     }
 }
-
-    /* backdrop */
-    .player-header_backdrop {
-        display: block;
-        position: fixed;
-        inset: 0;
-        background: rgba(0, 0, 0, 0.25);
-        z-index: 40;
-    }
-
-    .player-header {
-        position: relative;
-    }
-
-    .player-header_logo img {
-        height: 80px;
-        width: auto;
-        transition: height 0.2s ease;
-    }
-
-    @media (max-width: 900px) {
-        .player-header_logo img {
-            height: 40px;
-        }
-    }
-
-
-
