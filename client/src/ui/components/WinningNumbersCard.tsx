@@ -1,5 +1,5 @@
 import {useWinningNumbers} from "../../core/hooks/useWinningNumbers.ts";
-import {WinningNumbersCardView} from "./WinningNumbersCardView.tsx";
+import {WinningNumbersCardView} from "./results/WinningNumbersCardView.tsx";
 
 function getWeekNumber(date: Date) {
     const d = new Date(Date.UTC(

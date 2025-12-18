@@ -1,5 +1,5 @@
 import { Bell } from "lucide-react";
-import "../css/AdminCSS/AdminMobileNav.css";
+import "../../css/AdminCSS/AdminMobileNav.css";
 
 interface Props {
     open: boolean;

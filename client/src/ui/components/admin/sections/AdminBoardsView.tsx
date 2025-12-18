@@ -1,5 +1,5 @@
 ﻿import React from "react";
-import type { AdminBoard } from "../../core/hooks/useAdminBoards";
+import type { AdminBoard } from "../../../../core/hooks/useAdminBoards.ts";
 
 type Props = {
     boards: AdminBoard[];

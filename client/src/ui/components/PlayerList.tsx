@@ -1,4 +1,4 @@
-import { PlayerListView } from "./PlayerListView";
+import { PlayerListView } from "./player/PlayerListView.tsx";
 import {usePlayerList} from "../../core/hooks/usePlayerList.tsx";
 
 export const PlayerList = () => {

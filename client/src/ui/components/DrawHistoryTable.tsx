@@ -1,4 +1,4 @@
-﻿import { DrawHistoryView } from "./DrawHistoryView";
+﻿import { DrawHistoryView } from "./admin/DrawHistoryView.tsx";
 import { useDrawHistory } from "../../core/hooks/useDrawHistory";
 
 type Props = {

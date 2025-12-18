@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
-import { AdminHeader } from "../components/AdminHeader";
+import { AdminHeader } from "../components/admin/AdminHeader.tsx";
 import { PlayerForm } from "../components/PlayerForm";
 import { PlayerList } from "../components/PlayerList";
 import { WinningNumbersCard } from "../components/WinningNumbersCard";
 import { DrawHistoryTable } from "../components/DrawHistoryTable";
-import { PendingTransactions } from "../components/PendingTransactions";
-import { AdminBoardsView } from "../components/AdminBoardsView";
+import { PendingTransactions } from "../components/admin/sections/PendingTransactions.tsx";
+import { AdminBoardsView } from "../components/admin/sections/AdminBoardsView.tsx";
 import { useAdminBoards } from "../../core/hooks/useAdminBoards";
 import { useAdminHeader } from "../../core/hooks/useAdminHeader";
 
