@@ -4,18 +4,25 @@ import { Card } from "../components/common/Card.tsx";
 import { Logo } from "../components/common/Logo.tsx";
 import type { FormEvent } from "react";
 
-export const LoginView = ({ onSubmit }: { onSubmit: (e: FormEvent) => void }) => {
+interface LoginViewProps {
+    onSubmit: (e: FormEvent) => void;
+    loading: boolean;
+    error: string | null;
+}
+
+export const LoginView = ({
+                              onSubmit,
+                              loading,
+                              error,
+                          }: LoginViewProps) => {
     return (
         <div className="flex flex-col items-center gap-6 w-full px-4">
 
-            {/* Responsive Logo */}
+            {/* Logo */}
             <div className="mt-4">
-                {/* Mobile */}
                 <div className="block lg:hidden">
                     <Logo size={80} />
                 </div>
-
-                {/* Desktop */}
                 <div className="hidden lg:block">
                     <Logo size={140} />
                 </div>
@@ -27,10 +34,47 @@ export const LoginView = ({ onSubmit }: { onSubmit: (e: FormEvent) => void }) =>
             </h1>
 
             <Card>
-                <form className="flex flex-col gap-4" onSubmit={onSubmit}>
-                    <Input label="Email" name="email" type="email" required />
-                    <Input label="Password" name="password" type="password" required />
-                    <Button type="submit">Login</Button>
+                <form
+                    className="flex flex-col gap-4"
+                    onSubmit={onSubmit}
+                >
+                    <Input
+                        label="Email"
+                        name="email"
+                        type="email"
+                        required
+                        disabled={loading}
+                    />
+
+                    <Input
+                        label="Password"
+                        name="password"
+                        type="password"
+                        required
+                        disabled={loading}
+                    />
+
+                    {/* Error slot (reserves space, keeps layout identical) */}
+                    <div className="min-h-[0px]">
+                        {error && (
+                            <div
+                                role="alert"
+                                className="
+                                    rounded-md
+                                    border border-red-200
+                                    bg-red-50
+                                    px-3 py-2
+                                    text-sm text-red-700
+                                "
+                            >
+                                {error}
+                            </div>
+                        )}
+                    </div>
+
+                    <Button type="submit" disabled={loading}>
+                        {loading ? "Logging in…" : "Login"}
+                    </Button>
                 </form>
             </Card>
         </div>

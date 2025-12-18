@@ -102,13 +102,10 @@ export const PlayerMyTransactionPage: FC = () => {
                                 )}
 
                                 <button
-                                    type="submit"
+                                    type="button"
                                     className="balance-submit-btn"
-                                    disabled={
-                                        tx.loading ||
-                                        !tx.amountInput ||
-                                        !tx.mobilePayInput
-                                    }
+                                    disabled={tx.loading}
+                                    onClick={tx.submitDeposit}
                                 >
                                     Submit deposit
                                 </button>
