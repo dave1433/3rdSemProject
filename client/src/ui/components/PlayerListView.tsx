@@ -171,7 +171,7 @@ export const PlayerListView = ({ players, loading }: Props) => {
 
         title: {
             fontSize: 18,
-            fontWeight: 800,
+            //fontWeight: 800,
             margin: 0,
         } as React.CSSProperties,
 
@@ -215,7 +215,7 @@ export const PlayerListView = ({ players, loading }: Props) => {
 
         label: {
             fontSize: 12,
-            fontWeight: 700,
+            //fontWeight: 700,
             opacity: 0.75,
         } as React.CSSProperties,
 
@@ -251,12 +251,12 @@ export const PlayerListView = ({ players, loading }: Props) => {
                 border: "1px solid rgba(0,0,0,.12)",
                 background: "#fff",
                 cursor: disabled ? "not-allowed" : "pointer",
-                fontWeight: 800,
+                //fontWeight: 800,
                 opacity: disabled ? 0.5 : 1,
             } as React.CSSProperties),
 
         pageText: {
-            fontWeight: 800,
+            //fontWeight: 800,
             opacity: 0.85,
         } as React.CSSProperties,
 
@@ -289,7 +289,7 @@ export const PlayerListView = ({ players, loading }: Props) => {
 
         name: {
             margin: 0,
-            fontWeight: 800,
+            //fontWeight: 800,
         } as React.CSSProperties,
 
         meta: {
@@ -305,13 +305,13 @@ export const PlayerListView = ({ players, loading }: Props) => {
         } as React.CSSProperties,
 
         balance: {
-            fontWeight: 900,
+            //fontWeight: 900,
             whiteSpace: "nowrap",
         } as React.CSSProperties,
 
         badgeAdmin: {
             fontSize: 12,
-            fontWeight: 900,
+            //fontWeight: 900,
             padding: "4px 10px",
             borderRadius: 999,
             background: "#dc2626",
@@ -364,7 +364,8 @@ export const PlayerListView = ({ players, loading }: Props) => {
     return (
         <div style={styles.card}>
             <div style={styles.header}>
-                <h2 style={styles.title}>All Users</h2>
+                <h2 className="text-jerneNavy text-lg font-semibold mb-4">
+                    All Users</h2>
             </div>
 
             {/* Row 1: Search / Role / Status / Sort */}
