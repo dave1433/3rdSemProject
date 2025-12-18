@@ -101,7 +101,44 @@ We use role-based authorization policies.
 
 - ** with mobile optimization.**
   The client is specifically optimized for mobile devices.
+- 
+### Authentication
 
+ ** The API uses JWT-based authentication with Argon2id password hashing.
+- Users log in using email and password
+- Passwords are securely hashed with Argon2id and never stored in plain text
+- On successful login, the API issues a JWT
+- The JWT contains the user ID (sub) and role (role) and must be sent with subsequent requests
+ ** JWT details
+- Signed using HMAC-SHA256
+- Valid for 8 hours
+- Validated automatically by middleware (signature and expiration)
+
+
+
+### Deployment
+
+ ** The backend is deployed using Docker and Fly.io.
+- The API is built with a multi-stage Docker build
+- A lightweight ASP.NET runtime image is used in production
+- Deployed to Fly.io in the fra region
+- Runs on port 8080 with HTTPS enforced
+- Fly.io manages TLS, scaling, and machine lifecycle 
+ ** Configuration
+- Database connection and JWT secret are provided via AppSettings
+- In production, secrets are supplied using environment variables / Fly.io secrets
+
+
+### Proxy & Frontend Integration
+
+- Frontend runs on http://localhost:5173
+- API requests are proxied to the backend
+- CORS allows the local frontend origin
+ ** Production
+- Frontend and backend are hosted separately
+- Backend is accessed over HTTPS via Fly.io
+- CORS allows only the production frontend domain
+This setup ensures secure and smooth communication in both development and production environments.
 
 ### Run API
 From repo root (adjust paths if yours differ):
@@ -120,6 +157,9 @@ npm run dev
 ```bash
 cd server/tests
 dotnet test
+
+
+
 ```
 
 
