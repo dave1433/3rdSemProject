@@ -44,6 +44,7 @@ export function useCurrentUser() {
     const [user, setUser] = useState<CurrentUser | null>(cachedUser);
     const [loading, setLoading] = useState(!cachedUser);
 
+    // Subscribe to global updates
     useEffect(() => {
         subscribers.push(setUser);
         return () => {
@@ -51,6 +52,7 @@ export function useCurrentUser() {
         };
     }, []);
 
+    // Initial load
     useEffect(() => {
         if (cachedUser) {
             setLoading(false);
@@ -58,12 +60,34 @@ export function useCurrentUser() {
         }
 
         if (!inflight) {
-            inflight = fetchMe().finally(() => {
-                inflight = null;
-            });
+            inflight = fetchMe()
+                .then(u => {
+                    inflight = null;
+                    return u;
+                })
+                .catch(err => {
+                    inflight = null;
+                    throw err;
+                });
         }
 
-        inflight
+        const p = inflight;
+        if (!p) return;
+
+        p.then(u => {
+            cachedUser = u;
+            notify();
+            setLoading(false);
+        }).catch(() => {
+            cachedUser = null;
+            notify();
+            setLoading(false);
+        });
+    }, []);
+
+    function refresh() {
+        setLoading(true);
+        fetchMe()
             .then(u => {
                 cachedUser = u;
                 notify();
@@ -72,14 +96,9 @@ export function useCurrentUser() {
                 cachedUser = null;
                 notify();
             })
-            .finally(() => setLoading(false));
-    }, []);
-
-    function refresh() {
-        fetchMe().then(u => {
-            cachedUser = u;
-            notify();
-        });
+            .then(() => {
+                setLoading(false);
+            });
     }
 
     function updateBalance(newBalance: number) {
