@@ -59,6 +59,33 @@ export function usePlayerTransactions(userId?: string) {
             }
         })();
     }, [userId, typeFilter, statusFilter, sort, page, pageSize]);
+    async function loadTransactions() {
+        if (!userId) return;
+
+        try {
+            setLoading(true);
+            setError(null);
+
+            const filters = buildSieveFilters(
+                typeFilter,
+                statusFilter
+            );
+
+            const data = await fetchUserTransactions(
+                userId,
+                filters,
+                sort,
+                page,
+                pageSize
+            );
+
+            setTransactions(data);
+        } catch {
+            setError("Failed to load transactions.");
+        } finally {
+            setLoading(false);
+        }
+    }
 
     const pendingDeposits = useMemo(
         () =>
@@ -93,6 +120,7 @@ export function usePlayerTransactions(userId?: string) {
             });
 
             setPage(1);
+            await loadTransactions();
             setAmountInput("");
             setMobilePayInput("");
             setFormSuccess("Deposit submitted!");

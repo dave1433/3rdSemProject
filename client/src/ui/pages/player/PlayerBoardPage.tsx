@@ -29,6 +29,7 @@ export const PlayerBoardPage: FC = () => {
         addLockMessage,
         submitLockMessage,
         submitBtnDisabled,
+        canAddToCart,
 
         // actions
         toggleNumber,
@@ -171,7 +172,7 @@ export const PlayerBoardPage: FC = () => {
                                         type="button"
                                         className="player-board-btn player-board-btn--primary"
                                         onClick={addBet}
-                                        disabled={!!addLockMessage}
+                                        disabled={!canAddToCart}
                                     >
                                         Purchase
                                     </button>

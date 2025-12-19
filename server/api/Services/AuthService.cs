@@ -49,8 +49,7 @@ public class AuthService : IAuthService
 
     // --------------------------------------------------
     // CURRENT USER INFO
-    // --------------------------------------------------
-    public async Task<AuthUserInfo> GetUserInfoAsync(ClaimsPrincipal principal)
+    public async Task<AuthUserInfo?> GetUserInfoAsync(ClaimsPrincipal principal)
     {
         var userId = principal.GetUserId();
 
@@ -68,6 +67,7 @@ public class AuthService : IAuthService
             user.Fullname
         );
     }
+
 
     // ==================================================
     // VALIDATION

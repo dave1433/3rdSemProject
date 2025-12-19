@@ -35,23 +35,33 @@ export const PlayerHistoryTable: React.FC<Props> = ({
                 return (
                     <tr key={r.id}>
                         <td>{r.weekLabel}</td>
+
                         <td>
                             <div className="history-numbers-inline">
                                 {r.numbers.map(n => (
-                                    <span key={n} className="history-number-chip">
-                                        {n}
-                                    </span>
+                                    <span
+                                        key={n}
+                                        className="history-number-chip"
+                                    >
+                                            {n}
+                                        </span>
                                 ))}
                             </div>
                         </td>
+
                         <td>{r.numbers.length}</td>
                         <td>{r.times}</td>
                         <td>{r.totalAmountDkk} DKK</td>
+
                         <td className="history-col-repeat">
                             {isRepeatInstance ? (
-                                <span className="history-repeat-badge">Repeated</span>
+                                <span className="history-repeat-badge">
+                                        Repeated
+                                    </span>
                             ) : r.repeatOptOut ? (
-                                <span className="history-stop-badge">Stopped</span>
+                                <span className="history-stop-badge">
+                                        Stopped
+                                    </span>
                             ) : (
                                 <button
                                     type="button"

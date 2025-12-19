@@ -6,6 +6,7 @@ import { PlayerHistoryTable } from "../../components/history/PlayerHistoryTable"
 
 export const PlayerHistoryPage: React.FC = () => {
     const { user } = useCurrentUser();
+
     const {
         records,
         loading,
@@ -21,6 +22,7 @@ export const PlayerHistoryPage: React.FC = () => {
                 <p className="history-subtitle">Active & Recent Boards</p>
 
                 {loading && <p className="history-status">Loading…</p>}
+
                 {error && (
                     <p className="history-status history-status-error">
                         {error}
