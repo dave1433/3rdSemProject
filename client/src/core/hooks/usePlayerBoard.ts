@@ -1,11 +1,19 @@
 import { useEffect, useMemo, useState } from "react";
-import { fetchBoardPrices, purchaseBoards } from "../board/boardService";
+import {
+    fetchBoardPrices,
+    purchaseBoards,
+    getPurchaseStatus,
+} from "../board/boardService";
+
 import type {
     BetPlacement,
     FieldsCount,
     PriceMap,
     SubmitStatus,
 } from "../board/types";
+
+import type { IsBoardLockedResponse } from "../../generated-ts-client";
+
 import { getErrorMessage } from "../../utils/error/getErrorMessage";
 
 export function usePlayerBoard(
@@ -13,6 +21,9 @@ export function usePlayerBoard(
     balanceValue: number,
     updateBalance: (v: number) => void
 ) {
+    // ----------------------
+    // CORE STATE
+    // ----------------------
     const [fieldsCount, setFieldsCount] = useState<FieldsCount>(5);
     const [selectedNumbers, setSelectedNumbers] = useState<number[]>([]);
     const [times, setTimes] = useState(1);
@@ -27,6 +38,14 @@ export function usePlayerBoard(
     const [warningMsg, setWarningMsg] = useState<string | null>(null);
 
     // ----------------------
+    // GAME LOCK STATE
+    // ----------------------
+    const [lockStatus, setLockStatus] =
+        useState<IsBoardLockedResponse | null>(null);
+
+    const isLocked = lockStatus?.isOpen === false;
+
+    // ----------------------
     // CONSTANTS
     // ----------------------
     const numbers = useMemo(
@@ -35,7 +54,7 @@ export function usePlayerBoard(
     );
 
     // ----------------------
-    // PRICES
+    // LOAD PRICES
     // ----------------------
     useEffect(() => {
         if (!playerId) return;
@@ -53,6 +72,30 @@ export function usePlayerBoard(
         })();
     }, [playerId]);
 
+    // ----------------------
+    // LOAD GAME STATUS
+    // ----------------------
+    useEffect(() => {
+        if (!playerId) return;
+
+        (async () => {
+            try {
+                const status = await getPurchaseStatus();
+                setLockStatus(status);
+            } catch {
+                setLockStatus({
+                    isOpen: false,
+                    message: "Unable to determine game status.",
+                    year: 0,
+                    weekNumber: 0,
+                });
+            }
+        })();
+    }, [playerId]);
+
+    // ----------------------
+    // PRICING
+    // ----------------------
     const unitPrice = priceByFields[fieldsCount] ?? 0;
     const fields = selectedNumbers.length;
 
@@ -64,32 +107,50 @@ export function usePlayerBoard(
     );
 
     // ----------------------
-    // BALANCE RULES
+    // BALANCE + LOCK RULES
     // ----------------------
     const canAddToCart =
+        !isLocked &&
         unitPrice > 0 &&
         fields === fieldsCount &&
         balanceValue >= totalAmount + price;
 
-    const canSubmitCart = bets.length > 0 && balanceValue >= totalAmount;
+    const canSubmitCart =
+        !isLocked &&
+        bets.length > 0 &&
+        balanceValue >= totalAmount;
 
     const addLockMessage = useMemo(() => {
-        // only show "insufficient balance" message once selection is complete
+        if (isLocked) return lockStatus?.message ?? null;
+
         if (fields === fieldsCount && !canAddToCart) {
             const remaining = balanceValue - totalAmount;
             return `Insufficient balance. You have ${remaining} DKK left.`;
         }
+
         return null;
-    }, [canAddToCart, fields, fieldsCount, balanceValue, totalAmount]);
+    }, [
+        isLocked,
+        lockStatus?.message,
+        fields,
+        fieldsCount,
+        canAddToCart,
+        balanceValue,
+        totalAmount,
+    ]);
 
     const submitLockMessage = useMemo(() => {
+        if (isLocked) return lockStatus?.message ?? null;
+
         if (!canSubmitCart && bets.length > 0) {
             return `Insufficient balance to submit.`;
         }
-        return null;
-    }, [canSubmitCart, bets.length]);
 
-    const submitBtnDisabled = submitStatus.type === "loading" || !canSubmitCart;
+        return null;
+    }, [isLocked, lockStatus?.message, canSubmitCart, bets.length]);
+
+    const submitBtnDisabled =
+        submitStatus.type === "loading" || !canSubmitCart;
 
     // ----------------------
     // ACTIONS
@@ -102,15 +163,11 @@ export function usePlayerBoard(
         });
     }
 
-    // when user changes fieldsCount, prevent "stuck" selection
     function changeFieldsCount(next: FieldsCount) {
         setFieldsCount(next);
-
-        setSelectedNumbers(prev => {
-            if (prev.length <= next) return prev;
-            // keep first N numbers (already sorted), instead of clearing everything
-            return prev.slice(0, next);
-        });
+        setSelectedNumbers(prev =>
+            prev.length <= next ? prev : prev.slice(0, next)
+        );
     }
 
     function clearSelection() {
@@ -126,8 +183,6 @@ export function usePlayerBoard(
     function addBet() {
         if (!canAddToCart) return;
 
-        const amount = unitPrice * times;
-
         setBets(b => [
             ...b,
             {
@@ -136,7 +191,7 @@ export function usePlayerBoard(
                 fields,
                 times,
                 unitPriceDkk: unitPrice,
-                amountDkk: amount,
+                amountDkk: unitPrice * times,
             },
         ]);
 
@@ -144,6 +199,13 @@ export function usePlayerBoard(
     }
 
     async function submit() {
+        if (isLocked) {
+            setWarningMsg(
+                lockStatus?.message ?? "The game has not started yet."
+            );
+            return;
+        }
+
         if (!canSubmitCart) return;
 
         try {
@@ -161,15 +223,22 @@ export function usePlayerBoard(
             updateBalance(balanceValue - totalAmount);
             setBets([]);
 
-            setSubmitStatus({ type: "success", text: "Purchase succeeded ✅" });
+            setSubmitStatus({
+                type: "success",
+                text: "Purchase succeeded",
+            });
         } catch (err) {
-            const msg = getErrorMessage(err);
-            setSubmitStatus({ type: "error", text: msg });
+            setSubmitStatus({
+                type: "error",
+                text: getErrorMessage(err),
+            });
         }
     }
 
+    // ----------------------
+    // PUBLIC API
+    // ----------------------
     return {
-        // state
         fieldsCount,
         selectedNumbers,
         times,
@@ -179,18 +248,16 @@ export function usePlayerBoard(
         submitStatus,
         warningMsg,
 
-        // derived
         numbers,
         price,
         totalAmount,
         addLockMessage,
         submitLockMessage,
         submitBtnDisabled,
-        canAddToCart, // expose so UI can enable/disable Purchase button
+        canAddToCart,
 
-        // actions
         toggleNumber,
-        setFieldsCount: changeFieldsCount, // swap to safe wrapper
+        setFieldsCount: changeFieldsCount,
         setTimes,
         clearSelection,
         addBet,
