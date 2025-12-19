@@ -56,8 +56,7 @@ export function usePlayerBoard(
     const unitPrice = priceByFields[fieldsCount] ?? 0;
     const fields = selectedNumbers.length;
 
-    const price =
-        fields === fieldsCount ? unitPrice * times : 0;
+    const price = fields === fieldsCount ? unitPrice * times : 0;
 
     const totalAmount = useMemo(
         () => bets.reduce((s, b) => s + b.amountDkk, 0),
@@ -72,11 +71,11 @@ export function usePlayerBoard(
         fields === fieldsCount &&
         balanceValue >= totalAmount + price;
 
-    const canSubmitCart =
-        bets.length > 0 && balanceValue >= totalAmount;
+    const canSubmitCart = bets.length > 0 && balanceValue >= totalAmount;
 
     const addLockMessage = useMemo(() => {
-        if (!canAddToCart && fields === fieldsCount) {
+        // only show "insufficient balance" message once selection is complete
+        if (fields === fieldsCount && !canAddToCart) {
             const remaining = balanceValue - totalAmount;
             return `Insufficient balance. You have ${remaining} DKK left.`;
         }
@@ -90,8 +89,7 @@ export function usePlayerBoard(
         return null;
     }, [canSubmitCart, bets.length]);
 
-    const submitBtnDisabled =
-        submitStatus.type === "loading" || !canSubmitCart;
+    const submitBtnDisabled = submitStatus.type === "loading" || !canSubmitCart;
 
     // ----------------------
     // ACTIONS
@@ -101,6 +99,17 @@ export function usePlayerBoard(
             if (prev.includes(n)) return prev.filter(x => x !== n);
             if (prev.length >= fieldsCount) return prev;
             return [...prev, n].sort((a, b) => a - b);
+        });
+    }
+
+    // when user changes fieldsCount, prevent "stuck" selection
+    function changeFieldsCount(next: FieldsCount) {
+        setFieldsCount(next);
+
+        setSelectedNumbers(prev => {
+            if (prev.length <= next) return prev;
+            // keep first N numbers (already sorted), instead of clearing everything
+            return prev.slice(0, next);
         });
     }
 
@@ -123,7 +132,7 @@ export function usePlayerBoard(
             ...b,
             {
                 id: Date.now().toString(),
-                numbers: selectedNumbers,
+                numbers: [...selectedNumbers],
                 fields,
                 times,
                 unitPriceDkk: unitPrice,
@@ -177,10 +186,11 @@ export function usePlayerBoard(
         addLockMessage,
         submitLockMessage,
         submitBtnDisabled,
+        canAddToCart, // expose so UI can enable/disable Purchase button
 
         // actions
         toggleNumber,
-        setFieldsCount,
+        setFieldsCount: changeFieldsCount, // swap to safe wrapper
         setTimes,
         clearSelection,
         addBet,
