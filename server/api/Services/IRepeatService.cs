@@ -1,17 +1,19 @@
-﻿using api.Dtos.Requests;
-using api.Dtos.Responses;
+using api.dtos.Requests;
+using api.dtos.Responses;
 
 namespace api.Services;
 
 public interface IRepeatService
 {
-    // Admin
-    Task<IEnumerable<RepeatResponse>> GetAllRepeats();
-    Task<RepeatResponse?> GetRepeatById(string id);
-    Task<RepeatResponse> CreateRepeat(CreateRepeatDto dto);
-    Task<RepeatResponse?> UpdateRepeat(string id, UpdateRepeatDto dto);
-    Task<bool> DeleteRepeat(string id);
+    Task<RepeatDtoResponse> CreateAsync(string playerId, CreateRepeatRequest request, CancellationToken ct = default);
 
-    // Player
-    Task<IEnumerable<RepeatResponse>> GetRepeatsByPlayer(string playerId);
+    Task<IReadOnlyList<RepeatDtoResponse>> GetByPlayerAsync(string playerId, CancellationToken ct = default);
+
+    Task StopAsync(string playerId, string repeatId, CancellationToken ct = default);
+
+    /// <summary>
+    /// Generate boards for all active repeats for a given game (week).
+    /// Call this when you create a new Game / start a new round.
+    /// </summary>
+    Task GenerateBoardsForGameAsync(string gameId, CancellationToken ct = default);
 }

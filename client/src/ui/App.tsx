@@ -1,20 +1,53 @@
-import { useState } from 'react'
+import {
+    createBrowserRouter,
+    Navigate,
+    RouterProvider,
+} from "react-router";
+import PlayerRootLayout from "./layout/PlayerRootLayout.tsx";
 
-import '../App.css'
+import { PlayerBoardPage } from "./pages/player/PlayerBoardPage";
+import { PlayerHistoryPage } from "./pages/player/PlayerHistoryPage";
+import { PlayerResultsPage } from "./pages/player/PlayerResultsPage";
+import { PlayerMyTransactionPage } from "./pages/player/PlayerMyTransactionPage";
+import { Login } from "./pages/Login";
+import { AdminDashboard } from "./pages/AdminDashboard";
+import { AdminLayout } from "./layout/AdminLayout";
+
+const router = createBrowserRouter([
+    // Redirect root → login
+    { path: "/", element: <Navigate to="/login" replace /> },
+
+    // Login
+    { path: "/login", element: <Login /> },
+
+    // ADMIN
+    {
+        path: "/admin",
+        element: <AdminLayout />,
+        children: [
+            { index: true, element: <AdminDashboard /> }
+        ]
+    },
+
+    // PLAYER
+    {
+        path: "/player",
+        element: <PlayerRootLayout />,
+        children: [
+            { index: true, element: <Navigate to="board" replace /> },
+            { path: "board", element: <PlayerBoardPage /> },
+            { path: "history", element: <PlayerHistoryPage /> },
+            { path: "transactions", element: <PlayerMyTransactionPage /> },
+            { path: "results", element: <PlayerResultsPage /> },
+        ],
+    },
+
+    // fallback
+    { path: "*", element: <Navigate to="/login" replace /> },
+]);
 
 function App() {
-  const [count, setCount] = useState(0)
-
-  return (
-    <>
-     <div>
-         <span>
-             <h1>Exam Project</h1>
-         </span>
-
-     </div>
-    </>
-  )
+    return <RouterProvider router={router} />;
 }
 
-export default App
+export default App;

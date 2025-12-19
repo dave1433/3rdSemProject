@@ -1,4 +1,4 @@
-﻿using System.Collections;
+﻿using System;
 using System.Collections.Generic;
 
 namespace efscaffold.Entities;
@@ -19,9 +19,15 @@ public partial class Board
 
     public DateTime? Createdat { get; set; }
 
+    public int Times { get; set; }
+
+    public bool? Iswinner { get; set; }
+
+    public bool AutoRepeat { get; set; }
+
     public virtual Game? Game { get; set; }
 
-    public virtual Player? Player { get; set; }
+    public virtual User? Player { get; set; }
 
     public virtual ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
 }

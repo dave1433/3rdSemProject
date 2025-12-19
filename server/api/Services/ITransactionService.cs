@@ -1,17 +1,22 @@
-﻿using api.Dtos.Requests;
-using api.Dtos.Responses;
+﻿using api.dtos.Requests;
+using api.dtos.Responses;
+using Sieve.Models;
 
 namespace api.Services;
 
 public interface ITransactionService
 {
-    // Admin
-    Task<IEnumerable<TransactionResponse>> GetAllTransactions();
-    Task<TransactionResponse?> GetTransactionById(string id);
-    Task<bool> DeleteTransaction(string id);
-    Task<TransactionResponse?> ApproveTransaction(string id, UpdateTransactionDto dto);
+    Task<List<TransactionDtoResponse>> GetByUserAsync(string userId, SieveModel sieveModel);
+    Task<List<TransactionDtoResponse>> GetPendingAsync(SieveModel sieveModel);
 
-    // Admin + Player
-    Task<IEnumerable<TransactionResponse>> GetTransactionsByPlayer(string playerId);
-    Task<TransactionResponse> CreateTransaction(CreateTransactionDto dto);
+    Task<TransactionDtoResponse> CreateDepositAsync(CreateTransactionRequest dto);
+
+    /// <summary>
+    /// Update status (approved / rejected) and adjust balance if needed.
+    /// adminUserId can be null for now if we have no auth wired.
+    /// </summary>
+    Task<TransactionDtoResponse> UpdateStatusAsync(
+        string transactionId,
+        UpdateTransactionStatusRequest dto,
+        string? adminUserId);
 }

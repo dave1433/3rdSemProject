@@ -1,0 +1,92 @@
+﻿.pending-transactions-page {
+    padding: 2rem;
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+
+.pending-transactions-card {
+    background: #ffffff;
+    width: 100%;
+    max-width: 900px;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+}
+
+.pending-transactions-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.pending-transactions-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.pending-transactions-table thead tr {
+    background: #f7f7f8;
+}
+
+.pending-transactions-table th,
+.pending-transactions-table td {
+    padding: 0.75rem 1rem;
+    text-align: left;
+}
+
+.pending-transactions-table th {
+    font-weight: 600;
+    color: #555;
+}
+
+.pending-transactions-actions-cell {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.pending-transactions-btn {
+    border: none;
+    border-radius: 4px;
+    padding: 0.25rem 0.5rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.pending-transactions-btn--approve {
+    background: #e5f9ec;
+    color: #10893e;
+}
+
+.pending-transactions-btn--reject {
+    background: #fde8e8;
+    color: #c81e1e;
+}
+
+.pending-transactions-status {
+    padding: 0.5rem 0;
+    font-size: 0.9rem;
+}
+
+.pending-transactions-status--error {
+    color: #c81e1e;
+}
+
+@media (max-width: 900px) {
+
+    .pending-transactions-page {
+        padding: 1rem;
+    }
+
+    .pending-transactions-card {
+        padding: 1rem;
+        border-radius: 10px;
+    }
+
+    .pending-transactions-table th,
+    .pending-transactions-table td {
+        padding: 0.5rem;
+        font-size: 0.85rem;
+    }
+}

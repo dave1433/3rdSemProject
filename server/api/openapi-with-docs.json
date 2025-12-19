@@ -1,0 +1,1457 @@
+{
+  "x-generator": "NSwag v14.6.3.0 (NJsonSchema v11.5.2.0 (Newtonsoft.Json v13.0.0.0))",
+  "openapi": "3.0.0",
+  "info": {
+    "title": "DeadPigeons API",
+    "description": "3rd Semester Project API documentation",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/admin/games/draw": {
+      "post": {
+        "tags": [
+          "AdminGame"
+        ],
+        "operationId": "AdminGame_EnterWinningNumbers",
+        "requestBody": {
+          "x-name": "request",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateGameDrawRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GameResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/games/draw/status": {
+      "get": {
+        "tags": [
+          "AdminGame"
+        ],
+        "operationId": "AdminGame_IsWeekLocked",
+        "parameters": [
+          {
+            "name": "year",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "x-position": 1
+          },
+          {
+            "name": "weekNumber",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "x-position": 2
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/games/winners/summary": {
+      "get": {
+        "tags": [
+          "AdminGame"
+        ],
+        "operationId": "AdminGame_GetWeeklyWinningSummary",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WeeklyBoardSummaryDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/games/draw/history": {
+      "get": {
+        "tags": [
+          "AdminGame"
+        ],
+        "operationId": "AdminGame_GetDrawHistory",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/GameHistoryResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "operationId": "Auth_Login",
+        "requestBody": {
+          "x-name": "request",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JwtResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/userinfo": {
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "operationId": "Auth_UserInfo",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthUserInfo"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/board/user/{userId}": {
+      "get": {
+        "tags": [
+          "Board"
+        ],
+        "operationId": "Board_GetByUser",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BoardDtoResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/board/admin/all": {
+      "get": {
+        "tags": [
+          "Board"
+        ],
+        "operationId": "Board_GetAllBoardsForAdmin",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AdminBoardDtoResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/board/user/purchase": {
+      "post": {
+        "tags": [
+          "Board"
+        ],
+        "operationId": "Board_Purchase",
+        "requestBody": {
+          "x-name": "dtos",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/CreateBoardRequest"
+                }
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BoardDtoResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/board/{boardId}/auto-repeat": {
+      "put": {
+        "tags": [
+          "Board"
+        ],
+        "operationId": "Board_SetAutoRepeat",
+        "parameters": [
+          {
+            "name": "boardId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "request",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAutoRepeatRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AutoRepeatResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/board/purchase/status": {
+      "get": {
+        "tags": [
+          "Board"
+        ],
+        "operationId": "Board_GetIsBoardLockedStatus",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IsBoardLockedResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/BoardPrice": {
+      "get": {
+        "tags": [
+          "BoardPrice"
+        ],
+        "operationId": "BoardPrice_GetAll",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BoardPriceDtoResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/games/draw/history": {
+      "get": {
+        "tags": [
+          "GameResult"
+        ],
+        "operationId": "GameResult_GetDrawHistoryForPlayers",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/GameHistoryResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Repeat/me": {
+      "get": {
+        "tags": [
+          "Repeat"
+        ],
+        "operationId": "Repeat_GetMine",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RepeatDtoResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Repeat": {
+      "post": {
+        "tags": [
+          "Repeat"
+        ],
+        "operationId": "Repeat_Create",
+        "requestBody": {
+          "x-name": "request",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRepeatRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepeatDtoResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Repeat/{id}/stop": {
+      "post": {
+        "tags": [
+          "Repeat"
+        ],
+        "operationId": "Repeat_Stop",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Transaction/deposit": {
+      "post": {
+        "tags": [
+          "Transaction"
+        ],
+        "operationId": "Transaction_CreateDeposit",
+        "requestBody": {
+          "x-name": "dto",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTransactionRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransactionDtoResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Transaction/{id}/status": {
+      "put": {
+        "tags": [
+          "Transaction"
+        ],
+        "operationId": "Transaction_UpdateStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "dto",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTransactionStatusRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransactionDtoResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Transaction/user/{userId}": {
+      "get": {
+        "tags": [
+          "Transaction"
+        ],
+        "operationId": "Transaction_GetByUser",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          },
+          {
+            "name": "Filters",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 2
+          },
+          {
+            "name": "Sorts",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 3
+          },
+          {
+            "name": "Page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "maximum": 2147483647.0,
+              "minimum": 1.0,
+              "nullable": true
+            },
+            "x-position": 4
+          },
+          {
+            "name": "PageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "maximum": 2147483647.0,
+              "minimum": 1.0,
+              "nullable": true
+            },
+            "x-position": 5
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TransactionDtoResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Transaction/pending": {
+      "get": {
+        "tags": [
+          "Transaction"
+        ],
+        "operationId": "Transaction_GetPending",
+        "parameters": [
+          {
+            "name": "Filters",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 1
+          },
+          {
+            "name": "Sorts",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 2
+          },
+          {
+            "name": "Page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "maximum": 2147483647.0,
+              "minimum": 1.0,
+              "nullable": true
+            },
+            "x-position": 3
+          },
+          {
+            "name": "PageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "maximum": 2147483647.0,
+              "minimum": 1.0,
+              "nullable": true
+            },
+            "x-position": 4
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TransactionDtoResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/user": {
+      "post": {
+        "tags": [
+          "User"
+        ],
+        "operationId": "User_CreateUser",
+        "requestBody": {
+          "x-name": "req",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUserRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "operationId": "User_GetUsers",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 1
+          },
+          {
+            "name": "Filters",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 2
+          },
+          {
+            "name": "Sorts",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 3
+          },
+          {
+            "name": "Page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "maximum": 2147483647.0,
+              "minimum": 1.0,
+              "nullable": true
+            },
+            "x-position": 4
+          },
+          {
+            "name": "PageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "maximum": 2147483647.0,
+              "minimum": 1.0,
+              "nullable": true
+            },
+            "x-position": 5
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UserResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/user/me": {
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "operationId": "User_Me",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/user/{id}/activate": {
+      "patch": {
+        "tags": [
+          "User"
+        ],
+        "operationId": "User_Activate",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/user/{id}/deactivate": {
+      "patch": {
+        "tags": [
+          "User"
+        ],
+        "operationId": "User_Deactivate",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "GameResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "year": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "weekNumber": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "winningNumbers": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "CreateGameDrawRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "year": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "weekNumber": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "winningNumbers": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        }
+      },
+      "WeeklyBoardSummaryDto": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "week": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "year": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalWinningBoards": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "GameHistoryResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "year": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "weekNumber": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "winningNumbers": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "JwtResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "token": {
+            "type": "string"
+          },
+          "role": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "userId": {
+            "type": "string"
+          }
+        }
+      },
+      "AuthRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "email",
+          "password"
+        ],
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "minLength": 1
+          },
+          "password": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "AuthUserInfo": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "role": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "fullName": {
+            "type": "string"
+          }
+        }
+      },
+      "BoardDtoResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "playerId": {
+            "type": "string",
+            "nullable": true
+          },
+          "gameId": {
+            "type": "string",
+            "nullable": true
+          },
+          "numbers": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          "price": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "times": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "repeatId": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "autoRepeat": {
+            "type": "boolean"
+          },
+          "isWinner": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "transactions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BoardTransactionDto"
+            }
+          }
+        }
+      },
+      "BoardTransactionDto": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "status": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        }
+      },
+      "AdminBoardDtoResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "boardId": {
+            "type": "string"
+          },
+          "userId": {
+            "type": "string"
+          },
+          "userName": {
+            "type": "string"
+          },
+          "numbers": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          "times": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "year": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "week": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "isWinner": {
+            "type": "boolean"
+          },
+          "winningNumbers": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        }
+      },
+      "CreateBoardRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "userId",
+          "numbers"
+        ],
+        "properties": {
+          "userId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "numbers": {
+            "type": "array",
+            "maxItems": 8,
+            "minItems": 5,
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          "times": {
+            "type": "integer",
+            "format": "int32",
+            "maximum": 2147483647.0,
+            "minimum": 1.0
+          }
+        }
+      },
+      "AutoRepeatResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "boardId": {
+            "type": "string"
+          },
+          "autoRepeat": {
+            "type": "boolean"
+          },
+          "repeatId": {
+            "type": "string",
+            "nullable": true
+          },
+          "isStopped": {
+            "type": "boolean"
+          }
+        }
+      },
+      "UpdateAutoRepeatRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "autoRepeat": {
+            "type": "boolean"
+          }
+        }
+      },
+      "IsBoardLockedResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "isOpen": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string",
+            "nullable": true
+          },
+          "year": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "weekNumber": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "BoardPriceDtoResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "fieldsCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "price": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "RepeatDtoResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "playerId": {
+            "type": "string"
+          },
+          "numbers": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          "price": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "remainingWeeks": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "optOut": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "totalWeeks": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "playedWeeks": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "status": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateRepeatRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "numbers": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          "times": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "weeks": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "TransactionDtoResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "userId": {
+            "type": "string",
+            "nullable": true
+          },
+          "fullName": {
+            "type": "string",
+            "nullable": true
+          },
+          "type": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "mobilePayRef": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "string"
+          },
+          "boardId": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "processedBy": {
+            "type": "string",
+            "nullable": true
+          },
+          "processedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        }
+      },
+      "CreateTransactionRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "userId"
+        ],
+        "properties": {
+          "userId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "amount": {
+            "type": "integer",
+            "format": "int32",
+            "maximum": 2147483647.0,
+            "minimum": 1.0
+          },
+          "mobilePayRef": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "UpdateTransactionStatusRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "status"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "approved|rejected"
+          }
+        }
+      },
+      "UserResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "fullName": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "active": {
+            "type": "boolean"
+          },
+          "balance": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "role": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "CreateUserRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "fullName": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          },
+          "role": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      }
+    }
+  }
+}

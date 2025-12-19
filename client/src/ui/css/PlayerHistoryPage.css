@@ -1,0 +1,246 @@
+.history-page {
+    min-height: 100vh;
+    background: #D9D9D9;
+    display: flex;
+    flex-direction: column;
+}
+
+.history-inner {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+    max-width: 1200px;
+    padding: 32px clamp(16px, 5vw, 80px) 40px;
+    margin: 0 auto;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.history-title {
+    font-size: 1.6rem;
+    margin: 0 0 4px 0;
+}
+
+.history-subtitle {
+    margin: 0 0 16px 0;
+    font-size: 0.9rem;
+    color: #555;
+}
+
+.history-status {
+    font-size: 0.9rem;
+    color: #555;
+    margin-top: 10px;
+}
+
+.history-status-error {
+    color: #c80000;
+}
+
+/* table wrapper */
+.history-table-wrapper {
+    margin-top: 8px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    background: #f9f6f2;
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+.history-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.history-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.history-table th,
+.history-table td {
+    padding: 8px 10px;
+    border-bottom: 1px solid #e0ddd8;
+    vertical-align: middle;
+}
+
+.history-table th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+
+    text-align: left;
+    background: #ebe6de;
+    font-weight: 600;
+}
+
+.history-table tr:nth-child(even) td {
+    background: #f5f1eb;
+}
+
+/* numbers */
+.history-numbers-inline {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.history-number-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    height: 26px;
+    padding: 0 8px;
+    border-radius: 999px;
+    background: #fff;
+    border: 1px solid #ddd0c0;
+    font-size: 0.85rem;
+    color: #3b3630;
+}
+
+/* repeat button (simple, looks like your app buttons) */
+.history-repeat-btn {
+    border: none;
+    border-radius: 6px;
+    padding: 6px 14px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    background: #e0ded9;
+    color: #333;
+    transition: background 0.12s, transform 0.08s, box-shadow 0.08s;
+}
+
+.history-repeat-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* ON state uses your green */
+.history-repeat-btn--on {
+    background: #00a86b;
+    color: #fff;
+}
+
+.history-repeat-btn--on:hover {
+    background: #008a58;
+}
+
+
+/* Toggle */
+.history-col-repeat {
+    text-align: center;
+    width: 80px;
+}
+
+.history-numbers-inline {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.history-number-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    height: 28px;
+    padding: 0 8px;
+    border-radius: 6px;
+    background: #c80000;
+    border: 1px solid #c80000;
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 12px;
+}
+
+/* toggle switch */
+.history-toggle {
+    width: 46px;
+    height: 26px;
+    border-radius: 999px;
+    border: 1px solid #d4cec7;
+    background: #e0ded9;
+    cursor: pointer;
+    position: relative;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.history-toggle:hover {
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
+    transform: translateY(-1px);
+}
+
+.history-toggle:active {
+    transform: translateY(0px);
+}
+
+.history-toggle-knob {
+    width: 22px;
+    height: 22px;
+    border-radius: 999px;
+    background: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    position: absolute;
+    left: 2px;
+    transition: left 0.15s ease;
+}
+
+.history-toggle--on {
+    background: #00a86b;
+    border-color: #00a86b;
+}
+
+.history-toggle--on .history-toggle-knob {
+    left: 22px;
+}
+
+/* repeat stopped badge (cannot restart) */
+.history-repeat-badge {
+    display: inline-block;
+    padding: 2px 10px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: #00a86b1a;
+    color: #007046;
+}
+
+.history-stop-badge {
+    display: inline-block;
+    padding: 2px 10px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: #f6d3d0;
+    color: #b02a1a;
+}
+
+.player-board-status {
+    margin: 8px 0 8px;
+    color: #c80000;          /* red */
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.history-repeat-badge.auto {
+    opacity: 0.8;
+}
+/* mobile */
+@media (max-width: 768px) {
+    .history-table-wrapper {
+        overflow-x: auto;
+    }
+
+    .history-table {
+        min-width: 720px;
+    }
+}

@@ -1,0 +1,419 @@
+.player-board-page {
+    min-height: 100vh;
+    background: #D9D9D9;
+    display: flex;
+    flex-direction: column;
+}
+
+.player-board-main {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+    max-width: 1200px;
+    gap: 40px;
+    margin: 0 auto;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 32px clamp(16px, 5vw, 80px) 40px;
+}
+
+.player-board-layout {
+    display: flex;
+    gap: 32px;
+    justify-items: flex-start;
+}
+
+/* left vs right */
+.player-board-left {
+    flex: 5;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.player-board-right {
+    flex: 5;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.player-board-week {
+    font-size: 1.6rem;
+    margin: 0 0 4px 0;
+}
+
+/* generic card */
+.player-board-card {
+    background: #f9f6f2;
+    border-radius: 12px;
+    border: 1px solid #d4cec7;
+    padding: 20px 24px;
+    width: 100%;
+    max-width: none;
+    box-sizing: border-box;
+    text-align: center;
+}
+
+/* grid */
+.player-board-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px 15px;
+    margin-bottom: 20px;
+}
+
+.player-board-tile {
+    height: 56px;
+    border-radius: 8px;
+    border: none;
+    background: #bbaea8;
+    color: #262626;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.12s;
+}
+
+.player-board-tile:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.player-board-tile--selected {
+    background: #c80000;
+    color: #fff;
+}
+
+.player-board-tile--disabled:not(.player-board-tile--selected) {
+    opacity: 0.4;
+    cursor: default;
+}
+
+/* fields tabs */
+.player-board-fields-tabs {
+    display: inline-flex;
+    gap: 8px;
+    padding: 4px;
+    margin: 0 auto 16px auto;
+    border-radius: 999px;
+    background: #e9e5de;
+
+    max-width: 100%;
+    overflow-x: auto;
+    white-space: nowrap;
+}
+
+.player-board-fields-tab {
+    border: none;
+    background: transparent;
+    padding: 4px 12px;
+    border-radius: 999px;
+    cursor: pointer;
+    color: #555;
+    display: flex;              /* 👈 align content in one row */
+    align-items: center;
+    justify-content: center;
+}
+
+.player-board-fields-text {
+    font-size: 0.8rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    white-space: nowrap;        /* 👈 prevents “5” and “NUMBERS” from splitting */
+}
+
+.player-board-fields-tab--active {
+    background: #ffffff;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.07);
+}
+
+/* value / times row */
+.player-board-meta {
+    display: flex;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 16px;
+    align-items: center;
+}
+
+.player-board-meta-label {
+    display: block;
+    font-size: 0.8rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #666;
+    margin-bottom: 4px;
+}
+
+.player-board-times-control {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    background: #e9e5de;
+    padding: 2px;
+}
+
+.player-board-times-control button {
+    border: none;
+    background: transparent;
+    width: 28px;
+    height: 28px;
+    cursor: pointer;
+    font-size: 1.1rem;
+}
+
+.player-board-times-control input {
+    width: 50px;
+    border: none;
+    background: #ffffff;
+    border-radius: 999px;
+    text-align: center;
+    font-size: 0.9rem;
+    padding: 2px 8px;
+    margin: 0 4px;
+}
+
+.player-board-value-box {
+    min-width: 120px;
+    padding: 6px 10px;
+    border-radius: 8px;
+    border: 1px solid #d4cec7;
+    background: #fff;
+    font-size: 0.9rem;
+}
+
+/* action buttons */
+.player-board-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.player-board-btn {
+    border: none;
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background 0.12s, transform 0.08s, box-shadow 0.08s;
+}
+
+.player-board-btn--primary {
+    background: #c80000;
+    color: #fff;
+}
+
+.player-board-btn--primary:hover:enabled {
+    background: #b00000;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.18);
+}
+
+.player-board-btn--secondary {
+    background: #d4cec7;
+    color: #222;
+}
+
+.player-board-btn--secondary:hover:enabled {
+    background: #c3bcb4;
+    transform: translateY(-1px);
+}
+
+.player-board-btn:disabled {
+    opacity: 0.6;
+    cursor: default;
+    box-shadow: none;
+    transform: none;
+}
+
+/* right panel: bets */
+.player-board-bets-card {
+}
+
+.player-board-bets-card h2 {
+    font-size: 1.1rem;
+    margin-bottom: 12px;
+    text-align: left;
+}
+
+.player-board-bets-card p {
+    font-size: 0.9rem;
+    margin-bottom: 12px;
+    text-align: left;
+}
+
+.player-board-bets-empty {
+    font-size: 0.9rem;
+    color: #555;
+}
+
+.player-board-bets-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+    margin-bottom: 16px;
+}
+
+.player-board-bets-table th,
+.player-board-bets-table td {
+    padding: 8px 8px;
+    border-bottom: 1px solid #e0ddd8;
+}
+
+.player-board-bets-table th {
+    text-align: left;
+    background: #ebe6de;
+    font-weight: 600;
+}
+
+.player-board-bets-remove {
+    text-align: right;
+}
+
+.player-board-bets-remove-btn {
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    border: none;
+    background: #c80000;        /* same red as your tiles */
+    color: #fff;
+    font-size: 0.6rem;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    transition: background 0.12s, transform 0.08s, box-shadow 0.08s;
+}
+
+.player-board-bets-remove-btn:hover {
+    background: #b00000;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+/* footer */
+.player-board-bets-footer {
+    margin-top: 12px;
+    border-top: 1px solid #d4cec7;
+    padding-top: 10px;
+}
+
+/* "Total" label */
+.player-board-bets-total-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+/* Number / Amount / Balance strip */
+.player-board-bets-summary-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    font-size: 0.85rem;
+    background: #f0edf7; /* light bar like your ref */
+    border-radius: 6px;
+    padding: 6px 10px;
+    margin-bottom: 12px;
+}
+
+.player-board-bets-summary-row span strong {
+    font-weight: 600;
+}
+
+/* Buttons row */
+.player-board-bets-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+/* Buttons themselves */
+.player-board-bets-btn {
+    flex: 1;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 0;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background 0.12s, transform 0.08s, box-shadow 0.08s;
+}
+
+/* Reset = red */
+.player-board-bets-btn--reset {
+    background: #c80000;
+    color: #fff;
+}
+
+.player-board-bets-btn--reset:hover:enabled {
+    background: #b80000;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.18);
+}
+
+/* Submit = black */
+.player-board-bets-btn--submit {
+    background: #00a86b;
+    color: #fff;
+}
+
+.player-board-bets-btn--submit:hover:enabled {
+    background: #008a58;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.18);
+}
+
+/* disabled state */
+.player-board-bets-btn:disabled {
+    opacity: 0.6;
+    cursor: default;
+    box-shadow: none;
+    transform: none;
+}
+
+/* Chrome, Safari, Edge: hide arrows on number input */
+.player-board-times-control input::-webkit-outer-spin-button,
+.player-board-times-control input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* Firefox: hide arrows on number input */
+.player-board-times-control input[type="number"] {
+    -moz-appearance: textfield;
+}
+
+.player-board-warning {
+    margin: 8px 0 0;
+    color: #c80000;          /* red */
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.player-board-status--success {
+    color: #0a7a43;
+    font-weight: 600;
+}
+
+@media (max-width: 600px) {
+    .player-board-fields-text {
+        font-size: 0.7rem;
+        letter-spacing: 0.05em;
+    }
+
+    .player-board-fields-tab {
+        flex: 0 0 auto;
+        padding: 4px 5px;
+    }
+
+    .player-board-fields-tabs {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .player-board-layout {
+        flex-direction: column;
+        gap: 16px;
+    }
+}
+

@@ -1,0 +1,147 @@
+.myrepeats-card {
+    background: #f9f6f2;
+    border-radius: 16px;
+    border: 1px solid #d4cec7;
+    padding: 18px 20px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.myrepeats-title {
+    margin: 0;
+    font-size: 1.1rem;
+}
+
+.myrepeats-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.myrepeats-label {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #555;
+}
+
+.myrepeats-numbers {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.myrepeats-number-pill {
+    min-width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background-color: #fff;
+    border: 1px solid #ddd0c0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 500;
+    color: #3b3630;
+}
+
+.myrepeats-value {
+    font-size: 0.95rem;
+}
+
+.myrepeats-times-control {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    background: #e9e5de;
+    padding: 2px;
+}
+
+.myrepeats-times-control button {
+    border: none;
+    background: transparent;
+    width: 28px;
+    height: 28px;
+    cursor: pointer;
+    font-size: 1.1rem;
+}
+
+.myrepeats-times-control input {
+    width: 60px;
+    border: none;
+    background: #ffffff;
+    border-radius: 999px;
+    text-align: center;
+    font-size: 0.9rem;
+    padding: 2px 8px;
+    margin: 0 4px;
+}
+
+.myrepeats-preview {
+    margin-top: 4px;
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    font-size: 0.9rem;
+}
+
+.myrepeats-preview-label {
+    font-size: 0.8rem;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.myrepeats-preview-value {
+    margin-top: 2px;
+    font-weight: 600;
+}
+
+.myrepeats-actions {
+    margin-top: 8px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.myrepeats-actions--single {
+    justify-content: flex-start;
+}
+
+.myrepeats-btn {
+    border: none;
+    border-radius: 8px;
+    padding: 8px 18px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background 0.12s, transform 0.08s, box-shadow 0.08s;
+}
+
+.myrepeats-btn-cancel {
+    background: transparent;
+    color: #b3261e;
+    text-decoration: underline;
+}
+
+.myrepeats-btn-confirm {
+    background: #00a86b;
+    color: #fff;
+}
+
+.myrepeats-btn-confirm:hover:enabled {
+    background: #008a58;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.18);
+}
+
+.myrepeats-empty-text,
+.myrepeats-error {
+    font-size: 0.9rem;
+    color: #5f5b55;
+    margin: 8px 0;
+}
+
+.myrepeats-error {
+    color: #b3261e;
+}

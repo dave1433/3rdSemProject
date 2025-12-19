@@ -1,17 +1,17 @@
-﻿using api.Dtos.Requests;
-using api.Dtos.Responses;
+using api.dtos.Requests;
+using api.dtos.Responses;
 
 namespace api.Services;
 
 public interface IBoardService
 {
-    // Admin
-    Task<IEnumerable<BoardResponse>> GetAllBoards();
-    Task<BoardResponse?> GetBoardById(string id);
-    Task<bool> DeleteBoard(string id);
+    Task<List<BoardDtoResponse>> GetByUserAsync(string userId);
+    Task<List<BoardDtoResponse>> CreatePurchaseAsync(string userId, IEnumerable<CreateBoardRequest> dtos);
+    Task<List<AdminBoardDtoResponse>> GetAllBoardsForAdminAsync();
+    Task<List<WeeklyBoardSummaryDto>> GetWeeklyWinningSummaryAsync();
+    Task<AutoRepeatResponse> SetAutoRepeatAsync(string playerId, string boardId, bool autoRepeat);
 
-    // Player / Admin
-    Task<IEnumerable<BoardResponse>> GetBoardsByPlayer(string playerId);
-    Task<BoardResponse> CreateBoard(CreateBoardDto dto);
-    Task<BoardResponse?> UpdateBoard(string id, UpdateBoardDto dto);
+    // run when winning numbers are selected (game "starts")
+    Task ProcessRepeatOrdersForGameAsync(string gameId);
+    Task<IsBoardLockedResponse> GetIsBoardLockedAsync();
 }

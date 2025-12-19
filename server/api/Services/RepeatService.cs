@@ -1,6 +1,6 @@
-﻿using api.Dtos.Requests;
-using api.Dtos.Responses;
-using AutoMapper;
+using api.dtos.Requests;
+using api.dtos.Responses;
+using api.Errors;
 using efscaffold.Entities;
 using Infrastructure.Postgres.Scaffolding;
 using Microsoft.EntityFrameworkCore;
@@ -10,128 +10,292 @@ namespace api.Services;
 public class RepeatService : IRepeatService
 {
     private readonly MyDbContext _db;
-    private readonly IMapper _mapper;
 
-    public RepeatService(MyDbContext db, IMapper mapper)
+    public RepeatService(MyDbContext db)
     {
         _db = db;
-        _mapper = mapper;
     }
 
-    // -----------------------------
-    // Admin
-    // -----------------------------
-    public async Task<IEnumerable<RepeatResponse>> GetAllRepeats()
+    // --------------------------------------------------
+    // CREATE REPEAT + FIRST BOARD
+    // --------------------------------------------------
+    public async Task<RepeatDtoResponse> CreateAsync(
+        string playerId,
+        CreateRepeatRequest request,
+        CancellationToken ct = default)
     {
-        var repeats = await _db.Repeats.AsNoTracking().ToListAsync();
-        return _mapper.Map<IEnumerable<RepeatResponse>>(repeats);
-    }
+        if (request.Numbers == null || request.Numbers.Count == 0)
+            throw ApiErrors.BadRequest(
+                "You must select numbers for the repeat.");
 
-    public async Task<RepeatResponse?> GetRepeatById(string id)
-    {
-        var repeat = await _db.Repeats.AsNoTracking()
-            .FirstOrDefaultAsync(r => r.Id == id);
+        if (request.Numbers.Count < 5 || request.Numbers.Count > 8)
+            throw ApiErrors.BadRequest(
+                "You must select between 5 and 8 numbers.");
 
-        return repeat == null ? null : _mapper.Map<RepeatResponse>(repeat);
-    }
+        if (request.Times <= 0)
+            throw ApiErrors.BadRequest(
+                "Times must be a positive number.");
 
-    public async Task<bool> DeleteRepeat(string id)
-    {
-        var entity = await _db.Repeats.FirstOrDefaultAsync(r => r.Id == id);
-        if (entity == null) return false;
+        if (request.Weeks <= 0)
+            throw ApiErrors.BadRequest(
+                "Weeks must be a positive number.");
 
-        _db.Repeats.Remove(entity);
-        await _db.SaveChangesAsync();
-        return true;
-    }
+        var currentGame = await _db.Games
+            .OrderByDescending(g => g.Year)
+            .ThenByDescending(g => g.Weeknumber)
+            .FirstOrDefaultAsync(ct);
 
-    // -----------------------------
-    // Player + Admin
-    // -----------------------------
-    public async Task<IEnumerable<RepeatResponse>> GetRepeatsByPlayer(string playerId)
-    {
-        var repeats = await _db.Repeats.AsNoTracking()
-            .Where(r => r.Playerid == playerId)
-            .ToListAsync();
+        if (currentGame == null)
+            throw ApiErrors.Conflict(
+                "No active game is available at the moment.");
 
-        return _mapper.Map<IEnumerable<RepeatResponse>>(repeats);
-    }
+        var fields = request.Numbers.Count;
 
-    public async Task<RepeatResponse> CreateRepeat(CreateRepeatDto dto)
-    {
-        ValidateNumbers(dto.Numbers);
+        var boardPriceRow = await _db.Boardprices
+            .FirstOrDefaultAsync(bp => bp.Fieldscount == fields, ct);
 
-        // Validate player exists + active
-        var player = await _db.Players.FirstOrDefaultAsync(p => p.Id == dto.PlayerId);
-        if (player == null)
-            throw new InvalidOperationException("Player not found.");
-        if (!player.Active)
-            throw new InvalidOperationException("Player is not active.");
+        if (boardPriceRow == null)
+            throw ApiErrors.NotFound(
+                $"No price is configured for a board with {fields} numbers.");
 
-        // Fetch price from BoardPrice (same as board)
-        var boardPrice = await _db.Boardprices
-            .AsNoTracking()
-            .FirstOrDefaultAsync(bp => bp.Fieldscount == dto.Numbers.Length);
+        var pricePerWeek = boardPriceRow.Price * request.Times;
+        var repeatId = Guid.NewGuid().ToString();
 
-        if (boardPrice == null)
-            throw new InvalidOperationException("Invalid number count for board price.");
-
-        var entity = _mapper.Map<Repeat>(dto);
-        entity.Numbers = dto.Numbers.ToList();
-
-        entity.Id = Guid.NewGuid().ToString();
-        entity.Price = boardPrice.Price;
-        entity.Createdat = DateTime.UtcNow;
-        entity.Optout = false;
-
-        _db.Repeats.Add(entity);
-        await _db.SaveChangesAsync();
-
-        return _mapper.Map<RepeatResponse>(entity);
-    }
-
-    public async Task<RepeatResponse?> UpdateRepeat(string id, UpdateRepeatDto dto)
-    {
-        var repeat = await _db.Repeats.FirstOrDefaultAsync(r => r.Id == id);
-        if (repeat == null) return null;
-
-        // If numbers change, validate + recalc price
-        if (dto.Numbers != null)
+        var repeat = new Repeat
         {
-            ValidateNumbers(dto.Numbers);
+            Id = repeatId,
+            Playerid = playerId,
+            Numbers = request.Numbers,
+            Price = pricePerWeek,
+            Remainingweeks = Math.Max(request.Weeks - 1, 0),
+            Optout = false,
+            Createdat = DateTime.UtcNow
+        };
 
-            var boardPrice = await _db.Boardprices
-                .AsNoTracking()
-                .FirstOrDefaultAsync(bp => bp.Fieldscount == dto.Numbers.Length);
+        _db.Repeats.Add(repeat);
 
-            if (boardPrice == null)
-                throw new InvalidOperationException("Invalid number count for board price.");
+        var board = new Board
+        {
+            Id = Guid.NewGuid().ToString(),
+            Playerid = playerId,
+            Gameid = currentGame.Id,
+            Numbers = request.Numbers,
+            Times = request.Times,
+            Price = pricePerWeek,
+            Repeatid = repeatId,
+            Createdat = DateTime.UtcNow
+        };
 
-            repeat.Numbers = dto.Numbers.ToList();
+        _db.Boards.Add(board);
 
-            repeat.Price = boardPrice.Price; // update price
-        }
+        _db.Transactions.Add(new Transaction
+        {
+            Id = Guid.NewGuid().ToString(),
+            Playerid = playerId,
+            Type = "purchase",
+            Amount = -pricePerWeek,
+            Status = "approved",
+            Boardid = board.Id,
+            Createdat = DateTime.UtcNow
+        });
 
-        if (dto.RemainingWeeks.HasValue)
-            repeat.Remainingweeks = dto.RemainingWeeks.Value;
+        await _db.SaveChangesAsync(ct);
 
-        if (dto.OptOut.HasValue)
-            repeat.Optout = dto.OptOut.Value;
-
-        await _db.SaveChangesAsync();
-
-        return _mapper.Map<RepeatResponse>(repeat);
+        return await MapToResponseAsync(repeat, ct);
     }
 
-    // -----------------------------
-    // Helpers
-    // -----------------------------
-    private static void ValidateNumbers(int[] numbers)
+    // --------------------------------------------------
+    // GET PLAYER REPEATS
+    // --------------------------------------------------
+    public async Task<IReadOnlyList<RepeatDtoResponse>> GetByPlayerAsync(
+        string playerId,
+        CancellationToken ct = default)
     {
-        if (numbers.Length < 5 || numbers.Length > 8)
-            throw new InvalidOperationException("Repeat setup must have 5–8 numbers.");
+        var repeats = await _db.Repeats
+            .Where(r => r.Playerid == playerId)
+            .OrderByDescending(r => r.Createdat)
+            .ToListAsync(ct);
 
-        if (numbers.Any(n => n < 1 || n > 16))
-            throw new InvalidOperationException("Numbers must be between 1 and 16.");
+        var result = new List<RepeatDtoResponse>();
+        foreach (var repeat in repeats)
+            result.Add(await MapToResponseAsync(repeat, ct));
+
+        return result;
+    }
+
+    // --------------------------------------------------
+    // STOP REPEAT
+    // --------------------------------------------------
+    public async Task StopAsync(
+        string playerId,
+        string repeatId,
+        CancellationToken ct = default)
+    {
+        var repeat = await _db.Repeats
+            .FirstOrDefaultAsync(r => r.Id == repeatId && r.Playerid == playerId, ct);
+
+        if (repeat == null)
+            throw ApiErrors.NotFound(
+                "The repeat could not be found for your account.");
+
+        repeat.Optout = true;
+        repeat.Remainingweeks = 0;
+
+        await _db.SaveChangesAsync(ct);
+    }
+
+    // --------------------------------------------------
+    // PROCESS REPEATS WHEN GAME STARTS
+    // --------------------------------------------------
+    public async Task GenerateBoardsForGameAsync(
+        string gameId,
+        CancellationToken ct = default)
+    {
+        var game = await _db.Games.FirstOrDefaultAsync(g => g.Id == gameId, ct);
+        if (game == null)
+            throw ApiErrors.NotFound("Game not found.");
+
+        if (game.Winningnumbers == null || game.Winningnumbers.Count == 0)
+            return;
+
+        var repeats = await _db.Repeats
+            .Where(r =>
+                !r.Optout &&
+                r.Remainingweeks > 0 &&
+                r.Createdat < game.Createdat)
+            .ToListAsync(ct);
+
+        if (repeats.Count == 0)
+            return;
+
+        var prices = await _db.Boardprices.ToDictionaryAsync(
+            p => p.Fieldscount,
+            p => p.Price,
+            ct);
+
+        foreach (var repeat in repeats)
+        {
+            await using var tx = await _db.Database.BeginTransactionAsync(ct);
+
+            try
+            {
+                var alreadyProcessed = await _db.Boards.AnyAsync(
+                    b => b.Gameid == gameId && b.Repeatid == repeat.Id,
+                    ct);
+
+                if (alreadyProcessed)
+                {
+                    await tx.RollbackAsync(ct);
+                    continue;
+                }
+
+                var numbers = repeat.Numbers ?? new List<int>();
+                if (!prices.TryGetValue(numbers.Count, out var basePrice))
+                {
+                    await tx.RollbackAsync(ct);
+                    continue;
+                }
+
+                var times = repeat.Price / basePrice;
+                if (times <= 0) times = 1;
+
+                var total = basePrice * times;
+
+                var player = await _db.Users
+                    .FromSqlInterpolated($@"
+                        select * from deadpigeons.""user""
+                        where id = {repeat.Playerid} for update")
+                    .SingleAsync(ct);
+
+                if (player.Balance < total)
+                {
+                    _db.Transactions.Add(new Transaction
+                    {
+                        Id = Guid.NewGuid().ToString(),
+                        Playerid = repeat.Playerid,
+                        Type = "purchase",
+                        Amount = -total,
+                        Status = "rejected",
+                        Createdat = DateTime.UtcNow
+                    });
+
+                    repeat.Optout = true;
+                    repeat.Remainingweeks = 0;
+
+                    await _db.SaveChangesAsync(ct);
+                    await tx.CommitAsync(ct);
+                    continue;
+                }
+
+                var board = new Board
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    Playerid = repeat.Playerid,
+                    Gameid = gameId,
+                    Numbers = numbers,
+                    Times = times,
+                    Price = total,
+                    Repeatid = repeat.Id,
+                    Createdat = DateTime.UtcNow
+                };
+
+                _db.Boards.Add(board);
+
+                player.Balance -= total;
+
+                _db.Transactions.Add(new Transaction
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    Playerid = repeat.Playerid,
+                    Type = "purchase",
+                    Amount = -total,
+                    Status = "approved",
+                    Boardid = board.Id,
+                    Createdat = DateTime.UtcNow
+                });
+
+                repeat.Remainingweeks--;
+                if (repeat.Remainingweeks <= 0)
+                {
+                    repeat.Remainingweeks = 0;
+                    repeat.Optout = true;
+                }
+
+                await _db.SaveChangesAsync(ct);
+                await tx.CommitAsync(ct);
+            }
+            catch
+            {
+                await tx.RollbackAsync(ct);
+                throw;
+            }
+        }
+    }
+
+    // --------------------------------------------------
+    // MAP TO DTO
+    // --------------------------------------------------
+    private async Task<RepeatDtoResponse> MapToResponseAsync(
+        Repeat repeat,
+        CancellationToken ct)
+    {
+        var playedWeeks = await _db.Boards
+            .CountAsync(b => b.Repeatid == repeat.Id, ct);
+
+        return new RepeatDtoResponse
+        {
+            Id = repeat.Id,
+            PlayerId = repeat.Playerid ?? "",
+            Numbers = repeat.Numbers ?? new(),
+            Price = repeat.Price,
+            RemainingWeeks = repeat.Remainingweeks,
+            OptOut = repeat.Optout,
+            CreatedAt = repeat.Createdat,
+            PlayedWeeks = playedWeeks,
+            TotalWeeks = playedWeeks + repeat.Remainingweeks,
+            Status = (!repeat.Optout && repeat.Remainingweeks > 0)
+                ? "Active"
+                : "Inactive"
+        };
     }
 }

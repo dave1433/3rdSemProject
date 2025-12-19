@@ -1,106 +1,147 @@
-﻿using api.Dtos.Requests;
-using api.Dtos.Responses;
-using AutoMapper;
+﻿using api.dtos.Requests;
+using api.dtos.Responses;
+using api.Errors;
 using efscaffold.Entities;
 using Infrastructure.Postgres.Scaffolding;
 using Microsoft.EntityFrameworkCore;
+using Sieve.Models;
+using Sieve.Services;
 
 namespace api.Services;
 
 public class TransactionService : ITransactionService
 {
     private readonly MyDbContext _db;
-    private readonly IMapper _mapper;
+    private readonly SieveProcessor _sieve;
 
-    public TransactionService(MyDbContext db, IMapper mapper)
+    public TransactionService(MyDbContext db, SieveProcessor sieve)
     {
         _db = db;
-        _mapper = mapper;
+        _sieve = sieve;
     }
 
-    // -----------------------------
-    // Admin
-    // -----------------------------
-    public async Task<IEnumerable<TransactionResponse>> GetAllTransactions()
+    // GET /api/Transaction/user/{userId}
+    public async Task<List<TransactionDtoResponse>> GetByUserAsync(string userId, SieveModel sieveModel)
     {
-        var trx = await _db.Transactions.AsNoTracking().ToListAsync();
-        return _mapper.Map<IEnumerable<TransactionResponse>>(trx);
+        var query = _db.Transactions
+            .Where(t => t.Playerid == userId)
+            .AsNoTracking()
+            .AsQueryable();
+
+        // Optional: default sort if client didn't send sorts
+        if (string.IsNullOrWhiteSpace(sieveModel.Sorts))
+            sieveModel.Sorts = "-createdat";
+
+        query = _sieve.Apply(sieveModel, query);
+
+        var transactions = await query.ToListAsync();
+        return transactions.Select(t => new TransactionDtoResponse(t)).ToList();
     }
 
-    public async Task<TransactionResponse?> GetTransactionById(string id)
+    // GET pending transactions (admin)
+    public async Task<List<TransactionDtoResponse>> GetPendingAsync(SieveModel sieveModel)
     {
-        var trx = await _db.Transactions.AsNoTracking()
-            .FirstOrDefaultAsync(t => t.Id == id);
-        return trx == null ? null : _mapper.Map<TransactionResponse>(trx);
-    }
-
-    public async Task<bool> DeleteTransaction(string id)
-    {
-        var trx = await _db.Transactions.FirstOrDefaultAsync(t => t.Id == id);
-        if (trx == null) return false;
-
-        _db.Transactions.Remove(trx);
-        await _db.SaveChangesAsync();
-        return true;
-    }
-
-    public async Task<TransactionResponse?> ApproveTransaction(string id, UpdateTransactionDto dto)
-    {
-        var trx = await _db.Transactions
+        var query = _db.Transactions
             .Include(t => t.Player)
-            .FirstOrDefaultAsync(t => t.Id == id);
+            .Where(t => t.Status == "pending")
+            .AsNoTracking()
+            .AsQueryable();
 
-        if (trx == null) return null;
+        if (string.IsNullOrWhiteSpace(sieveModel.Sorts))
+            sieveModel.Sorts = "-createdat";
 
-        if (trx.Processedby != null)
-            throw new InvalidOperationException("Transaction already approved.");
+        query = _sieve.Apply(sieveModel, query);
 
-        trx.Processedby = dto.ProcessedBy ?? "admin";  // placeholder — session later
-        trx.Processedat = DateTime.UtcNow;
+        var entities = await query.ToListAsync();
+        return entities.Select(t => new TransactionDtoResponse(t)).ToList();
+    }
 
-        // Update balance if deposit
-        if (trx.Type == "deposit")
+
+    // POST create deposit request
+    public async Task<TransactionDtoResponse> CreateDepositAsync(CreateTransactionRequest ctr)
+    {
+        // ensure user exists
+        var user = await _db.Users
+            .SingleOrDefaultAsync(u => u.Id == ctr.UserId);
+
+        if (user == null)
+            throw ApiErrors.NotFound(
+                "The specified user could not be found.");
+
+        var tx = new Transaction
         {
-            trx.Player.Balance += trx.Amount;
+            Id = Guid.NewGuid().ToString(),
+            Playerid = ctr.UserId,
+            Type = "deposit",
+            Amount = ctr.Amount,
+            Mobilepayref = ctr.MobilePayRef,
+            Status = "pending",
+            Boardid = null,
+            Createdat = DateTime.UtcNow,
+            Processedby = null,
+            Processedat = null
+        };
+
+        _db.Transactions.Add(tx);
+        await _db.SaveChangesAsync();
+        Console.WriteLine("TX saved. ConnStr: " + _db.Database.GetConnectionString());
+
+        return new TransactionDtoResponse(tx);
+        
+    }
+
+    // PUT update transaction status
+    public async Task<TransactionDtoResponse> UpdateStatusAsync(
+        string transactionId,
+        UpdateTransactionStatusRequest dto,
+        string? adminUserId)
+    {
+        var tx = await _db.Transactions
+            .SingleOrDefaultAsync(t => t.Id == transactionId);
+
+        if (tx == null)
+            throw ApiErrors.NotFound(
+                "The transaction could not be found.");
+
+        var oldStatus = tx.Status;
+        var newStatus = dto.Status.ToLowerInvariant();
+
+        if (oldStatus == newStatus)
+        {
+            return new TransactionDtoResponse(tx);
         }
 
-        // For purchases: amount is negative, but balance was already updated earlier
+        if (newStatus is not ("approved" or "rejected"))
+            throw ApiErrors.BadRequest(
+                "Transaction status must be either 'approved' or 'rejected'.");
+
+        tx.Status = newStatus;
+        tx.Processedby = adminUserId;
+        tx.Processedat = DateTime.UtcNow;
+
+        // Balance adjustment only when becoming approved
+        if (oldStatus != "approved" && newStatus == "approved")
+        {
+            if (tx.Type is "deposit" or "refund")
+            {
+                if (tx.Playerid == null)
+                    throw ApiErrors.Conflict(
+                        "This transaction is missing a user reference.");
+
+                var user = await _db.Users
+                    .SingleOrDefaultAsync(u => u.Id == tx.Playerid);
+
+                if (user == null)
+                    throw ApiErrors.NotFound(
+                        "The user associated with this transaction could not be found.");
+
+                // deposit/refund: amount adds to balance
+                user.Balance += tx.Amount;
+            }
+        }
 
         await _db.SaveChangesAsync();
 
-        return _mapper.Map<TransactionResponse>(trx);
-    }
-
-    // -----------------------------
-    // Admin + Player
-    // -----------------------------
-    public async Task<IEnumerable<TransactionResponse>> GetTransactionsByPlayer(string playerId)
-    {
-        var trx = await _db.Transactions.AsNoTracking()
-            .Where(t => t.Playerid == playerId)
-            .OrderByDescending(t => t.Createdat)
-            .ToListAsync();
-
-        return _mapper.Map<IEnumerable<TransactionResponse>>(trx);
-    }
-
-    public async Task<TransactionResponse> CreateTransaction(CreateTransactionDto dto)
-    {
-        var player = await _db.Players.FirstOrDefaultAsync(p => p.Id == dto.PlayerId);
-        if (player == null)
-            throw new InvalidOperationException("Player not found.");
-
-        // Create entity
-        var trx = _mapper.Map<Transaction>(dto);
-        trx.Id = Guid.NewGuid().ToString();
-        trx.Createdat = DateTime.UtcNow;
-        trx.Processedby = null;
-        trx.Processedat = null;
-
-        // Note: balance only updated when approved
-        _db.Transactions.Add(trx);
-        await _db.SaveChangesAsync();
-
-        return _mapper.Map<TransactionResponse>(trx);
+        return new TransactionDtoResponse(tx);
     }
 }
