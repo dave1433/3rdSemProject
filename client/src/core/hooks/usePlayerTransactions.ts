@@ -102,17 +102,14 @@ export function usePlayerTransactions(userId?: string) {
     }
 
     return {
-        // data
         transactions,
         pendingDeposits,
 
-        // ui state
         loading,
         error,
         formError,
         formSuccess,
 
-        // filters
         typeFilter,
         statusFilter,
         sort,
@@ -120,11 +117,9 @@ export function usePlayerTransactions(userId?: string) {
         pageSize,
         hasNextPage,
 
-        // form
         amountInput,
         mobilePayInput,
 
-        // setters
         setTypeFilter,
         setStatusFilter,
         setSort,
@@ -133,7 +128,6 @@ export function usePlayerTransactions(userId?: string) {
         setAmountInput,
         setMobilePayInput,
 
-        // actions
         submitDeposit,
     };
 }
