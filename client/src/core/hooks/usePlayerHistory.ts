@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { fetchPlayerHistory, toggleAutoRepeat } from "../history/historyService";
+import {
+    fetchPlayerHistory,
+    toggleAutoRepeat,
+} from "../history/historyService";
 import type { PlayerRecord } from "../history/types";
 
 export function usePlayerHistory(userId?: string) {
@@ -7,26 +10,14 @@ export function usePlayerHistory(userId?: string) {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    // --------------------------------------------------
-    // LOAD HISTORY
-    // --------------------------------------------------
     async function load() {
         if (!userId) return;
 
         try {
             setLoading(true);
             setError(null);
-
             const raw = await fetchPlayerHistory(userId);
-
-            // IMPORTANT:
-            // We reset autoRepeat here and derive it ourselves
-            setRecords(
-                (raw ?? []).map(r => ({
-                    ...r,
-                    autoRepeat: false,
-                }))
-            );
+            setRecords(raw ?? []);
         } catch (e) {
             console.error(e);
             setError("Failed to load history.");
@@ -40,9 +31,6 @@ export function usePlayerHistory(userId?: string) {
         void load();
     }, [userId]);
 
-    // --------------------------------------------------
-    // FIND STARTER PER REPEAT GROUP
-    // --------------------------------------------------
     const starterByRepeatId = useMemo(() => {
         const earliest = new Map<string, { id: string; time: number }>();
 
@@ -62,28 +50,15 @@ export function usePlayerHistory(userId?: string) {
         );
     }, [records]);
 
-    // --------------------------------------------------
-    // DERIVE autoRepeat (ONLY FOR STARTER)
-    // --------------------------------------------------
     const recordsWithDerivedRepeat = useMemo(() => {
         return records.map(r => {
-            if (!r.repeatId) return r;
-
+            if (!r.repeatId) return { ...r, autoRepeat: false };
             const starterId = starterByRepeatId.get(r.repeatId);
-
-            return {
-                ...r,
-                autoRepeat: starterId === r.id && !r.repeatOptOut,
-            };
+            return { ...r, autoRepeat: starterId === r.id };
         });
     }, [records, starterByRepeatId]);
 
-    // --------------------------------------------------
-    // TOGGLE HANDLER
-    // --------------------------------------------------
     async function onToggleRepeat(record: PlayerRecord) {
-        if (record.repeatOptOut) return;
-
         const next = !record.autoRepeat;
 
         const ok = window.confirm(
@@ -94,8 +69,13 @@ export function usePlayerHistory(userId?: string) {
 
         if (!ok) return;
 
-        await toggleAutoRepeat(record.id, next);
-        await load();
+        try {
+            await toggleAutoRepeat(record.id, next);
+            await load();
+        } catch (e) {
+            console.error(e);
+            alert("Could not update repeat setting.");
+        }
     }
 
     return {
