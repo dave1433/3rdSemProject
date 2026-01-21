@@ -77,8 +77,8 @@ Full-stack lottery web application with:
 ## Configuration
 ### API configuration
 - Configuration values (connection string and Jwt secret) are read from `server/api/appsettings.json`.
-- Swagger is enabled (please see `server/api/Program.cs`).
-- Sieve is enabled for selected list endpoints (filter/sort/paging via query parameters using `SieveModel`).
+- Service registration (Dependency Injection) and the middleware pipeline are configured in `server/api/Startup.cs`.
+- Sieve is enabled for list endpoints, with the configuration also located in `server/api/Startup.cs`.
 
 ### Client configuration
 - `VITE_API_URL` is stored in `client/.env`.
@@ -87,9 +87,11 @@ Full-stack lottery web application with:
 
 ### Testing
 #### How we test
-- xUnit tests for service methods (happy path + unhappy path).
-- Testcontainers for isolated PostgreSQL persistence.
-- XUnit.DependencyInjection for test setup / DI wiring.
+- We use a combination of fast unit tests and realistic integration tests.
+- The **Repository Pattern** is used to abstract database logic, allowing for unit tests with in-memory "fake" repositories that run in milliseconds.
+- **xUnit** is our primary testing framework.
+- **Testcontainers** automatically spins up an isolated PostgreSQL database for integration tests, ensuring they run against a real database without external dependencies.
+- **XUnit.DependencyInjection** helps manage test setup and DI wiring, especially for integration tests.
 
 ## Linting
 Client linting is handled with ESLint (TypeScript + React rules).
@@ -188,6 +190,11 @@ Admins must be authenticated.
 - `PUT /api/Transaction/{id}/status` (approve/reject transaction)
 
 ## Architecture / Data model
+The backend follows a service-oriented architecture with a clear separation of concerns. Key architectural patterns include:
+- **Service Layer:** Encapsulates all business logic (e.g., `AdminGameService`, `BoardService`).
+- **Repository Pattern:** Abstracts database access away from the service layer. This makes services more focused on business logic and vastly improves testability.
+- **Dependency Injection:** Used throughout the application to manage dependencies between layers (e.g., injecting `IBoardRepository` into a service).
+
 > Data model diagram:
 ![DBdeadpigeons.png](client/public/DBdeadpigeons.png)
 
