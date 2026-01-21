@@ -1,7 +1,12 @@
 ﻿using api.Services;
 using api.dtos.Requests;
 using api.Errors;
+using efscaffold.Entities;
+using tests.Mocks;
 using Xunit;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 
 [Collection("Postgres")]
 public class AdminGameServiceTests
@@ -19,12 +24,14 @@ public class AdminGameServiceTests
     [Fact]
     public async Task EnterWinningNumbersAsync_CreatesGame_AndCallsRepeatService()
     {
-        using var ctx = _db.CreateContext();
+        using var context = _db.CreateContext();
 
-        var repeat = new FakeRepeatService();
-        var boards = new FakeBoardService();
+        var realBoardRepository = new BoardRepository(context);
 
-        var service = new AdminGameService(ctx, boards, repeat);
+        var fakeBoardService = new FakeBoardService();
+        var fakeRepeatService = new FakeRepeatService();
+
+        var service = new AdminGameService(realBoardRepository, fakeBoardService, fakeRepeatService);
 
         var request = new CreateGameDrawRequest
         {
@@ -37,7 +44,7 @@ public class AdminGameServiceTests
 
         Assert.NotNull(result);
         Assert.Equal(2025, result.Year);
-        Assert.True(repeat.WasCalled);
+        Assert.True(fakeRepeatService.WasCalled);
     }
 
     // ----------------------------
@@ -49,7 +56,7 @@ public class AdminGameServiceTests
         using var ctx = _db.CreateContext();
 
         var service = new AdminGameService(
-            ctx,
+            new BoardRepository(ctx),
             new FakeBoardService(),
             new FakeRepeatService());
 
@@ -76,7 +83,7 @@ public class AdminGameServiceTests
         using var ctx = _db.CreateContext();
 
         var service = new AdminGameService(
-            ctx,
+            new BoardRepository(ctx),
             new FakeBoardService(),
             new FakeRepeatService());
 
@@ -95,5 +102,32 @@ public class AdminGameServiceTests
         );
 
         Assert.Equal(409, ex.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetWinningBoardsForUser_ReturnsOnlyWinningBoards()
+    {
+      var fakeRepo = new FakeBoardRepository();
+      var fakeBoardService = new FakeBoardService();
+      var fakeRepeatService = new FakeRepeatService();
+
+      var playerId = Guid.NewGuid().ToString();
+      var anotherPlayerId = Guid.NewGuid().ToString();
+      
+      fakeRepo.SetBoards(new List<Board>
+      {
+        new Board { Playerid = playerId, Iswinner = true },
+        new Board { Playerid = playerId, Iswinner = true },
+        new Board { Playerid = anotherPlayerId, Iswinner = true },
+        new Board { Playerid = playerId, Iswinner = false },
+      });
+      var service = new AdminGameService(fakeRepo, fakeBoardService, fakeRepeatService);
+
+      var result = await service.GetWinningBoardsForUser(playerId);
+
+      Assert.NotNull(result);
+      Assert.Equal(2, result.Count());
+      Assert.All(result, board => Assert.Equal(playerId, board.Playerid));
+      Assert.All(result, board => Assert.True(board.Iswinner));
     }
 }

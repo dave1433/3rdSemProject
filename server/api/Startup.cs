@@ -1,5 +1,5 @@
+
 using System.ComponentModel.DataAnnotations;
-using api;
 using api.Errors;
 using api.Etc;
 using api.security;
@@ -10,13 +10,11 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Sieve.Services;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using tests.Mocks;
 
-namespace tests;
+namespace api;
 
 public class Startup
 {
@@ -94,15 +92,12 @@ public class Startup
         });
 
         // Application services (THIS IS DI)
-        // We swap the real services with fake ones for testing
-        services.AddScoped<IBoardService, FakeBoardService>();
-        services.AddScoped<IRepeatService, FakeRepeatService>();
-
-        // Keep the rest of the real services
+        services.AddScoped<IBoardService, BoardService>();
         services.AddScoped<IBoardPriceService, BoardPriceService>();
         services.AddScoped<ITokenService, JwtService>();
         services.AddScoped<ITransactionService, TransactionService>();
         services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<IRepeatService, RepeatService>();
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<IAdminGameService, AdminGameService>();
         services.AddScoped<SieveProcessor, AppSieveProcessor>();

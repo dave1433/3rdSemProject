@@ -8,5 +8,5 @@ namespace api.Services;
 public interface IAuthService
 {
     Task<AuthUserInfo> AuthenticateAsync(AuthRequest request);
-    Task<AuthUserInfo?> GetUserInfoAsync(ClaimsPrincipal principal);
+    Task<AuthUserInfo> GetUserInfoAsync(ClaimsPrincipal principal);
 }

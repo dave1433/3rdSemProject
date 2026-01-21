@@ -9,17 +9,17 @@ namespace api.Services;
 
 public class AdminGameService : IAdminGameService
 {
-    private readonly MyDbContext _db;
-    private readonly IBoardService _boards;
+    private readonly IBoardRepository _boardRepository;
+    private readonly IBoardService _boardService;
     private readonly IRepeatService _repeatService;
 
     public AdminGameService(
-        MyDbContext db,
-        IBoardService boards,
+        IBoardRepository boardRepository,
+        IBoardService boardService,
         IRepeatService repeatService)
     {
-        _db = db;
-        _boards = boards;
+        _boardRepository = boardRepository;
+        _boardService = boardService;
         _repeatService = repeatService;
     }
 
@@ -37,7 +37,7 @@ public class AdminGameService : IAdminGameService
         await _repeatService.GenerateBoardsForGameAsync(game.Id);
 
         await EvaluateWinnersAsync(game);
-
+        
         return MapToResponse(game);
     }
 
@@ -46,7 +46,7 @@ public class AdminGameService : IAdminGameService
     // --------------------------------------------------
     public async Task<bool> IsWeekLockedAsync(int year, int weekNumber)
     {
-        return await _db.Games.AnyAsync(g =>
+        return await _boardRepository.Games.AnyAsync(g =>
             g.Year == year &&
             g.Weeknumber == weekNumber &&
             g.Winningnumbers != null &&
@@ -55,12 +55,12 @@ public class AdminGameService : IAdminGameService
 
     public async Task<List<WeeklyBoardSummaryDto>> GetWeeklyWinningSummaryAsync()
     {
-        return await _boards.GetWeeklyWinningSummaryAsync();
+        return await _boardService.GetWeeklyWinningSummaryAsync();
     }
 
     public async Task<List<GameHistoryResponse>> GetDrawHistoryAsync()
     {
-        return await _db.Games
+        return await _boardRepository.Games
             .Where(g => g.Winningnumbers != null && g.Winningnumbers.Count > 0)
             .OrderByDescending(g => g.Year)
             .ThenByDescending(g => g.Weeknumber)
@@ -96,7 +96,7 @@ public class AdminGameService : IAdminGameService
 
     private async Task EnsureWeekNotLocked(int year, int weekNumber)
     {
-        var locked = await _db.Games.AnyAsync(g =>
+        var locked = await _boardRepository.Games.AnyAsync(g =>
             g.Year == year &&
             g.Weeknumber == weekNumber &&
             g.Winningnumbers != null);
@@ -119,8 +119,8 @@ public class AdminGameService : IAdminGameService
             Joindeadline = CalculateJoinDeadline(request.Year, request.WeekNumber)
         };
 
-        _db.Games.Add(game);
-        await _db.SaveChangesAsync();
+        _boardRepository.AddGame(game);
+        await _boardRepository.SaveChangesAsync();
 
         return game;
     }
@@ -129,14 +129,14 @@ public class AdminGameService : IAdminGameService
     {
         var winning = game.Winningnumbers!.ToHashSet();
 
-        var boards = await _db.Boards
+        var boards = await _boardRepository.Boards
             .Where(b => b.Gameid == game.Id)
             .ToListAsync();
 
         foreach (var board in boards)
             board.Iswinner = winning.All(n => board.Numbers.Contains(n));
 
-        await _db.SaveChangesAsync();
+        await _boardRepository.SaveChangesAsync();
     }
 
     private static GameResponse MapToResponse(Game game) =>
@@ -168,5 +168,13 @@ public class AdminGameService : IAdminGameService
             .AddHours(16)
             .AddMinutes(59)
             .AddSeconds(59);
+    }
+
+    public async Task<List<Board>> GetWinningBoardsForUser(string userId)
+    {
+        var allUserBoards = await _boardRepository.GetBoardsByPlayerIdAsync(userId);
+        var winningBoards = allUserBoards.Where(b => b.Iswinner == true).ToList();
+        
+        return winningBoards;
     }
 }
