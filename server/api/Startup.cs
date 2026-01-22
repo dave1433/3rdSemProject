@@ -92,6 +92,7 @@ public class Startup
         });
 
         // Application services (THIS IS DI)
+        services.AddScoped<IBoardRepository, BoardRepository>();
         services.AddScoped<IBoardService, BoardService>();
         services.AddScoped<IBoardPriceService, BoardPriceService>();
         services.AddScoped<ITokenService, JwtService>();

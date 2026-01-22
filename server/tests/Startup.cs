@@ -95,6 +95,7 @@ public class Startup
 
         // Application services (THIS IS DI)
         // We swap the real services with fake ones for testing
+        services.AddScoped<IBoardRepository, FakeBoardRepository>();
         services.AddScoped<IBoardService, FakeBoardService>();
         services.AddScoped<IRepeatService, FakeRepeatService>();
 
